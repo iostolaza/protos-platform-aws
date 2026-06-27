@@ -1,0 +1,28 @@
+version: 1
+# Build spec for the ADMIN Amplify app.
+# This is the primary app: it deploys the shared Gen 2 backend
+# (auth, data, storage) and builds the admin frontend.
+# The portal app reuses this backend (see amplify.portal.yml).
+backend:
+  phases:
+    build:
+      commands:
+        - npm ci --cache .npm --prefer-offline
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --cache .npm --prefer-offline
+    build:
+      commands:
+        - cp amplify_outputs.json admin/src/amplify_outputs.json
+        - npx nx build admin --configuration=production
+  artifacts:
+    baseDirectory: dist/admin/browser
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .npm/**/*
+      - node_modules/**/*

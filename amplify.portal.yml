@@ -1,0 +1,31 @@
+version: 1
+# Build spec for the PORTAL Amplify app.
+#
+# Amplify only auto-detects a file literally named "amplify.yml", so this file
+# is NOT picked up automatically. Paste its contents into the PORTAL app's
+# build settings in the Amplify Console (App settings -> Build settings -> Edit),
+# which overrides the repo's amplify.yml for that app only.
+#
+# The portal does NOT deploy a backend. Instead it pulls the already-deployed
+# shared backend outputs from the ADMIN app, then builds the portal frontend.
+#
+# IMPORTANT: replace <ADMIN_APP_ID> below with the admin app's App ID
+# (looks like d1234abcd5678) before saving.
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --cache .npm --prefer-offline
+        - npx ampx generate outputs --branch $AWS_BRANCH --app-id <ADMIN_APP_ID>
+    build:
+      commands:
+        - cp amplify_outputs.json portal/src/amplify_outputs.json
+        - npx nx build portal --configuration=production
+  artifacts:
+    baseDirectory: dist/portal/browser
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .npm/**/*
+      - node_modules/**/*
