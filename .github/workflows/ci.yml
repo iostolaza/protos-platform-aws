@@ -31,7 +31,9 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci
+      # npm install (not npm ci): Amplify's bundled deps (zod, @noble/hashes)
+      # have internal version mismatches that npm ci rejects.
+      - run: npm install --no-audit --no-fund
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
