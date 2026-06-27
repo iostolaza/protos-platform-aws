@@ -1,8 +1,12 @@
 version: 1
-# Build spec for the ADMIN Amplify app.
-# This is the primary app: it deploys the shared Gen 2 backend
-# (auth, data, storage) and builds the admin frontend.
-# The portal app reuses this backend (see amplify.portal.yml).
+# Single build spec for BOTH Amplify apps in this monorepo.
+# A repo-level amplify.yml takes precedence over the app-level build spec set
+# in the console/CLI, so we branch on $AWS_APP_ID instead:
+#   - ADMIN app  -> deploys the shared Gen 2 backend, builds the admin frontend
+#   - PORTAL app -> reuses the admin backend (no deploy), builds portal frontend
+env:
+  variables:
+    ADMIN_APP_ID: d11yajkly52yyj
 backend:
   phases:
     build:
@@ -10,7 +14,14 @@ backend:
         # npm install (not npm ci): Amplify's bundled deps (zod, @noble/hashes)
         # have internal version mismatches that npm ci rejects.
         - npm install --cache .npm --prefer-offline --no-audit --no-fund
-        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        - |
+          if [ "$AWS_APP_ID" = "$ADMIN_APP_ID" ]; then
+            echo "ADMIN app: deploying shared backend"
+            npx ampx pipeline-deploy --branch "$AWS_BRANCH" --app-id "$AWS_APP_ID"
+          else
+            echo "PORTAL app: reusing ADMIN backend ($ADMIN_APP_ID)"
+            npx ampx generate outputs --branch main --app-id "$ADMIN_APP_ID"
+          fi
 frontend:
   phases:
     preBuild:
@@ -18,10 +29,15 @@ frontend:
         - npm install --cache .npm --prefer-offline --no-audit --no-fund
     build:
       commands:
-        - cp amplify_outputs.json admin/src/amplify_outputs.json
-        - npx nx build admin --configuration=production
+        - |
+          if [ "$AWS_APP_ID" = "$ADMIN_APP_ID" ]; then APP=admin; else APP=portal; fi
+          echo "Building frontend: $APP"
+          cp amplify_outputs.json "$APP/src/amplify_outputs.json"
+          npx nx build "$APP" --configuration=production
+          rm -rf dist/current
+          cp -r "dist/$APP" dist/current
   artifacts:
-    baseDirectory: dist/admin/browser
+    baseDirectory: dist/current/browser
     files:
       - '**/*'
   cache:
