@@ -1,0 +1,49 @@
+
+<!-- src/app/features/ticket-management/edit-team/edit-team.component.html -->
+
+<div class="ledger-card max-w-md mx-auto"> 
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="page-title">Edit Team: {{ team.name }}</h3> 
+  </div>
+
+  @if (errorMessage()) {
+    <div class="text-destructive mb-4">{{ errorMessage() }}</div>
+  }
+  <form [formGroup]="form" (ngSubmit)="updateTeam()" class="space-y-4">
+    <div class="flex items-center gap-1">
+      <label class="text-sm font-medium text-label mr-1 w-1/5">Name:</label> 
+      <input formControlName="name" type="text" class="flex-1 p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+    </div>
+    <div class="flex items-start gap-1">
+      <label class="text-sm font-medium text-label mr-1 w-1/5">Description:</label>
+      <textarea formControlName="description" class="flex-1 p-2 bg-background border border-border rounded-lg text-foreground h-24 focus:ring-2 focus:ring-primary"></textarea> 
+    </div>
+    <div class="mt-6">  
+      <h3 class="text-md font-bold text-foreground mb-2">Members ({{ members().length }})</h3>
+      <ul class="space-y-2">
+        @for (member of members(); track member.cognitoId) {
+          <li class="flex justify-between items-center bg-card p-2 rounded border border-border text-foreground">
+            <span class="text-foreground">{{ member.firstName }} {{ member.lastName }} ({{ member.email }})</span> 
+            <button type="button" (click)="removeMember(member.cognitoId)" class="icon-btn-hover text-destructive hover:text-destructive/80"> 
+              <svg-icon [src]="getIconPath('x-mark')" svgClass="h-4 w-4 text-destructive"></svg-icon>
+            </button>
+          </li>
+        }
+      </ul>
+      <div class="mt-4 flex items-center gap-2">
+        <select [(ngModel)]="selectedUserId" [ngModelOptions]="{standalone: true}" class="flex-1 p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary"> 
+          @for (user of users(); track user.cognitoId) {
+            <option [value]="user.cognitoId">{{ user.firstName }} {{ user.lastName }} ({{ user.email }})</option>
+          }
+        </select>
+        <button type="button" (click)="addMember()" class="icon-btn-hover text-primary hover:text-primary/80"> 
+          <svg-icon [src]="getIconPath('plus')" svgClass="h-5 w-5 text-primary"></svg-icon>
+        </button>
+      </div>
+    </div>
+    <div class="mt-6 flex gap-2 justify-end">
+      <button type="submit" class="btn btn-primary">Update</button> 
+      <button type="button" (click)="cancel.emit()" class="btn btn-neutral">Cancel</button> 
+    </div>
+  </form>
+</div>

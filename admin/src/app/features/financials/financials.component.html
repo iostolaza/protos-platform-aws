@@ -1,0 +1,25 @@
+
+<!-- src/app/features/financials/financials.component.html -->
+
+<div class="page-wrapper flex flex-col bg-background gap-6">
+
+  <app-financial-title-card></app-financial-title-card>
+
+  @if (canCreate()) {
+    <app-create-invoice [accountId]="accountId()" [isManager]="isManager()" [assignedBuildings]="assignedBuildings()" (created)="onInvoiceCreated($event)"></app-create-invoice>
+  }
+
+  <!-- UPDATED: Pass invoices -->
+  <app-invoice-ledger [invoices]="invoices()" (view)="selectedInvoice.set($event)"></app-invoice-ledger>
+
+  @if (selectedInvoice()) {
+    <app-invoice-details [invoice]="selectedInvoice()!" (close)="selectedInvoice.set(null)" (edit)="editInvoice($event)" (refresh)="onRefresh()"></app-invoice-details>
+  }
+
+  <!-- NEW: Balance Card (user total; pay button deducts) -->
+  <app-balance-card [balance]="currentBalance()" (pay)="onPay($event)"></app-balance-card>
+
+  <!-- NEW: Balance Ledger (transaction history) -->
+  <app-balance-ledger [transactions]="transactions()"></app-balance-ledger>
+
+</div> 

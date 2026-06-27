@@ -1,0 +1,249 @@
+@import "@aws-amplify/ui/styles.css";
+@import "@angular/material/prebuilt-themes/azure-blue.css";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* Custom vars in root */
+:root {
+  --background: #f7f7fb;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --border: #e6e9ef;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --success: #16a34a;
+  --destructive: #dc2626;
+}
+
+.dark {
+  --background: #212121;
+  --foreground: #e6eef8;
+  --card: #0e0e0e;
+  --card-foreground: #e6eef8;
+  --border: #273244;
+  --muted: #111827;
+  --muted-foreground: #9aa7bb;
+  --primary: #93c5fd;
+  --primary-foreground: #06121a;
+  --success: #34d399;
+  --destructive: #fb7185;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  margin: 0;
+}
+
+/* Tailwind custom vars */
+@layer utilities {
+  .bg-background { background-color: var(--background); }
+  .text-foreground { color: var(--foreground); }
+  .bg-card { background-color: var(--card); }
+  .text-card-foreground { color: var(--card-foreground); }
+  .border-border { border-color: var(--border); }
+  .text-muted-foreground { color: var(--muted-foreground); }
+  .bg-primary { background-color: var(--primary); }
+  .text-primary-foreground { color: var(--primary-foreground); }
+  .text-success { color: var(--success); }
+  .text-destructive { color: var(--destructive); }
+}
+
+/* HEROICONS OUTLINE – VISIBLE STROKE ONLY */
+.nav-icon,
+svg-icon,
+[svgClass*="text-foreground"],
+svg-icon svg,
+svg-icon svg path {
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2.5 !important;   /* thicker, always visible outline */
+  transition: stroke 0.2s ease;
+}
+
+.dark .nav-icon,
+.dark svg-icon,
+.dark [svgClass*="text-foreground"],
+.dark svg-icon svg,
+.dark svg-icon svg path {
+  stroke: currentColor !important;
+}
+
+/* Hover & active */
+.group-hover .nav-icon,
+.group:hover .nav-icon,
+.group-hover svg-icon,
+.group:hover svg-icon {
+  stroke: var(--primary) !important;
+}
+
+.text-primary .nav-icon,
+.text-primary svg-icon,
+.text-primary [svgClass*="text-foreground"] {
+  stroke: var(--primary) !important;
+}
+
+/* Sidebar toggle arrow – white */
+.sidebar-toggle-icon,
+.sidebar-toggle-icon svg-icon,
+.sidebar-toggle-icon svg-icon svg path {
+  stroke: #ffffff !important;
+}
+
+/* ===================================================================
+   Auth (sign-in / sign-up) page + Amplify Authenticator theming
+   =================================================================== */
+:root {
+  --amplify-fonts-default-variable: 'Inter', system-ui, sans-serif;
+  --amplify-fonts-default-static: 'Inter', system-ui, sans-serif;
+
+  --amplify-colors-background-primary: var(--card);
+  --amplify-colors-background-secondary: var(--muted);
+  --amplify-colors-font-primary: var(--foreground);
+  --amplify-colors-font-secondary: var(--muted-foreground);
+  --amplify-colors-font-tertiary: var(--muted-foreground);
+  --amplify-colors-border-primary: var(--border);
+  --amplify-colors-border-secondary: var(--border);
+
+  --amplify-colors-brand-primary-10: rgba(59, 130, 246, 0.1);
+  --amplify-colors-brand-primary-80: var(--primary);
+  --amplify-colors-brand-primary-90: #2563eb;
+  --amplify-colors-brand-primary-100: #1d4ed8;
+
+  --amplify-components-authenticator-router-background-color: transparent;
+  --amplify-components-authenticator-router-border-width: 0;
+  --amplify-components-authenticator-router-box-shadow: none;
+  --amplify-components-authenticator-router-max-width: 100%;
+
+  --amplify-components-tabs-item-color: var(--muted-foreground);
+  --amplify-components-tabs-item-active-color: var(--primary);
+  --amplify-components-tabs-item-active-border-color: var(--primary);
+  --amplify-components-tabs-item-focus-color: var(--primary);
+
+  --amplify-components-field-label-color: var(--foreground);
+  --amplify-components-fieldcontrol-color: var(--foreground);
+  --amplify-components-fieldcontrol-border-color: var(--border);
+  --amplify-components-fieldcontrol-focus-border-color: var(--primary);
+
+  --amplify-components-button-primary-background-color: var(--primary);
+  --amplify-components-button-primary-hover-background-color: #2563eb;
+  --amplify-components-button-primary-active-background-color: #1d4ed8;
+  --amplify-components-button-primary-color: #ffffff;
+  --amplify-components-button-link-color: var(--primary);
+  --amplify-components-button-color: var(--foreground);
+  --amplify-components-button-border-color: var(--border);
+
+  --amplify-components-heading-color: var(--foreground);
+  --amplify-components-text-color: var(--foreground);
+}
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(1100px 560px at 8% -12%, rgba(59, 130, 246, 0.28), transparent 60%),
+    radial-gradient(900px 480px at 112% 115%, rgba(16, 163, 74, 0.16), transparent 55%),
+    var(--background);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 30rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  box-shadow: 0 24px 50px -22px rgba(0, 0, 0, 0.5);
+  padding: 2.25rem 2rem 2.5rem;
+}
+
+.auth-brand {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-logo {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1rem;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--primary), #1d4ed8);
+  color: #fff;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  box-shadow: 0 12px 26px -8px rgba(37, 99, 235, 0.65);
+}
+
+.auth-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+}
+
+.auth-subtitle {
+  color: var(--muted-foreground);
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.auth-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--foreground);
+  background: var(--background);
+  font-weight: 600;
+}
+
+.auth-spinner {
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 9999px;
+  animation: auth-spin 0.7s linear infinite;
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Amplify authenticator — fill card width cleanly */
+.auth-card amplify-authenticator,
+.auth-card [data-amplify-authenticator],
+.auth-card [data-amplify-router] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: unset !important;
+  --amplify-components-authenticator-modal-background-color: transparent;
+}
+
+.auth-card [data-amplify-router-content],
+.auth-card [data-amplify-form] {
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+.auth-card .amplify-input,
+.auth-card .amplify-select,
+.auth-card .amplify-field {
+  width: 100% !important;
+  background: var(--background);
+}
+
+.auth-card [data-amplify-authenticator] [data-amplify-container] {
+  width: 100% !important;
+}

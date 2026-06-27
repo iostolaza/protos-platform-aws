@@ -1,0 +1,42 @@
+<div class="bg-card relative border-b border-border">
+  <div class="mx-auto px-4 max-w-screen-2xl">
+    <div class="flex items-center justify-between py-3.5">
+      <!-- App Title - left -->
+      <div class="nav-heading text-2xl font-bold text-foreground">
+        {{ appService.appTitle() }}
+      </div>
+
+      <!-- Profile section - right (relative wrapper) -->
+      <div class="relative">
+        <button
+          type="button"
+          (click)="profileMenu.toggleMenu()"
+          class="flex items-center gap-3 rounded-full p-2 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all"
+        >
+          <!-- Avatar -->
+          <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-primary/60 shadow-sm">
+            <img
+              [src]="profileMenu.user()?.profileImageUrl || '/assets/profile/avatar-default.svg'"
+              alt="User avatar"
+              class="w-full h-full object-cover"
+            />
+          </div>
+
+          <!-- Name (hidden on small screens) -->
+          <span class="hidden md:block text-sm font-medium text-foreground">
+            {{ profileMenu.fullName() }}
+          </span>
+
+          <!-- Dropdown Arrow -->
+          <svg-icon
+            [src]="getIconPath('chevron-down')"
+            svgClass="h-5 w-5 text-muted-foreground transition-transform duration-200"
+          ></svg-icon>
+        </button>
+
+        <!-- Dropdown Menu (absolute, no flex impact) -->
+        <lib-profile-menu #profileMenu></lib-profile-menu>
+      </div>
+    </div>
+  </div>
+</div>

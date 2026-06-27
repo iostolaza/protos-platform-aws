@@ -1,0 +1,40 @@
+
+<!-- src/app/features/ticket-management/team-list/team-list.component.html -->
+
+<div class="ledger-card">
+  <h3 class="page-title">Teams</h3>
+  <div class="relative overflow-x-auto">
+    <table class="w-full table-auto">
+      <thead class="text-xs uppercase text-muted-foreground">
+        <tr>
+          <th class="py-3 text-left">Team ID</th>  
+          <th class="py-3 text-left">Name</th>
+          <th class="py-3 text-left">Lead</th>
+          <th class="py-3 text-center">Members</th>
+          <th class="py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (team of teams(); track team.id) {
+          <tr class="table-row-hover"> 
+            <td class="py-3 text-left text-foreground">{{ team.id.slice(-8) }}</td> 
+            <td class="py-3 text-left text-foreground">{{ team.name | slice:0:25 }}{{ team.name.length > 25 ? '...' : '' }}</td> 
+            <td class="py-3 text-left text-foreground">{{ team.teamLeadName || 'N/A' }}</td> 
+            <td class="py-3 text-center text-foreground">{{ team.memberCount ?? 0 }}</td> 
+            <td class="py-3 text-right flex justify-end gap-2 pr-4">
+              <button (click)="viewTeam(team)" class="icon-btn-hover rounded-full bg-transparent p-1 hover:bg-info/10"> 
+                <svg-icon [src]="getIconPath('eye')" svgClass="h-4 w-4 text-foreground"></svg-icon> 
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <!-- Edit Form (Conditional) -->
+    @if (editingTeam()) {
+      <div class="mt-4">
+        <app-team-edit [team]="editingTeam()!" (update)="onTeamUpdate($event)" (cancel)="editingTeam.set(null)"></app-team-edit>
+      </div>
+    }
+  </div>
+</div>

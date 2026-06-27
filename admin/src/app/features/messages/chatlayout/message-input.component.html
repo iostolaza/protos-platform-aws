@@ -1,0 +1,28 @@
+
+<!-- src/app/features/messages/chatlayout/message-input.component.html -->
+ 
+<div class="p-2 bg-card flex gap-2">
+  <input 
+    type="text" 
+    class="flex-1 bg-background text-body placeholder:text-placeholder rounded-md border border-border px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all" 
+    [(ngModel)]="newMessage" 
+    placeholder="Type a message..." 
+    [disabled]="disabled()" 
+    (keydown.enter)="onSend(); $event.preventDefault()" /> 
+  <button 
+    class="send-button px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50" 
+    aria-label="Send message" 
+    (click)="onSend()" 
+    [disabled]="disabled()">
+    Send
+  </button>
+  <input type="file" class="hidden" id="file" (change)="onFileChange($event)" [disabled]="disabled()" />
+  <label 
+    for="file" 
+    class="file-label cursor-pointer text-muted" 
+    aria-label="Upload file" 
+    [class.opacity-50]="disabled()" 
+    [class.pointer-events-none]="disabled()" >
+    <svg-icon [src]="getIconPath('paper-clip')" class="h-6 w-6"></svg-icon>
+  </label>
+</div>

@@ -1,0 +1,47 @@
+<!-- src/app/features/ticket-management/team-details/team-details.component.html -->
+
+
+<div class="ledger-card">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="accent-title">{{ team.name }}</h3> 
+    <button (click)="close.emit()" class="icon-btn-hover text-destructive hover:text-foreground"> 
+      <svg-icon [src]="getIconPath('x-mark')" svgClass="h-5 w-5 text-destructive"></svg-icon>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center text-muted-foreground">Loading...</div>
+  } @else {
+    <div class="space-y-4">
+      <div class="flex items-center gap-1">  
+        <label class="text-sm font-bold text-label w-1/5">Team ID:</label> 
+        <span class="text-foreground">{{ team.id.slice(-8) }}</span> 
+      </div>
+      <div class="flex items-center gap-1">
+        <label class="text-sm font-bold text-label w-1/5">Name:</label>
+        <span class="text-foreground">{{ team.name }}</span> 
+      </div>
+      <div class="flex items-center gap-1">
+        <label class="text-sm font-bold text-label w-1/5">Date Created:</label>
+        <span class="text-foreground">{{ team.createdAt | date:'shortDate' }}</span> 
+      </div>
+      <div>
+        <h3 class="text-md font-bold text-foreground mb-2">Members ({{ members().length }})</h3>
+        <ul class="space-y-2"> 
+          @for (member of members(); track member.cognitoId) {
+            <li class="bg-card p-2 rounded border border-border text-foreground">{{ member.firstName }} {{ member.lastName }} ({{ member.email }})</li> 
+          } @empty {
+            <li class="text-center text-muted-foreground">No members</li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+  @if (error()) {
+    <div class="text-destructive mt-4">{{ error() }}</div>
+  }
+  <div class="flex gap-2 mt-6">
+    <button (click)="edit.emit(team)" class="btn btn-primary">Edit</button> 
+    <button (click)="deleteTeam(team.id)" class="btn btn-destructive">Delete</button> 
+  </div>
+</div>

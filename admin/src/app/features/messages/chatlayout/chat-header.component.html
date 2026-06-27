@@ -1,0 +1,10 @@
+
+<!-- src/app/features/messages/chatlayout/chat-header.component.html -->
+
+<div class="flex items-center justify-between p-4 gap-4 text-foreground w-full bg-card rounded-tr-lg"> 
+  <div class="flex items-center gap-2">
+    <img [src]="avatar() || 'assets/profile/avatar-default.svg'" alt="Recipient" class="w-10 h-10 rounded-full" />
+    <span class="font-semibold">{{ recipient() }}</span>
+  </div>
+  <svg-icon [src]="getIconPath('plus')" class="h-6 w-6 text-destructive cursor-pointer"></svg-icon>
+</div>

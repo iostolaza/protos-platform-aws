@@ -1,0 +1,73 @@
+<!-- src/app/features/ticket-management/ticket-details/ticket-details.component.html -->
+
+<div class="ledger-card">
+  <!-- UPDATED: Enhanced header with larger title for visibility (text-3xl like balance emphasis) -->
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="accent-title text-label text-3xl">{{ ticket.title }}</h3>
+    <button (click)="close.emit()" class="icon-btn-hover text-destructive hover:text-foreground">
+      <svg-icon [src]="getIconPath('x-mark')" svgClass="h-5 w-5 text-destructive"></svg-icon>
+    </button>
+  </div>
+
+  <!-- Basic Info Section (UPDATED: Invoice-like h4 mb-2, grid-cols-2 gap-8 mb-6 for left/right; p-3 text-body values, full-span desc mt-1 break-words p-3) -->
+  <div class="mb-6">
+    <h4 class="text-m font-bold text-foreground mb-2">Basic Information</h4>
+    <div class="grid grid-cols-2 gap-8 text-foreground">
+      <div class="p-3 text-body"><strong>Ticket No.:</strong> {{ ticket.id.slice(-8) }}</div>
+      <div class="md:col-span-2">
+        <div><strong>Description:</strong></div>
+        <div class="max-w-[400px] break-words mt-1 p-3 text-body">{{ ticket.description || 'No description provided' }}</div>
+      </div>
+      <div class="p-3 text-body"><strong>Status: </strong><span class="text-sm px-3 py-2 rounded-full" [ngClass]="ticket.status | statusClass">{{ ticket.status | status }}</span></div>
+    </div>
+  </div>
+
+  <!-- Dates Section (UPDATED: grid-cols-2 gap-8 for left/right pairs; p-3 text-body values) -->
+  <div class="mb-6">
+    <h4 class="text-m font-bold text-foreground mb-2">Dates</h4>
+    <div class="grid grid-cols-2 gap-8 text-foreground">
+
+      <div class="p-3 text-body"><strong>Created At:</strong> {{ ticket.createdAt | date:'shortDate'}}</div>
+      <div class="p-3 text-body"><strong>Estimated:</strong> {{ ticket.estimated | date:'shortDate' }}</div>
+      <div class="p-3 text-body"><strong>Updated At:</strong> {{ ticket.updatedAt | date:'shortDate' }}</div>
+    </div>
+  </div>
+
+  <!-- Relations Section (UPDATED: grid-cols-2 gap-8 for left/right; p-3 text-body values) -->
+  <div class="mb-6">
+    <h4 class="text-m font-bold text-foreground mb-2">Relations</h4>
+    <div class="grid grid-cols-2 gap-8 text-foreground">
+      <div class="p-3 text-body"><strong>Requester:</strong> {{ ticket.requesterName || 'N/A' }}</div>
+      <div class="p-3 text-body"><strong>Assigned:</strong> {{ ticket.assigneeName || 'Unassigned' }}</div>
+      <div class="p-3 text-body"><strong>Team:</strong> {{ ticket.teamName || 'No team' }}</div>
+    </div>
+  </div>
+
+  <!-- Actions (UPDATED: flex gap-2 mb-6 like invoice) -->
+  <div class="flex gap-2 mb-6">
+    <button (click)="editTicket()" class="btn btn-primary">Edit</button>
+    <button (click)="deleteTicket()" class="btn btn-destructive">Delete</button>
+  </div>
+
+  <!-- Add Note Form (UPDATED: space-y-4 like invoice forms) -->
+  <div class="mb-6 space-y-4">
+    <h4 class="text-sm font-bold text-foreground mb-2">Add Note</h4>
+    <form (ngSubmit)="addNote()">
+      <textarea [(ngModel)]="newNote" name="newNote" class="w-full p-2 bg-background border border-border rounded-lg text-foreground h-20 focus:ring-2 focus:ring-primary"></textarea>
+      <button type="submit" class="btn btn-primary">Add</button>
+    </form>
+  </div>
+
+  <!-- Comments Section (UPDATED: border-b py-2 table-row-hover like invoice items; h4 mb-2) -->
+  <div class="mb-6">
+    <h4 class="text-sm font-bold text-foreground mb-2">Comments (Chronological)</h4>
+    @for (comment of ticket.comments; track $index) {
+      <div class="border-b border-dashed border-border py-2 table-row-hover">
+        <div class="text-sm text-muted-foreground">{{ comment.name }} - {{ comment.date | date:'medium' }}</div>
+        <p class="text-foreground p-3 text-body">{{ comment.comment }}</p> <!-- UPDATED: p-3 text-body for value padding like invoice -->
+      </div>
+    } @empty {
+      <div class="text-muted-foreground">No comments yet.</div>
+    }
+  </div>
+</div>

@@ -1,0 +1,51 @@
+
+<!-- src/app/features/profile/vehicle-card.component.html -->
+
+<div class="profile-card">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">Vehicle Details</h2>
+  @if (editMode()) {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-label">Make</label>
+          <input formControlName="make" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter make (e.g., Toyota)" />
+        </div>
+        <div>
+          <label class="block text-sm text-label">Model</label>
+          <input formControlName="model" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter model (e.g., Camry)" />
+        </div>
+        <div>
+          <label class="block text-sm text-label">Color</label>
+          <input formControlName="color" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter color (e.g., Blue)" />
+        </div>
+        <div>
+          <label class="block text-sm text-label">License</label>
+          <input formControlName="license" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter license plate" />
+        </div>
+        <div>
+          <label class="block text-sm text-label">Year</label>
+          <input formControlName="year" type="number" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter year (e.g., 2020)" />
+        </div>
+      </div>
+      <div class="mt-4 flex justify-end gap-2">
+        <button type="button" (click)="toggleEdit()" class="btn btn-neutral">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  } @else {
+    @if (user?.vehicle) {
+      <div class="grid grid-cols-2 gap-4 text-body">
+        <div><strong class="text-label">Make: </strong> <span class="text-body">{{ user?.vehicle?.make || 'Not set' }}</span></div>
+        <div><strong class="text-label">Model: </strong> <span class="text-body">{{ user?.vehicle?.model || 'Not set' }}</span></div>
+        <div><strong class="text-label">Color: </strong> <span class="text-body">{{ user?.vehicle?.color || 'Not set' }}</span></div>
+        <div><strong class="text-label">License: </strong> <span class="text-body">{{ user?.vehicle?.license || 'Not set' }}</span></div>
+        <div><strong class="text-label">Year: </strong> <span class="text-body">{{ user?.vehicle?.year || 'Not set' }}</span></div>
+      </div>
+    } @else {
+      <p class="text-muted">No vehicle details set.</p>
+    }
+    <div class="mt-4 flex justify-start">
+      <button (click)="toggleEdit()" class="btn btn-primary">Edit</button>
+    </div>
+  }
+</div>

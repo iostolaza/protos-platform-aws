@@ -1,0 +1,20 @@
+<!-- src/app/features/messages/chatlayout/chat-list.component.html -->
+<div class="flex-1 overflow-y-auto">
+  <ul>
+    <li *ngFor="let chat of chats()" class="chat-item-hover group relative shadow-sm" (click)="chatSelected.emit(chat)">
+      <div class="flex items-center gap-3 flex-1 min-w-0">
+        <img [src]="chat.avatar || 'assets/profile/avatar-default.svg'" alt="User" class="w-8 h-8 rounded-full flex-shrink-0" />
+        <div class="flex flex-col min-w-0">
+          <p class="chat-item-text truncate">{{ chat.name }}</p>
+          <p class="text-sm text-muted-foreground truncate">{{ chat.snippet }}</p>
+        </div>
+      </div>
+      <div class="ml-auto flex-shrink-0 text-xs text-muted-foreground">
+        <span class="group-hover:hidden">{{ chat.timestamp | date:'shortTime' }}</span>
+        <button class="hidden group-hover:block text-destructive hover:text-destructive/80" (click)="chatDeleted.emit(chat.id); $event.stopPropagation()" aria-label="Delete chat">
+          <svg-icon [src]="getIconPath('x-mark')" svgClass="h-6 w-6 text-destructive"></svg-icon>
+        </button>
+      </div>
+    </li>
+  </ul>
+</div>

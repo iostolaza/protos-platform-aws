@@ -1,0 +1,141 @@
+
+<!-- src/app/features/financials/edit-invoice/edit-invoice.component.html -->
+ 
+<!-- src/app/features/financials/edit-invoice/edit-invoice.component.html -->
+ 
+<!-- UPDATED: Used ledger-card (bg-card + border). Inner form: bg-card + border. Inputs: bg-background (fixed bg-form-bg). Title: page-title. -->
+<div class="ledger-card">
+  <h3 class="page-title">Edit Invoice</h3>
+  <form [formGroup]="form">
+    <div class="p-6 bg-card rounded-2xl border border-border"> <!-- UPDATED: bg-card + border only -->
+      <!-- Header Row: Invoice # and Actions -->
+      <div class="flex justify-between items-start mb-6">
+        <h1 class="text-2xl font-bold text-heading">{{ form.value.invoiceNumber }}</h1>
+      </div>
+
+      <!-- Type Selection (from current) -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-label mb-2">Select Type:</label>
+        <select formControlName="selectedType" (change)="onTypeChange()" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
+          <option value="">Select Type</option>
+          <option value="wedding">Wedding</option>
+          <option value="real_estate">Real Estate</option>
+        </select>
+      </div>
+
+      <!-- Status and Date Row -->
+      <div class="grid grid-cols-2 gap-8 mb-6">
+        <div>
+          <label class="block text-sm font-medium text-label mb-1">Order Status:</label>
+          <select formControlName="orderStatus" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
+            @for (status of orderStatuses; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+        <div class="text-right">
+          <label class="block text-sm font-medium text-label mb-1">Order Date:</label>
+          <input type="text" formControlName="orderDate" class="w-full p-2 bg-background border border-border rounded-lg text-right" placeholder="DD-MM-YYYY">
+        </div>
+      </div>
+
+      <!-- Bill From/To Row (Enhanced with separate addresses, tenant link) -->
+      <div class="grid grid-cols-2 gap-8 mb-6">
+        <div>
+          <label class="block text-sm font-medium text-label mb-1">Bill From:</label>
+          <input type="text" formControlName="billFrom" class="w-full p-3 bg-background border border-border rounded-lg mb-2" placeholder="Enter company name">
+          <label class="block text-sm font-medium text-label mb-1">From Address:</label>
+          <textarea formControlName="fromAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-label mb-1">Bill To:</label>
+            <select formControlName="tenantId" class="w-full p-3 bg-background border border-border rounded-lg">
+                <option value="">Select Recipient</option>
+                @for (contact of contacts(); track trackUser($index, contact)) {
+                  <option [value]="contact.cognitoId">
+                    {{ contact.firstName }} {{ contact.lastName }} ({{ contact.email }})
+                  </option>
+                }
+          </select>
+          <label class="block text-sm font-medium text-label mb-1 mt-2">To Address:</label>
+          <textarea formControlName="toAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
+
+          <!-- Building (if manager, from current) -->
+          @if (isManager && assignedBuildings.length > 0) {
+            <select formControlName="building" class="w-full p-3 bg-background border border-border rounded-lg mt-2">
+              <option value="">Select Building</option>
+              @for (building of assignedBuildings; track trackBuilding($index, building)) {
+                <option [value]="building">{{ building }}</option>
+              }
+            </select>
+          }
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-label mb-1">Description:</label>
+        <textarea formControlName="description" rows="2" class="w-full p-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary" placeholder="Invoice summary (e.g., Monthly service fees)"></textarea>
+      </div>
+
+      <!-- Items Table -->
+      <div class="mb-6">
+        <div class="grid grid-cols-6 gap-4 text-sm font-medium text-label mb-2 px-1">
+          <span>#</span>
+          <span>Item Name</span>
+          <span>Unit Price</span>
+          <span>Units</span>
+          <span class="text-right">Unit Total</span>
+          <span></span>
+        </div>
+        <div formArrayName="items">
+          @for (item of items.controls; track trackItem($index, item); let i = $index) {
+            <div [formGroupName]="i" class="grid grid-cols-6 gap-4 items-center mb-2 p-2 bg-background border border-border rounded-lg"> <!-- UPDATED: bg-background for edit inputs -->
+              <span class="font-medium">{{ i + 1 }}</span>
+              <input formControlName="name" class="p-2 bg-background border border-border rounded" placeholder="Item name">
+              <input type="number" formControlName="unitPrice" class="p-2 bg-background border border-border rounded text-right" placeholder="0.00">
+              <input type="number" formControlName="units" class="p-2 bg-background border border-border rounded text-right" placeholder="1">
+              <span class="text-right font-medium">${{ itemProductTotal(item.value) | number:'1.1-1' }}</span>
+              <div class="flex gap-3 ml-6">
+                <button type="button" (click)="items.push(createItemGroup())" class="text-success hover:text-success/70" [disabled]="selectedType() === ''">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </button>
+                @if (items.length > 1) {
+                  <button type="button" (click)="removeItem(i)" class="text-destructive hover:text-destructive/70">🗑️</button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Add Item Dropdown (from current, enhanced) -->
+        <div class="mt-4 w-full">
+          <label class="block text-sm font-medium text-label mb-1">Add Item:</label>
+          <select #addSelect (change)="onAddItemChange(addSelect.value); addSelect.selectedIndex = 0"
+                  class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary" [disabled]="selectedType() === ''">
+            <option value="">Add Item</option>
+            @for (item of filteredItems(); track trackItemOption($index, item)) {
+              <option [value]="item.description">
+                {{ item.description }} - ${{ item.price }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Totals Row (Right-Aligned) -->
+      <div class="flex justify-end">
+        <div class="w-48 text-right space-y-1 text-body">
+          <div>Subtotal: ${{ subtotal() | number:'1.1-1' }}</div>
+          <div>Total Tax ({{ vatRate * 100 }}%): ${{ vat() | number:'1.1-1' }}</div>
+          <div class="font-bold text-lg">Grand Total: ${{ grandTotal() | number:'1.1-1' }}</div>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" (click)="onCancel()" class="btn btn-destructive">Cancel</button>
+        <button type="submit" (click)="onSave()" [disabled]="!form.valid" class="btn btn-primary">Save Invoice</button>
+      </div>
+    </div>
+  </form>
+</div>

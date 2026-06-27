@@ -1,0 +1,12 @@
+<!-- src/app/features/documents/document-details/document-details.component.html (For view/download) -->
+
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-card p-6 rounded-lg shadow-lg max-w-lg w-full">
+    <h2 class="text-lg font-bold mb-4 text-foreground">{{ document.fileName }}</h2>
+    <p class="text-sm text-muted-foreground mb-2">Category: {{ document.category }}</p>
+    <p class="text-sm text-muted-foreground mb-2">Description: {{ document.description || 'N/A' }}</p>
+    <p class="text-sm text-muted-foreground mb-4">Uploaded: {{ document.uploadDate | date:'short' }}</p>
+    <a [href]="documentUrl()" target="_blank" class="bg-primary text-primary-foreground p-2 rounded hover:bg-primary/90 mr-2">Download/View</a>
+    <button (click)="close.emit()" class="bg-destructive text-destructive-foreground p-2 rounded hover:bg-destructive/90">Close</button>
+  </div>
+</div>

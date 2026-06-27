@@ -1,0 +1,18 @@
+@if (isLoading()) {
+  <div class="auth-loading">
+    <span class="auth-spinner"></span>
+    <span>Authenticating…</span>
+  </div>
+} @else {
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-logo">P</div>
+        <h1 class="auth-title">Protos Admin</h1>
+        <p class="auth-subtitle">Sign in to manage your workspace</p>
+      </div>
+      <amplify-authenticator [loginMechanisms]="['email']" class="block w-full">
+      </amplify-authenticator>
+    </div>
+  </div>
+}

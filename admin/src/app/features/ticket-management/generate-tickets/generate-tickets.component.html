@@ -1,0 +1,33 @@
+
+<!-- src/app/features/ticket-management/generate-tickets/generate-tickets.component.html -->
+
+<div class="ledger-card">
+  <div class="p-6 bg-card rounded-2xl border border-border max-w-md mx-auto w-full"> 
+    <div class="text-center">
+      <h3 class="page-title">Create Ticket</h3>
+      @if (errorMessage()) {
+        <div class="text-destructive mb-4">{{ errorMessage() }}</div>
+      }
+      @if (successMessage()) {
+        <div class="text-success mb-4">{{ successMessage() }}</div> 
+      }
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-label mb-1">*Title:</label>
+          <input formControlName="title" type="text" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-label mb-1">*Description:</label>
+          <textarea formControlName="description" class="w-full p-2 bg-background border border-border rounded-lg text-foreground h-24 focus:ring-2 focus:ring-primary"></textarea> 
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-label mb-1">*Estimated Date:</label>
+          <input formControlName="estimated" type="date" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary">Create</button> 
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

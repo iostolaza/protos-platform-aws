@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rental Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Phase 1: Quick Apply Form -->
+    <div class="max-w-lg mx-auto my-8 p-6 bg-white rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-center mb-6">Rental Application - Step 1: Basic Information</h1>
+        <form id="quick-apply-form" class="space-y-4" onsubmit="saveProgress(event, 'quick-apply')">
+            <div>
+                <label for="full-name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                <input type="text" id="full-name" name="full-name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                <input type="email" id="email" name="email" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="property-address" class="block text-sm font-medium text-gray-700">Property Address / Unit</label>
+                <input type="text" id="property-address" name="property-address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="move-in-date" class="block text-sm font-medium text-gray-700">Desired Move-in Date</label>
+                <input type="date" id="move-in-date" name="move-in-date" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="lease-term" class="block text-sm font-medium text-gray-700">Lease Term</label>
+                <select id="lease-term" name="lease-term" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="6 months">6 Months</option>
+                    <option value="12 months">12 Months</option>
+                    <option value="flexible">Flexible</option>
+                </select>
+            </div>
+            <div>
+                <label for="occupants" class="block text-sm font-medium text-gray-700">Number of Occupants</label>
+                <input type="number" id="occupants" name="occupants" min="1" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="income-range" class="block text-sm font-medium text-gray-700">Monthly Income Range</label>
+                <select id="income-range" name="income-range" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="0-2000">$0 - $2,000</option>
+                    <option value="2001-4000">$2,001 - $4,000</option>
+                    <option value="4001-6000">$4,001 - $6,000</option>
+                    <option value="6001+">$6,001+</option>
+                </select>
+            </div>
+            <div>
+                <label for="pets" class="block text-sm font-medium text-gray-700">Any Pets?</label>
+                <select id="pets" name="pets" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" onchange="togglePetDetails(this)">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                </select>
+                <textarea id="pet-details" name="pet-details" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm hidden" placeholder="Describe pets (type, number, etc.)"></textarea>
+            </div>
+            <div>
+                <label for="smoking" class="block text-sm font-medium text-gray-700">Smoking?</label>
+                <select id="smoking" name="smoking" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                </select>
+            </div>
+            <div class="text-sm text-gray-600">
+                <p><strong>Privacy Notice:</strong> Your information will be used solely for processing your rental application and will be stored securely in compliance with applicable privacy laws.</p>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Start Application</button>
+        </form>
+    </div>
+
+    <!-- Phase 2: Main Application Form -->
+    <div class="max-w-lg mx-auto my-8 p-6 bg-white rounded-lg shadow-md hidden" id="main-application">
+        <h1 class="text-2xl font-bold text-center mb-6">Rental Application - Step 2: Employment & Rental History</h1>
+        <form id="main-application-form" class="space-y-4" onsubmit="saveProgress(event, 'main-application')">
+            <h2 class="text-lg font-semibold">Employment & Income</h2>
+            <div>
+                <label for="employer" class="block text-sm font-medium text-gray-700">Current Employer / Occupation</label>
+                <input type="text" id="employer" name="employer" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="employer-contact" class="block text-sm font-medium text-gray-700">Employer Contact (Name, Phone, Email)</label>
+                <input type="text" id="employer-contact" name="employer-contact" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="employment-length" class="block text-sm font-medium text-gray-700">Length of Employment (Years)</label>
+                <input type="number" id="employment-length" name="employment-length" min="0" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="income" class="block text-sm font-medium text-gray-700">Monthly Income ($)</label>
+                <input type="number" id="income" name="income" min="0" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="other-income" class="block text-sm font-medium text-gray-700">Other Income Sources (Optional)</label>
+                <textarea id="other-income" name="other-income" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Describe any additional income sources"></textarea>
+            </div>
+
+            <h2 class="text-lg font-semibold">Rental History</h2>
+            <div>
+                <label for="current-address" class="block text-sm font-medium text-gray-700">Current Address</label>
+                <input type="text" id="current-address" name="current-address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="landlord-contact" class="block text-sm font-medium text-gray-700">Current Landlord Name & Contact</label>
+                <input type="text" id="landlord-contact" name="landlord-contact" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="tenancy-length" class="block text-sm font-medium text-gray-700">Length of Tenancy (Years)</label>
+                <input type="number" id="tenancy-length" name="tenancy-length" min="0" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="reason-moving" class="block text-sm font-medium text-gray-700">Reason for Moving</label>
+                <textarea id="reason-moving" name="reason-moving" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+            </div>
+            <div>
+                <label for="rent-amount" class="block text-sm font-medium text-gray-700">Rent Amount Paid ($)</label>
+                <input type="number" id="rent-amount" name="rent-amount" min="0" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+
+            <h2 class="text-lg font-semibold">Financial & Other</h2>
+            <div>
+                <label for="bank-name" class="block text-sm font-medium text-gray-700">Bank Name(s)</label>
+                <input type="text" id="bank-name" name="bank-name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="vehicle-info" class="block text-sm font-medium text-gray-700">Vehicle Information (Optional, if parking)</label>
+                <input type="text" id="vehicle-info" name="vehicle-info" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Make, Model, Year" />
+            </div>
+            <div>
+                <label for="emergency-contact" class="block text-sm font-medium text-gray-700">Emergency Contact (Name, Phone)</label>
+                <input type="text" id="emergency-contact" name="emergency-contact" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="documents" class="block text-sm font-medium text-gray-700">Upload Pay Stubs or ID</label>
+                <input type="file" id="documents" name="documents" multiple class="mt-1 block w-full text-sm text-gray-500" />
+            </div>
+            <div>
+                <label class="flex items-center">
+                    <input type="checkbox" id="background-consent" name="background-consent" required class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                    <span class="ml-2 text-sm text-gray-700">I consent to a background and credit check.</span>
+                </label>
+            </div>
+            <div class="text-sm text-gray-600">
+                <p><strong>Privacy Notice:</strong> Your information will be used to verify employment, rental history, and financial stability. We comply with the Fair Housing Act and protect your data per privacy laws.</p>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Continue Application</button>
+        </form>
+    </div>
+
+    <!-- Phase 3: Review & Consent Form -->
+    <div class="max-w-lg mx-auto my-8 p-6 bg-white rounded-lg shadow-md hidden" id="review-consent">
+        <h1 class="text-2xl font-bold text-center mb-6">Rental Application - Step 3: Review & Sign</h1>
+        <form id="review-consent-form" class="space-y-4" onsubmit="saveProgress(event, 'review-consent')">
+            <div>
+                <label class="flex items-center">
+                    <input type="checkbox" id="info-correct" name="info-correct" required class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                    <span class="ml-2 text-sm text-gray-700">I confirm all information provided is true and correct.</span>
+                </label>
+            </div>
+            <div>
+                <label class="flex items-center">
+                    <input type="checkbox" id="terms-acknowledge" name="terms-acknowledge" required class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                    <span class="ml-2 text-sm text-gray-700">I acknowledge the terms of the rental application.</span>
+                </label>
+            </div>
+            <div>
+                <label for="signature" class="block text-sm font-medium text-gray-700">Digital Signature (Type Your Name)</label>
+                <input type="text" id="signature" name="signature" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label class="flex items-center">
+                    <input type="checkbox" id="full-consent" name="full-consent" required class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                    <span class="ml-2 text-sm text-gray-700">I consent to credit, background, and eviction report checks.</span>
+                </label>
+            </div>
+            <div>
+                <label for="payment-link" class="block text-sm font-medium text-gray-700">Application Fee (if applicable)</label>
+                <a href="#" id="payment-link" class="text-indigo-600 hover:underline">Click here to pay</a>
+            </div>
+            <div>
+                <label for="move-in-confirm" class="block text-sm font-medium text-gray-700">Confirm Move-in Date</label>
+                <input type="date" id="move-in-confirm" name="move-in-confirm" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div>
+                <label for="comments" class="block text-sm font-medium text-gray-700">Comments or Special Requests</label>
+                <textarea id="comments" name="comments" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Any additional information"></textarea>
+            </div>
+            <div class="text-sm text-gray-600">
+                <p><strong>Privacy Notice:</strong> Your information is secure and used only for application processing, in compliance with the Fair Housing Act and privacy regulations. We may contact your employer or landlord for verification.</p>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Submit Application</button>
+        </form>
+    </div>
+
+    <script>
+        // Auto-save progress to localStorage
+        function saveProgress(event, formId) {
+            event.preventDefault();
+            const form = document.getElementById(`${formId}-form`);
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => { data[key] = value; });
+            localStorage.setItem(formId, JSON.stringify(data));
+
+            // Navigate to next form
+            if (formId === 'quick-apply') {
+                document.getElementById('quick-apply-form').parentElement.classList.add('hidden');
+                document.getElementById('main-application').classList.remove('hidden');
+            } else if (formId === 'main-application') {
+                document.getElementById('main-application').classList.add('hidden');
+                document.getElementById('review-consent').classList.remove('hidden');
+            } else {
+                alert('Application submitted successfully!');
+                localStorage.clear(); // Clear saved data on final submission
+            }
+        }
+
+        // Toggle pet details textarea visibility
+        function togglePetDetails(select) {
+            const petDetails = document.getElementById('pet-details');
+            petDetails.classList.toggle('hidden', select.value === 'no');
+            petDetails.required = select.value === 'yes';
+        }
+
+        // Load saved data on page load
+        window.onload = function() {
+            ['quick-apply', 'main-application', 'review-consent'].forEach(formId => {
+                const savedData = localStorage.getItem(formId);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    const form = document.getElementById(`${formId}-form`);
+                    Object.keys(data).forEach(key => {
+                        const input = form.querySelector(`[name="${key}"]`);
+                        if (input) {
+                            if (input.type === 'checkbox') {
+                                input.checked = data[key] === 'on';
+                            } else {
+                                input.value = data[key];
+                            }
+                        }
+                    });
+                    if (formId === 'quick-apply' && data['pets'] === 'yes') {
+                        document.getElementById('pet-details').classList.remove('hidden');
+                    }
+                }
+            });
+        };
+    </script>
+</body>
+</html> 

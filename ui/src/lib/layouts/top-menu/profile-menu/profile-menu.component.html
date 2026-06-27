@@ -1,0 +1,44 @@
+<div [@openClose]="isOpen() ? 'open' : 'closed'"
+     class="bg-card shadow-xl border-muted absolute z-[999] mt-3 w-72 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border py-4 ring-1 ring-black/5 dark:ring-white/10 transition-all duration-200 right-0 overflow-hidden">
+  <!-- User Info Header -->
+  <div class="flex items-center px-5 pb-4">
+    <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/40 flex-shrink-0">
+      <img
+        class="w-full h-full object-cover"
+        [src]="user()?.profileImageUrl || '/assets/profile/avatar-default.svg'"
+        alt="Profile Image"
+        aria-label="User profile image"
+      />
+    </div>
+    <div class="ml-3 overflow-hidden">
+      <div class="font-semibold text-foreground text-base leading-tight">
+        {{ fullName() }}
+      </div>
+      <div class="text-muted-foreground text-sm truncate mt-0.5">
+        {{ user()?.email || 'my_name@email.com' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="border-border border-t mx-5"></div>
+
+  <!-- Menu Items -->
+  <ul class="mt-2 px-3 flex flex-col">
+    @for (item of profileMenu(); track $index) {
+      <li class="nav-hover rounded-lg">
+        <button
+          type="button"
+          (click)="onMenuItemClick(item)"
+          class="text-foreground hover:text-primary hover:bg-muted inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium focus:outline-none focus:bg-muted transition-colors"
+        >
+          <svg-icon
+            [src]="getIconPath(item.icon)"
+            [svgClass]="'h-5 w-5 text-foreground'"
+          ></svg-icon>
+          {{ item.title }}
+        </button>
+      </li>
+    }
+  </ul>
+</div>

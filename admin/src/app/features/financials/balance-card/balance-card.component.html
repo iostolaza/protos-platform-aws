@@ -1,0 +1,19 @@
+  
+  <!-- src/app/features/financials/balance-card/balance-card.component.html -->
+  
+<div class="ledger-card">
+  <h3 class="page-title text-3xl">Your Balance</h3> <!-- UPDATED: Larger for emphasis -->
+  <p [ngClass]="{'balance-negative': unpaid() > 0, 'balance-positive': unpaid() < 0, 'balance-zero': unpaid() === 0}" class="text-3xl font-bold mb-3">$ {{ unpaid() | number:'1.2-2' }}</p>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+    <p class="text-sm font-medium text-label">Paid Recent: <span class="text-body">$ {{ paidRecent() | number:'1.2-2' }}</span></p>
+    <p class="text-sm font-medium text-label">Paid Last Year: <span class="text-body">$ {{ paidLastYear() | number:'1.2-2' }}</span></p>
+  </div>
+  <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <div class="relative w-full sm:w-auto">
+      <label for="payAmount" class="sr-only">Amount to pay</label>
+      <input id="payAmount" type="number" [(ngModel)]="payAmount" placeholder="Amount to pay" class="w-full p-2 bg-background border border-border rounded-lg text-body focus:ring-2 focus:ring-primary transition">
+    </div>
+    <button (click)="payPartial()" class="btn btn-primary w-full sm:w-auto">Pay Partial</button>
+    <button (click)="payFull()" class="btn btn-success w-full sm:w-auto">Pay Full</button> <!-- UPDATED: btn-success for positive action -->
+  </div>
+</div>

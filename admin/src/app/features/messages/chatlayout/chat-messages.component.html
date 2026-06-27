@@ -1,0 +1,16 @@
+<!-- src/app/features/messages/chatlayout/chat-messages.component.html -->
+
+<div class="flex-1 overflow-y-auto p-4 space-y-4 bg-background min-h-0">
+  <div *ngFor="let message of messages(); trackBy: trackById" class="flex flex-col gap-1" [ngClass]="{'items-end': message.isSelf}"> <!-- Used trackById for uniqueness -->
+    <div class="flex items-center gap-2">
+      <img *ngIf="message.senderAvatar" [src]="message.senderAvatar" alt="Sender" class="w-8 h-8 rounded-full" />
+      <span class="text-sm text-muted-foreground">{{ message.sender }}</span>
+    </div>
+    <div class="max-w-xs rounded-lg p-3" [ngClass]="{'bg-primary/80 text-primary-foreground': 
+    message.isSelf, 'bg-white text-black dark:bg-gray-700 dark:text-white': !message.isSelf}">
+      <p>{{ message.text }}</p>
+      <span class="text-xs text-muted-foreground">{{ message.timestamp | date:'shortTime' }}</span>
+      <span *ngIf="message.read" class="text-xs text-success"> Read</span> 
+    </div>
+  </div>
+</div>

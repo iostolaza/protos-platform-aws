@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Onboarding - Protos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="max-w-2xl mx-auto my-8 p-8 bg-white rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">Welcome to Protos, {{firstName}}!</h1>
+        <p class="text-center text-lg mb-6">You've been invited to join our team as an <strong>{{role}}</strong>.</p>
+        <p class="text-center text-xl font-bold text-indigo-600 mb-8">Temporary Password: {{temporaryPassword}}</p>
+        <p class="text-center mb-10">Please complete your employee onboarding below.</p>
+
+        <form class="space-y-8">
+            <section>
+                <h2 class="text-2xl font-semibold mb-4">Personal Information</h2>
+                <input type="text" placeholder="Full Legal Name" required class="w-full border rounded px-4 py-2 mb-3" />
+                <input type="date" placeholder="Date of Birth" class="w-full border rounded px-4 py-2 mb-3" />
+                <input type="text" placeholder="Social Security Number (or equiv)" class="w-full border rounded px-4 py-2 mb-3" />
+                <input type="tel" placeholder="Personal Phone" required class="w-full border rounded px-4 py-2 mb-3" />
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-semibold mb-4">Emergency Contact</h2>
+                <input type="text" placeholder="Name" required class="w-full border rounded px-4 py-2 mb-3" />
+                <input type="tel" placeholder="Phone" required class="w-full border rounded px-4 py-2 mb-3" />
+                <input type="text" placeholder="Relationship" class="w-full border rounded px-4 py-2 mb-3" />
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-semibold mb-4">Employment Details</h2>
+                <input type="date" placeholder="Preferred Start Date" class="w-full border rounded px-4 py-2 mb-3" />
+                <select class="w-full border rounded px-4 py-2 mb-3">
+                    <option>Full-Time</option><option>Part-Time</option><option>Contract</option>
+                </select>
+                <textarea placeholder="Relevant Experience or Notes" class="w-full border rounded px-4 py-2 mb-3 h-32"></textarea>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-semibold mb-4">Direct Deposit (Optional Now)</h2>
+                <input type="text" placeholder="Bank Name" class="w-full border rounded px-4 py-2 mb-3" />
+                <input type="text" placeholder="Routing Number" class="w-full border rounded px-4 py-2 mb-3" />
+                <input type="text" placeholder="Account Number" class="w-full border rounded px-4 py-2 mb-3" />
+            </section>
+
+            <div class="text-center">
+                <button type="submit" class="bg-indigo-600 text-white px-8 py-4 rounded-lg text-lg hover:bg-indigo-700">
+                    Submit Onboarding Form
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

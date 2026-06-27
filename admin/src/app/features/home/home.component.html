@@ -1,0 +1,19 @@
+
+<!-- src/app/features/home/home.component.html -->
+
+<!-- NEW: Uniform wrapper (removes pt-[5%]; dynamic width/height via utility) -->
+<div class="page-wrapper">
+  <!-- Top Greeting Card -->
+  <app-home-overview></app-home-overview>
+
+ <!-- Overview Cards -->
+  <div class="grid grid-cols-[repeat(3,minmax(150px,1fr))] gap-4">
+    <app-messages-overview class="rounded-lg col-span-1 row-span-1 aspect-square"></app-messages-overview>
+    <app-contacts-overview class="col-span-1 row-span-1"></app-contacts-overview>
+    <app-tickets-overview class="col-span-1 row-span-2"></app-tickets-overview>
+    <app-activity-overview class="col-span-2 row-span-1 aspect-[2/1]"></app-activity-overview>
+    <app-documents-overview class="col-start-1 col-span-1 row-start-3 row-span-1 aspect-square"></app-documents-overview>
+    <app-financial-overview class="col-start-1 col-span-1 row-start-4 row-span-1 aspect-square"></app-financial-overview>
+    <app-profile-overview class="col-start-2 col-span-2 row-start-3 row-span-2"></app-profile-overview>
+  </div>
+</div>

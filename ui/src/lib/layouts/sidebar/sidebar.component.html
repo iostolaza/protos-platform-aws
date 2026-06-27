@@ -1,0 +1,29 @@
+<nav
+  [ngClass]="menuService.showSideBar ? 'w-[200px] xl:w-[250px]' : 'w-[60px]'"
+  class="bg-card hidden h-full flex-col justify-between pt-3 transition-all duration-300 lg:flex overflow-hidden"
+>
+  <div class="overflow-hidden">
+    <!-- Header row -->
+    <div
+      [ngClass]="menuService.showSideBar ? 'justify-between' : 'justify-center'"
+      class="mx-4 mb-2 flex h-9 items-center"
+    >
+      @if (menuService.showSideBar) {
+        <div class="flex items-center">
+          <b class="text-heading ps-2 ml-1 grow text-sm">Navigation</b>
+        </div>
+      }
+      <button
+        (click)="toggleSidebar()"
+        class="nav-hover text-foreground flex items-center justify-center rounded-md p-2 transition-all duration-200 focus:outline-none"
+        [ngClass]="{ 'rotate-180': !menuService.showSideBar }"
+      >
+        <svg-icon src="assets/icons/heroicons/outline/arrow-left.svg" svgClass="h-5 w-5"></svg-icon>
+      </button>
+    </div>
+
+    <div class="h-full overflow-auto px-4">
+      <lib-sidebar-menu></lib-sidebar-menu>
+    </div>
+  </div>
+</nav>

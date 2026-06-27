@@ -1,0 +1,45 @@
+
+<!-- src/app/features/ticket-management/edit-ticket/edit-ticket.component.html -->
+
+<div class="ledger-card max-w-md mx-auto w-full"> 
+  <h3 class="page-title">Edit Ticket: {{ ticket.title }}</h3>
+  @if (errorMessage()) {
+    <div class="text-destructive mb-4">{{ errorMessage() }}</div>
+  }
+  <form [formGroup]="form" (ngSubmit)="updateTicket()" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium text-label mb-1">Title:</label> 
+      <input formControlName="title" type="text" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-label mb-1">Description:</label>
+      <textarea formControlName="description" class="w-full p-2 bg-background border border-border rounded-lg text-foreground h-24 focus:ring-2 focus:ring-primary"></textarea> 
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-label mb-1">Status: </label>
+      <select formControlName="status" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary">
+        <option value="OPEN">Open</option>
+        <option value="QUEUED">Queued</option> 
+        <option value="IN_PROGRESS">In Progress</option>
+        <option value="CLOSED">Closed</option>
+      </select> 
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-label mb-1">Assignee:</label>
+      <select formControlName="assigneeId" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary">
+        <option value="">Select Assignee</option>
+        @for (user of users(); track user.cognitoId) {
+          <option [value]="user.cognitoId">{{ user.firstName }} {{ user.lastName }}</option>
+        }
+      </select> 
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-label mb-1">Estimated Date:</label>
+      <input formControlName="estimated" type="date" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+    </div>
+    <div class="flex justify-end gap-2">
+      <button type="submit" class="btn btn-primary">Update</button> 
+      <button type="button" (click)="cancel.emit()" class="btn btn-neutral">Cancel</button> 
+    </div>
+  </form>
+</div>

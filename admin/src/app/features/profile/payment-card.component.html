@@ -1,0 +1,43 @@
+
+<!-- src/app/features/profile/payment-card.component.html -->
+
+<div class="profile-card">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">Payment Information</h2>
+  @if (loading()) {
+    <p class="text-muted">Loading payments...</p>
+  } @else {
+    <div class="mb-4">
+      @for (payment of payments(); track payment.id) {
+        <div class="flex justify-between items-center mb-2 border-b border-border pb-2">
+          <span class="text-body">{{ payment.type }}: {{ payment.name }}</span>
+          <div>
+            <button (click)="editPayment(payment)" class="text-primary mr-2">Edit</button>
+            <button (click)="deletePayment(payment.id)" class="text-destructive">Delete</button>
+          </div>
+        </div>
+      } @empty {
+        <p class="text-muted">No payment methods added.</p>
+      }
+    </div>
+    @if (editMode()) {
+      <form [formGroup]="form" (ngSubmit)="savePayment()">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-label">Type</label>
+            <input formControlName="type" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter payment type (e.g., Credit Card)" />
+          </div>
+          <div>
+            <label class="block text-sm text-label">Name</label>
+            <input formControlName="name" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter payment name (e.g., Visa ****1234)" />
+          </div>
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" (click)="toggleEdit()" class="btn btn-neutral">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    } @else {
+      <button (click)="toggleEdit(true)" class="btn btn-primary">Add Payment</button>
+    }
+  }
+</div>

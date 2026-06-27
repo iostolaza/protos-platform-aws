@@ -1,0 +1,53 @@
+
+<!-- src/app/features/documents/documents.component.html -->
+
+<div class="page-wrapper flex flex-col gap-6">
+  <div class="ledger-card">
+    <h3 class="page-title text-primary">Document Management</h3>
+    <p class="text-lg text-body">Upload and view your documents</p>
+    
+    <!-- Summary Pills -->
+    <div class="mb-4 flex gap-4 py-5">
+      <div class="flex-1 rounded-md bg-blue-100 px-4 py-2 text-center">
+        <div class="text-2xl font-bold text-blue-800">{{ documents().length }}</div>
+        <div class="text-lg text-blue-600">Total Documents</div>
+      </div>
+      <div class="flex-1 rounded-md bg-orange-100 px-4 py-2 text-center">
+        <div class="text-2xl font-bold text-orange-800">{{ recentDocuments().length }}</div>
+        <div class="text-lg text-orange-600">Recent Documents</div>
+      </div>
+      <div class="flex-1 rounded-md bg-green-100 px-4 py-2 text-center">
+        <div class="text-2xl font-bold text-green-800">{{ categoryCounts()['statements'] || 0 }}</div>
+        <div class="text-lg text-green-600">Statements</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Document Card -->
+  <app-generate-documents></app-generate-documents>
+
+  <!-- Document Previews -->
+  <div class="ledger-card"> 
+    <h3 class="page-title">Documents</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (doc of documents(); track doc.id) {
+        <div class="rounded-md bg-background border border-border p-4 hover:shadow-md transition-shadow">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-medium text-foreground truncate">{{ doc.fileName }}</span>
+            <span class="text-sm px-2 py-1 rounded-full bg-gray-200 text-gray-800">{{ doc.category }}</span>
+          </div>
+          <div class="text-sm text-muted-foreground mb-2">Uploaded: {{ doc.uploadDate ? (doc.uploadDate | date:'shortDate') : 'N/A' }}</div>
+          <button (click)="viewDetails(doc)" class="text-primary hover:text-primary/80 text-sm">View Details</button>
+        </div>
+      } @empty {
+        <div class="text-center text-muted-foreground col-span-full">No documents available.</div>
+      }
+    </div>
+  </div>
+
+  <!-- Document Details Card -->
+  <app-document-details *ngIf="selectedDocument()" [document]="selectedDocument()!" (close)="selectedDocument.set(null)"></app-document-details>
+
+  <!-- Document List Card (Table with search/filter) -->
+  <app-document-list (filterCategory)="applyFilter($event)"></app-document-list>
+</div>

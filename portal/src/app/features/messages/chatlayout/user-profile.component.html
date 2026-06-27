@@ -1,0 +1,10 @@
+<!-- src/app/features/messages/chatlayout/user-profile.component.html -->
+ 
+<div *ngIf="user(); else loading" class="flex items-center border-b py-3 gap-2"> 
+  <img [src]="user()?.profileImageUrl || 'assets/profile/avatar-default.svg'" alt="Profile" class="w-10 h-10 rounded-full" />
+  <div>
+    <span class="text-foreground font-medium">{{ user()?.firstName }} {{ user()?.lastName }}</span>
+    <span class="text-sm text-muted-foreground block">{{ truncatedEmail() }}</span>
+  </div>
+</div>
+<ng-template #loading>Loading profile...</ng-template>

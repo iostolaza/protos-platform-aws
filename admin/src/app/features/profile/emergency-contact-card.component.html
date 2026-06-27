@@ -1,0 +1,46 @@
+
+<!-- src/app/features/profile/emergency-contact-card.component.html -->
+ 
+<div class="profile-card">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">Emergency Contact</h2>
+  @if (editMode()) {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-label">Name</label>
+          <input formControlName="name" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter name" />
+        </div>
+        <div>
+          <label class="block text-sm text-label">Phone</label>
+          <input formControlName="phone" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter phone" />
+        </div>
+        <div>
+          <label class="block text-sm text-label">Email</label>
+          <input formControlName="email" type="email" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter email" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm text-label">Address</label>
+          <input formControlName="address" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter address" />
+        </div>
+      </div>
+      <div class="mt-4 flex justify-end gap-2">
+        <button type="button" (click)="toggleEdit()" class="btn btn-neutral">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  } @else {
+    @if (user?.emergencyContact) {
+      <div class="grid grid-cols-2 gap-4 text-body">
+        <div><strong class="text-label">Name: </strong> <span class="text-body">{{ user?.emergencyContact?.name || 'Not set' }}</span></div>
+        <div><strong class="text-label">Phone: </strong> <span class="text-body">{{ user?.emergencyContact?.phone || 'Not set' }}</span></div>
+        <div><strong class="text-label">Email: </strong> <span class="text-body">{{ user?.emergencyContact?.email || 'Not set' }}</span></div>
+        <div class="col-span-2"><strong class="text-label">Address: </strong> <span class="text-body">{{ user?.emergencyContact?.address || 'Not set' }}</span></div>
+      </div>
+    } @else {
+      <p class="text-muted">No emergency contact set.</p>
+    }
+    <div class="mt-4 flex justify-start">
+      <button (click)="toggleEdit()" class="btn btn-primary">Edit</button>
+    </div>
+  }
+</div>

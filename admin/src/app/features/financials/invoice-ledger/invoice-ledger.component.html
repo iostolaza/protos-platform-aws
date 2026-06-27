@@ -1,0 +1,42 @@
+
+<!-- src/app/features/financials/invoice-ledger/invoice-ledger.component.html -->
+ 
+<div class="ledger-card">
+  <h3 class="page-title">Invoice Ledger</h3>
+  <div class="relative overflow-x-auto">
+    <table class="w-full table-auto">
+      <thead class="text-xs uppercase text-muted-foreground">
+        <tr>
+          <th class="py-3 text-left">Date</th>
+          <th class="py-3 text-left">Invoice #</th>
+          <th class="py-3 text-left">Amount</th>
+          <th class="py-3 text-left">Status</th>
+          <th class="py-3 text-left">Description</th>
+          <th class="py-3 text-left">Bill To</th>
+          <th class="py-3 text-left">Details</th>
+        </tr>
+      </thead>
+      <tbody class="text-body">
+        @for (inv of invoices(); track inv.invoiceId) {
+          <tr class="table-row-hover"> <!-- UPDATED: table-row-hover for consistent bg -->
+            <td class="py-3 text-left">{{ inv.date }}</td>
+            <td class="py-3 text-left">{{ inv.invoiceNumber }}</td>
+            <td class="py-3 text-left">${{ inv.grandTotal | number:'1.1-1' }}</td>
+            <td class="py-3 text-left">{{ inv.status }}</td>
+            <td class="py-3 text-left">{{ inv.description || 'N/A' }}</td>
+            <td class="py-3 text-left">{{ billToNames().get(inv.billToId) || 'Unknown' }}</td>
+            <td class="py-3 text-right flex justify-end gap-2 pr-4">
+              <button (click)="view.emit(inv)" class="rounded-full bg-transparent p-1 hover:bg-info/10">
+                <svg-icon [src]="getIconPath('eye')" svgClass="h-4 w-4"></svg-icon>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="py-3 text-center text-muted">No invoices found</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

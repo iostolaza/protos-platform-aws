@@ -1,0 +1,453 @@
+import { Injectable } from '@angular/core';
+import { UserService } from './user.service';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '@amplify-schema';
+import { from, Observable, throwError, of, forkJoin } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { RoleService } from './role.service';
+import { AuthService } from './auth.service';
+import { Transaction, Invoice, InvoiceItem, Account } from '../models/financial.model';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+@Injectable({ providedIn: 'root' })
+export class FinancialService {
+  private client = generateClient<Schema>();
+  private taxRate = 0.0825;
+
+  constructor(
+    private roleService: RoleService,
+    private authService: AuthService,
+    private userService: UserService
+  ) {}
+
+  // TODO: adapt to new financial service
+  // The ported timesheet entry UI expects a charge-code-bearing Account model.
+  // The merged schema has no Account model yet, so this returns an empty list
+  // until the charge-code → account mapping is re-implemented.
+  async listAccounts(): Promise<Account[]> {
+    return [];
+  }
+
+  private getLastBalance(accountId: string): Observable<number> {
+    return from(this.client.models.Transaction.list({
+      filter: { accountId: { eq: accountId } },
+    })).pipe(
+      map(res => {
+        const transactions = res.data ?? [];
+        if (transactions.length === 0) return 0;
+        const filtered = transactions.filter(t => t.createdAt != null);
+        if (filtered.length === 0) return 0;
+        const sorted = filtered.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+        return sorted[0]?.balance ?? 0;
+      })
+    );
+  }
+
+  private async canViewTransaction(trans: Transaction): Promise<boolean> {
+    if (this.roleService.isAdmin$() || this.roleService.isManager$()) return true;
+    const currentUser = this.userService.user();
+    return currentUser?.cognitoId === trans.accountId;
+  }
+
+  createTransaction(transData: Partial<Transaction> & { accountId: string }): Observable<Transaction> {
+    const canCreate = this.roleService.isAdmin$() || this.roleService.isManager$();
+    if (!canCreate) {
+      return throwError(() => new Error('Unauthorized'));
+    }
+
+    return from(this.getLastBalance(transData.accountId)).pipe(
+      switchMap(lastBalance => {
+        const computed: Transaction = {
+          transactionId: crypto.randomUUID(),
+          accountId: transData.accountId,
+          type: transData.type ?? 'charge',
+          date: transData.date || new Date().toISOString().split('T')[0],
+          docNumber: transData.docNumber ?? undefined,
+          description: transData.description ?? undefined,
+          chargeAmount: transData.chargeAmount ?? 0,
+          paymentAmount: transData.paymentAmount ?? 0,
+          balance: (lastBalance || 0) + (transData.chargeAmount || 0) - (transData.paymentAmount || 0),
+          confirmationNumber: transData.confirmationNumber ?? undefined,
+          method: transData.method ?? undefined,
+          status: transData.status ?? 'pending',
+          category: transData.category ?? undefined,
+          recurringId: transData.recurringId ?? undefined,
+          reconciled: transData.reconciled ?? false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          tenantId: transData.tenantId ?? undefined,
+          building: transData.building ?? undefined,
+        };
+        return from(this.client.models.Transaction.create(computed)).pipe(
+          map(res => {
+            if (res.errors) throw new Error(res.errors.map(e => e.message).join(', '));
+            return res.data as Transaction;
+          })
+        );
+      }),
+      catchError(err => throwError(() => new Error(`Create failed: ${err.message}`)))
+    );
+  }
+
+  listTransactions(filter: { accountId?: string; startDate?: string; endDate?: string; limit?: number } = {}): Observable<Transaction[]> {
+    const isManager = this.roleService.isManager$();
+    const baseFilter = isManager ? {} : (filter.accountId ? { accountId: { eq: filter.accountId } } : {});
+    const conditions: any[] = [];
+    if (filter.startDate) conditions.push({ date: { ge: filter.startDate } });
+    if (filter.endDate) conditions.push({ date: { le: filter.endDate } });
+    const fullFilter = conditions.length > 0 ? { and: [baseFilter, ...conditions] } : baseFilter;
+
+    return from(this.client.models.Transaction.list({
+      filter: fullFilter,
+      limit: filter.limit || 100
+    })).pipe(
+      switchMap(res => from(Promise.all((res.data ?? []).map(async trans => {
+        const canView = await this.canViewTransaction(trans as Transaction);
+        return canView ? trans as Transaction : null;
+      })))),
+      map(filtered => filtered.filter(t => t !== null) as Transaction[])
+    );
+  }
+
+  getTransaction(transactionId: string): Observable<Transaction | null> {
+    return from(this.client.models.Transaction.get({ transactionId })).pipe(
+      switchMap(res => from(this.canViewTransaction(res.data as Transaction)).pipe(
+        map(can => can ? res.data as Transaction : null)
+      ))
+    );
+  }
+
+  updateTransaction(transactionId: string, updates: Partial<Transaction>): Observable<Transaction> {
+    if (!this.roleService.isAdmin$()) {
+      return throwError(() => new Error('Unauthorized'));
+    }
+
+    return from(this.client.models.Transaction.update({ transactionId, ...updates })).pipe(
+      map(res => {
+        if (res.errors) throw new Error(res.errors.map(e => e.message).join(', '));
+        return res.data as Transaction;
+      })
+    );
+  }
+
+  deleteTransaction(transactionId: string): Observable<void> {
+    if (!this.roleService.isAdmin$()) {
+      return throwError(() => new Error('Unauthorized'));
+    }
+
+    return from(this.client.models.Transaction.delete({ transactionId })).pipe(
+      map(() => undefined)
+    );
+  }
+
+  subscribeNewTransactions(accountId: string): Observable<Transaction[]> {
+    const isManager = this.roleService.isManager$();
+    const filter = isManager ? {} : { accountId: { eq: accountId } };
+
+    return this.client.models.Transaction.observeQuery({ filter }).pipe(
+      switchMap(snapshot => from(Promise.all(snapshot.items.map(async (trans: any) => {
+        const canView = await this.canViewTransaction(trans);
+        return canView ? trans as Transaction : null;
+      })))),
+      map(filtered => filtered.filter(t => t !== null) as Transaction[])
+    );
+  }
+
+  forecastBalance(accountId: string): Observable<number> {
+    return of(0);
+  }
+
+  getContacts(): Observable<Schema['User']['type'][]> {
+    return from(this.authService.getUserId()).pipe(
+      switchMap(userId => {
+        if (!userId) throw new Error('No current user');
+        return from(this.client.models.Friend.list({
+          filter: { ownerCognitoId: { eq: userId } },
+          selectionSet: ['friend.cognitoId', 'friend.firstName', 'friend.lastName', 'friend.email', 'friend.address.*'],
+          limit: 100
+        }));
+      }),
+      map(res => res.data.map(f => f.friend as Schema['User']['type'])),
+      catchError(err => throwError(() => new Error(`Contacts fetch failed: ${err.message}`)))
+    );
+  }
+
+  createInvoice(invoiceData: Partial<Invoice> & { items: Partial<InvoiceItem>[] }): Observable<Invoice> {
+    const canCreate = this.roleService.isAdmin$() || this.roleService.isManager$();
+    if (!canCreate) {
+      return throwError(() => new Error('Unauthorized'));
+    }
+
+    return from(this.authService.getUserId()).pipe(
+      switchMap(userId => {
+        if (!userId) throw new Error('No current user');
+
+        const invoiceId = crypto.randomUUID();
+        const invoiceNumber = `INV-${invoiceId.slice(0, 8).toUpperCase()}`;
+        const now = new Date().toISOString();
+
+        const computedInvoice = {
+          invoiceId,
+          invoiceNumber,
+          billFromId: userId,
+          billToId: invoiceData.billToId ?? '',
+          date: invoiceData.date || new Date().toISOString().split('T')[0],
+          status: 'pending' as const,
+          fromAddress: invoiceData.fromAddress ?? '',
+          toAddress: invoiceData.toAddress ?? '',
+          description: invoiceData.description ?? '',
+          subtotal: invoiceData.subtotal ?? 0,
+          tax: invoiceData.tax ?? 0,
+          grandTotal: invoiceData.grandTotal ?? 0,
+          createdAt: now,
+          updatedAt: now,
+          tenantId: invoiceData.tenantId ?? undefined,
+          building: invoiceData.building ?? undefined,
+        };
+
+        return from(this.client.models.Invoice.create(computedInvoice)).pipe(
+          map(res => {
+            if (res.errors) throw new Error(res.errors.map(e => e.message).join(', '));
+            const invoice = res.data as unknown as Invoice;
+            invoice.items = [];
+            return invoice;
+          }),
+          switchMap(invoice => {
+            const itemCreates = invoiceData.items.map(item => {
+              const itemId = crypto.randomUUID();
+              return this.client.models.InvoiceItem.create({
+                invoiceItemId: itemId,
+                invoiceId: invoice.invoiceId,
+                name: item.name ?? '',
+                unitPrice: item.unitPrice ?? 0,
+                units: item.units ?? 1,
+                total: item.total ?? 0,
+              });
+            });
+            return from(Promise.all(itemCreates)).pipe(
+              map(results => {
+                invoice.items = results.map(r => r.data as InvoiceItem);
+                return invoice;
+              })
+            );
+          }),
+          switchMap(invoice => {
+            const transData: Partial<Transaction> & { accountId: string } = {
+              accountId: invoice.billToId,
+              type: 'charge',
+              date: invoice.date,
+              docNumber: invoice.invoiceNumber,
+              description: `Invoice: ${invoice.description || 'N/A'}`,
+              chargeAmount: invoice.grandTotal,
+              paymentAmount: 0,
+              status: 'pending',
+              tenantId: invoice.tenantId ?? undefined,
+              building: invoice.building ?? undefined,
+            };
+            return this.createTransaction(transData).pipe(map(() => invoice));
+          })
+        );
+      })
+    );
+  }
+
+  getInvoice(invoiceId: string): Observable<Invoice | null> {
+    return from(this.client.models.Invoice.get({ invoiceId })).pipe(
+      map(res => res.data as unknown as Invoice | null),
+      switchMap(invoice => {
+        if (!invoice) return of(null);
+        invoice.items = [];
+        return from(this.client.models.InvoiceItem.list({ filter: { invoiceId: { eq: invoiceId } } })).pipe(
+          map(itemsRes => {
+            invoice.items = itemsRes.data as InvoiceItem[];
+            return invoice;
+          })
+        );
+      })
+    );
+  }
+
+  updateInvoice(invoiceId: string, updates: Partial<Invoice> & { items: Partial<InvoiceItem>[] }): Observable<Invoice> {
+    if (!this.roleService.isAdmin$()) {
+      return throwError(() => new Error('Unauthorized'));
+    }
+
+    return from(this.getInvoice(invoiceId)).pipe(
+      switchMap(existing => {
+        if (!existing) throw new Error('Invoice not found');
+        const now = new Date().toISOString();
+        const computed = {
+          ...existing,
+          ...updates,
+          updatedAt: now,
+        };
+        return from(this.client.models.Invoice.update(computed)).pipe(
+          map(res => res.data as unknown as Invoice),
+          switchMap(updated => {
+            const deleteOld = existing.items?.map(item => 
+              this.client.models.InvoiceItem.delete({ invoiceItemId: item.invoiceItemId })
+            ) || [];
+            return from(Promise.all(deleteOld)).pipe(
+              switchMap(() => {
+                const createNew = updates.items.map(item => {
+                  const itemId = crypto.randomUUID();
+                  return this.client.models.InvoiceItem.create({
+                    invoiceItemId: itemId,
+                    invoiceId,
+                    name: item.name ?? '',
+                    unitPrice: item.unitPrice ?? 0,
+                    units: item.units ?? 1,
+                    total: item.total ?? 0,
+                  });
+                });
+                return from(Promise.all(createNew)).pipe(
+                  map(results => {
+                    updated.items = results.map(r => r.data as InvoiceItem);
+                    return updated;
+                  })
+                );
+              })
+            );
+          })
+        );
+      })
+    );
+  }
+
+  sendInvoice(invoiceId: string): Observable<Invoice> {
+    if (!this.roleService.isAdmin$()) {
+      return throwError(() => new Error('Unauthorized'));
+    }
+
+    return from(this.client.models.Invoice.update({ invoiceId, status: 'open' })).pipe(
+      map(res => res.data as unknown as Invoice)
+    );
+  }
+
+  listInvoices(filter: { limit?: number } = {}): Observable<Invoice[]> {
+    const currentUser = this.userService.user();
+    if (!currentUser?.cognitoId) {
+      return throwError(() => new Error('No current user'));
+    }
+
+    const isAdmin = this.roleService.isAdmin$();
+    const queryFilter = isAdmin ? {} : { billToId: { eq: currentUser.cognitoId } };
+
+    return from(this.client.models.Invoice.list({ filter: queryFilter, limit: filter.limit || 100 })).pipe(
+      map(res => res.data as unknown as Invoice[]),
+      switchMap(invoices => {
+        const itemFetches = invoices.map(inv => 
+          from(this.client.models.InvoiceItem.list({ filter: { invoiceId: { eq: inv.invoiceId } } })).pipe(
+            map(itemsRes => {
+              inv.items = itemsRes.data as InvoiceItem[];
+              return inv;
+            })
+          )
+        );
+        return forkJoin(itemFetches.length ? itemFetches : [of([])]).pipe(
+          map(() => invoices.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
+        );
+      })
+    );
+  }
+
+  getCurrentBalance(accountId: string): Observable<number> {
+    const isManager = this.roleService.isManager$();
+    if (isManager) {
+      return this.listTransactions({}).pipe(
+        map(trans => trans.reduce((sum, t) => sum + t.balance, 0))
+      );
+    } else {
+      return this.getLastBalance(accountId);
+    }
+  }
+
+  payBalance(accountId: string, amount: number): Observable<Transaction | null> {
+    return from(this.userService.getPaymentMethods()).pipe(
+      switchMap(methods => {
+        if (methods.length === 0) throw new Error('No payment method');
+        const method = methods[0];
+        return this.listTransactions({ accountId, limit: 1000 }).pipe(
+          map(trans => trans.filter(t => t.status === 'pending' && t.type === 'charge').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())),
+          switchMap(pending => {
+            if (pending.length === 0) throw new Error('No pending charges');
+            let remaining = amount;
+            const updates: Observable<Transaction>[] = [];
+            for (const trans of pending) {
+              if (remaining <= 0) break;
+              const apply = Math.min(remaining, trans.chargeAmount || 0);
+              remaining -= apply;
+              const newCharge = (trans.chargeAmount || 0) - apply;
+              const newStatus = newCharge > 0 ? 'pending' : 'paid';
+              updates.push(this.updateTransaction(trans.transactionId, { chargeAmount: newCharge, status: newStatus, balance: trans.balance - apply }));
+            }
+            if (remaining > 0) throw new Error('Payment exceeds pending charges');
+            return forkJoin(updates).pipe(
+              map(() => null),
+              switchMap(() => {
+                const payTrans = {
+                  accountId,
+                  type: 'payment' as const,
+                  date: new Date().toISOString().split('T')[0],
+                  description: `Payment via ${method.type} (${method.name})`,
+                  paymentAmount: amount,
+                  status: 'paid' as const,
+                  method: `${method.type}-${method.name}`,
+                  tenantId: accountId,
+                };
+                return this.createTransaction(payTrans);
+              })
+            );
+          })
+        );
+      })
+    );
+  }
+
+  getUnpaidBalance(accountId: string): Observable<number> {
+    return this.listTransactions({ accountId }).pipe(
+      map(trans => trans.filter(t => t.status === 'pending' && t.type === 'charge').reduce((sum, t) => sum + (t.chargeAmount || 0), 0))
+    );
+  }
+
+  getPaidSummary(accountId: string, period: 'recent' | 'lastYear' = 'recent'): Observable<{ total: number; byCategory?: Record<string, number> }> {
+    const startDate = period === 'lastYear' ? new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split('T')[0] : undefined;
+    return this.listTransactions({ accountId, startDate }).pipe(
+      map(trans => {
+        const payments = trans.filter(t => t.status === 'paid' && t.type === 'payment');
+        const total = payments.reduce((sum, t) => sum + (t.paymentAmount || 0), 0);
+        const byCategory = payments.reduce((acc, t) => {
+          const cat = t.category || 'Uncategorized';
+          acc[cat] = (acc[cat] || 0) + (t.paymentAmount || 0);
+          return acc;
+        }, {} as Record<string, number>);
+        return { total, byCategory };
+      })
+    );
+  }
+
+  generatePdf(invoice: Invoice): jsPDF {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(`Invoice #${invoice.invoiceNumber}`, 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Date: ${invoice.date}`, 20, 30);
+    doc.text(`From: ${invoice.fromAddress || ''}`, 20, 40);
+    doc.text(`To: ${invoice.toAddress || ''}`, 20, 50);
+    doc.text(`Description: ${invoice.description || ''}`, 20, 60);
+
+    const tableData = invoice.items?.map(item => [item.name, item.unitPrice, item.units, item.total]) || [];
+    (doc as any).autoTable({
+      head: [['Name', 'Unit Price', 'Units', 'Total']],
+      body: tableData,
+      startY: 70,
+    });
+
+    doc.text(`Subtotal: $${invoice.subtotal}`, 140, (doc as any).lastAutoTable.finalY + 10);
+    doc.text(`Tax: $${invoice.tax}`, 140, (doc as any).lastAutoTable.finalY + 20);
+    doc.text(`Grand Total: $${invoice.grandTotal}`, 140, (doc as any).lastAutoTable.finalY + 30);
+
+    return doc;
+  }
+}

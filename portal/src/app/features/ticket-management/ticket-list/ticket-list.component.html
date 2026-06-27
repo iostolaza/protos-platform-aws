@@ -1,0 +1,45 @@
+
+<!-- src/app/features/ticket-management/ticket-list/ticket-list.component.html -->
+
+<div class="ledger-card">
+  <h3 class="page-title">Tickets</h3>
+  <div class="relative overflow-x-auto">
+    <table class="w-full table-auto">
+      <thead class="text-xs uppercase text-muted-foreground">
+        <tr>
+          <th class="py-3 text-left">Ticket #</th> 
+          <th class="py-3 text-left">Title</th>
+          <th class="py-3 text-left">Assignee</th>
+          <th class="py-3 text-center">Estimated</th>
+          <th class="py-3 text-center">Status</th>
+          <th class="py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ticket of tickets(); track ticket.id) {
+          <tr class="table-row-hover"> 
+            <td class="py-3 text-left text-foreground">{{ ticket.id.slice(-8) }}</td> 
+            <td class="py-3 text-left">
+              <span class="font-medium text-foreground">{{ ticket.title | slice:0:60 }}...</span>  
+            </td>
+            <td class="py-3 text-left text-foreground">{{ ticket.assigneeName }}</td>
+            <td class="py-3 text-center text-foreground">{{ ticket.estimated | date:'shortDate' }}</td> 
+            <td class="py-3 text-center">
+              <span class="text-sm px-3 py-2 rounded-full" [ngClass]="ticket.status | statusClass">{{ ticket.status | status }}</span>
+            </td>
+
+            <td class="py-3 text-right flex justify-end gap-2 pr-4">
+              <button (click)="onDelete(ticket.id)" class="icon-btn-hover rounded-full bg-transparent p-1 hover:bg-destructive/10"> 
+                <svg-icon [src]="getIconPath('x-mark')" svgClass="h-4 w-4 text-destructive"></svg-icon>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="py-3 text-center text-muted-foreground">No tickets available.</td> <!-- UPDATED: text-muted-foreground -->
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

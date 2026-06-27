@@ -1,0 +1,60 @@
+
+<!-- src/app/features/documents/document-list/document-list.component.html -->
+
+<div class="ledger-card">
+  <h3 class="page-title">Documents List</h3>
+  <!-- Search and Filter -->
+  <div class="mb-4 flex gap-6"> 
+    <input [(ngModel)]="searchTerm" placeholder="Search by name/description" class="flex-1 p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+    <select [(ngModel)]="selectedCategory" (change)="onFilterChange()" class="flex-1 p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary">
+      <option value="">All Categories</option>
+      @for (cat of categories(); track cat.value) {
+        <option [value]="cat.value">{{ cat.label }}</option>
+      }
+    </select>
+  </div>
+  <div class="relative overflow-x-auto">
+    <table class="w-full table-auto">
+      <thead class="text-xs uppercase text-muted-foreground">
+        <tr>
+          <th class="py-3 text-center">Upload Date</th>
+          <th class="py-3 text-left">File Name</th>
+          <th class="py-3 text-left">Description</th>
+          <th class="py-3 text-center">Type</th>
+          <th class="py-3 text-left">Category</th>
+          <th class="py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (doc of filteredDocuments(); track doc.id) {
+          <tr class="table-row-hover"> 
+            <td class="py-3 text-center text-foreground">{{ doc.uploadDate | date:'shortDate' }}</td> 
+            <td class="py-3 text-left text-foreground">{{ doc.fileName | slice:0:60 }}...</td> 
+            <td class="py-3 text-left text-foreground">{{ doc.description | slice:0:60 }}...</td>
+            <td class="py-3 text-center text-foreground">{{ doc.fileType }}</td> 
+            <td class="py-3 text-left text-foreground">{{ doc.category }}</td>
+            <td class="py-3 text-right flex justify-end gap-2 pr-4">
+              <button (click)="onView(doc)" class="group icon-btn-hover rounded-full bg-transparent p-1 hover:bg-accent/10"> 
+                <svg-icon [src]="getIconPath('eye')" svgClass="h-4 w-4 text-accent"></svg-icon>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="py-3 text-center text-muted-foreground">No documents available.</td> 
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (showModal()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-card w-full max-w-4xl h-[80vh] rounded-lg shadow-lg relative p-6"> 
+        <button (click)="showModal.set(false)" class="absolute top-4 right-4 rounded-full bg-transparent p-1 hover:bg-destructive/10"> 
+          <svg-icon [src]="getIconPath('x-mark')" svgClass="h-4 w-4 text-destructive"></svg-icon>
+        </button>
+        <iframe [src]="safeUrl()" class="w-full h-full" title="Document Viewer"></iframe> 
+      </div>
+    </div>
+  }
+</div>

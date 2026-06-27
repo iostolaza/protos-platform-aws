@@ -1,0 +1,57 @@
+ 
+<!-- src/app/features/ticket-management/generate-team/generate-team.component.html -->
+
+<div class="ledger-card">
+  <div class="p-6 bg-card rounded-2xl border border-border max-w-md mx-auto w-full"> 
+    <div class="text-center">
+      <h3 class="page-title">Create Team</h3> 
+      @if (errorMessage()) {
+        <div class="text-destructive mb-4">{{ errorMessage() }}</div>
+      }
+      @if (successMessage()) {
+        <div class="text-success mb-4">{{ successMessage() }}</div> 
+      }
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+        <div class="flex items-start">
+          <label class="text-sm font-medium text-label mr-4 w-1/4">*Name:</label> 
+          <input formControlName="name" type="text" class="w-3/4 p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+        </div>
+     
+        <div class="flex items-start">
+          <label class="text-sm font-medium text-label mr-4 w-1/4">Invite Users:</label>
+          <div class="w-3/4 space-y-2">
+            <div formArrayName="inviteUserIds">
+              @for (invite of inviteUserIds.controls; track $index) {
+                <div class="flex items-center gap-2">
+                  <select [formControlName]="$index" class="flex-1 p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary"> 
+                    <option value="">Select User</option>
+                    @for (user of users(); track user.cognitoId) {
+                      <option [value]="user.cognitoId">{{ user.firstName }} {{ user.lastName }} ({{ user.email }})</option>
+                    }
+                  </select>
+                  <button type="button" (click)="removeInvite($index)" class="icon-btn-hover"> 
+                    <svg-icon [src]="getIconPath('x-mark')" svgClass="h-5 w-5 text-destructive"></svg-icon>
+                  </button>
+                </div>
+              }
+            </div>
+            <div class="flex justify-center">
+              <button type="button" (click)="addInvite()" class="icon-btn-hover flex items-center gap-1"> <!-- UPDATED: icon-btn-hover -->
+                <svg-icon [src]="getIconPath('plus')" svgClass="h-5 w-5 text-primary"></svg-icon> Add Invite
+              </button>
+            </div>
+            @if (loadingUsers()) {
+              <div class="text-muted-foreground text-xs">Loading users...</div>
+            }
+            @if (!loadingUsers() && users().length === 0) {
+              <div class="text-destructive text-xs">No users available. Add users in Cognito first.</div>
+            }
+          </div>
+        </div>
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary w-full">Create</button> 
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

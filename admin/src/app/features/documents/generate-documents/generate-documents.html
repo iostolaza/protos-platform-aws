@@ -1,0 +1,37 @@
+
+<!-- src/app/features/documents/generate-documents/generate-documents.component.html -->
+
+<div class="ledger-card">
+  <div class="p-6 bg-card rounded-2xl border border-border max-w-md mx-auto w-full">
+    <div class="text-center">
+      <h3 class="page-title">Upload Document</h3> 
+      @if (errorMessage()) {
+        <div class="text-destructive mb-4">{{ errorMessage() }}</div>
+      }
+      @if (successMessage()) {
+        <div class="text-success mb-4">{{ successMessage() }}</div> 
+      }
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-label mb-1">*File:</label> 
+          <input type="file" (change)="onFileChange($event)" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-label mb-1">*Category:</label>
+            <select formControlName="category" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary">
+              @for (cat of categories; track cat.value) {
+                <option [value]="cat.value">{{ cat.label }}</option>
+              }
+           </select> 
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-label mb-1">Description:</label>
+          <textarea formControlName="description" class="w-full p-2 bg-background border border-border rounded-lg text-foreground h-24 focus:ring-2 focus:ring-primary"></textarea> 
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary w-full" [disabled]="!file">Upload</button> 
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

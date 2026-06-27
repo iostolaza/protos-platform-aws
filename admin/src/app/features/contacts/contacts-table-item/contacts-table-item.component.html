@@ -1,0 +1,25 @@
+<!-- src/app/features/contacts/contacts-table-item/contacts-table-item.component.html -->
+
+<td class="py-3 text-left">
+  <div class="flex items-center gap-3">
+    @if (contact.profileImageKey) {
+      <img [src]="contact.imageUrl || 'assets/profile/avatar-default.svg'" class="w-10 h-10 rounded-full" alt="Profile">
+    }
+    <div class="flex-col">
+      <span class="font-medium text-foreground">{{ contact.firstName }} {{ contact.lastName }}</span>
+      <span class="text-xs text-muted-foreground block">{{ contact.username }}</span> 
+    </div>
+  </div>
+</td>
+<td class="py-3 text-left text-foreground">{{ contact.email }}</td>
+<td class="py-3 text-right text-foreground">{{ contact.dateAdded | date:'short' }}</td> 
+<td class="py-3 text-right">
+  <button (click)="startMessage()" class="rounded-full bg-transparent p-1 hover:bg-primary/10">
+    <svg-icon [src]="getIconPath('chat-bubble-oval-left')" svgClass="h-4 w-4 text-success"></svg-icon> 
+  </button>
+</td>
+<td class="py-3 text-right">
+  <button (click)="deleteContact()" class="rounded-full bg-transparent p-1 hover:bg-destructive/10">
+    <svg-icon [src]="getIconPath('x-mark')" svgClass="h-4 w-4 text-destructive"></svg-icon>
+  </button>
+</td>

@@ -1,0 +1,69 @@
+<!-- src/app/features/ticket-management/ticket-management.component.html -->
+
+<!-- NEW: Uniform wrapper (removes pt-[5%]; dynamic width/height via utility) -->
+<div class="page-wrapper flex flex-col gap-6">
+
+  <!-- UPDATED: New title card div (ledger-card for uniformity; page-title h3 + new p + pills with text-2xl/lg, py-5 like Contacts example) -->
+  <div class="ledger-card">
+    <h3 class="page-title text-primary">Ticket Management</h3>
+    <p class="text-lg text-body">Create and manage work tickets</p>
+    <!-- Summary Pills -->
+    <div class="mb-4 flex gap-4 py-5"> <!-- UPDATED: py-5 for spacing like Contacts -->
+      <div class="flex-1 rounded-md bg-blue-100 px-4 py-2 text-center">
+        <div class="text-2xl font-bold text-blue-800">{{ tickets().length }}</div> <!-- UPDATED: Larger text -->
+        <div class="text-lg text-blue-600">Total Tickets</div> <!-- UPDATED: Larger text -->
+      </div>
+      <div class="flex-1 rounded-md bg-orange-100 px-4 py-2 text-center">
+        <div class="text-2xl font-bold text-orange-800">{{ openTickets() }}</div>
+        <div class="text-lg text-orange-600">Open Tickets</div>
+      </div>
+      <div class="flex-1 rounded-md bg-green-100 px-4 py-2 text-center">
+        <div class="text-2xl font-bold text-green-800">{{ recentTickets().length }}</div>
+        <div class="text-lg text-green-600">Recent Tickets</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Ticket Card -->
+  <app-generate-tickets></app-generate-tickets>
+
+  <!-- Ticket Previews -->
+  <div class="ledger-card"> <!-- UPDATED: ledger-card for border uniformity -->
+    <h3 class="page-title">Tickets</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (ticket of tickets(); track ticket.id) {
+        <div class="rounded-md bg-background border border-border p-4 hover:shadow-md transition-shadow"> <!-- UPDATED: bg-background + border for consistency -->
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-medium text-foreground truncate">{{ ticket.title }}</span>
+            <span class="text-sm px-2 py-1 rounded-full" [ngClass]="ticket.status | statusClass">{{ ticket.status | status }}</span>  
+          </div>
+          <div class="text-sm text-muted-foreground mb-2">Date: {{ ticket.createdAt ? (ticket.createdAt | date:'shortDate') : 'N/A' }}</div>
+          <button (click)="viewDetails(ticket)" class="text-primary hover:text-primary/80 text-sm">View Details</button>
+        </div>
+      } @empty {
+        <div class="text-center text-muted-foreground col-span-full">No tickets available.</div>
+      }
+    </div>
+  </div>
+
+  <!-- Ticket Details Card -->
+  <app-ticket-details *ngIf="selectedTicket()" [ticket]="selectedTicket()!" (close)="selectedTicket.set(null)" (edit)="startEditing($event)"></app-ticket-details>
+
+  <!-- Edit Ticket (Conditional) -->
+  <app-edit-ticket *ngIf="editingTicket()" [ticket]="editingTicket()!" (update)="onTicketUpdate($event)" (cancel)="editingTicket.set(null)"></app-edit-ticket>
+
+  <!-- Ticket List Card (Table) -->
+  <app-ticket-list></app-ticket-list>
+
+  <!-- Create Team Card -->
+  <app-generate-team></app-generate-team>
+
+  <!-- Team List Card -->
+  <app-team-list (view)="viewTeam($event)" (edit)="editTeam($event)"></app-team-list>
+
+  <!-- Team Details Card -->  <!-- NEW: Conditional details -->
+  <app-team-details *ngIf="selectedTeam()" [team]="selectedTeam()!" (close)="selectedTeam.set(null)" (edit)="editTeam($event)"></app-team-details>
+
+  <!-- Team Edit (Conditional) -->
+  <app-team-edit *ngIf="editingTeam()" [team]="editingTeam()!" (update)="onTeamUpdate($event)" (cancel)="editingTicket.set(null)"></app-team-edit>
+</div>

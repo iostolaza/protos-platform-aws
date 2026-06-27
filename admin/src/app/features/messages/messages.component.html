@@ -1,0 +1,23 @@
+<!-- src/app/features/messages/messages.component.html -->
+<div class="mx-auto h-[900px] bg-background text-foreground rounded-lg shadow-custom-lg">
+  <div class="flex h-[900px]">
+    <!-- Sidebar -->
+    <div class="w-64 flex flex-col bg-card overflow-y-none rounded-tl-lg rounded-bl-lg h-auto md:w-64 sm:w-20 sm:overflow-x-auto">
+      <app-user-profile class="user-profile mb-4 p-4 bg-card"></app-user-profile>
+      <app-chat-search class="chat-search mb-4" (searchChanged)="onSearch($event)"></app-chat-search>
+      <app-chat-list class="chat-list flex-1 overflow-y-auto" [chats]="filteredChats()" (chatSelected)="selectConversation($event)" (chatDeleted)="deleteConversation($event)"></app-chat-list>
+    </div>
+    <!-- Main area -->
+    <div class="flex-1 flex flex-col bg-background min-h-0 h-full rounded-tr-lg">
+      <app-chat-header class="chat-header" [recipient]="selectedConversation()?.otherUser?.name ?? 'Select a chat '" [avatar]="selectedConversation()?.otherUser?.avatar ?? ''"></app-chat-header>
+      @if (selectedConversation(); as conv) {
+        <app-chat-messages class="chat-messages flex-1 overflow-y-auto p-4 space-y-4 bg-background min-h-0 pb-16 md:pb-14 sm:pb-12" [messages]="messages()"></app-chat-messages>
+      } @else {
+        <div class="chat-messages flex-1 flex items-center justify-center text-muted-foreground min-h-0">
+          <p>Select a chat to start messaging</p>
+        </div>
+      }
+      <app-message-input class="message-input left-0 right-0 bg-card text-foreground z-10 p-4 rounded-br-lg" (send)="send($event)" (sendWithFile)="sendWithFile($event)" [disabled]="!selectedConversation()"></app-message-input>
+    </div>
+  </div>
+</div>

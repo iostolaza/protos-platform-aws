@@ -1,0 +1,36 @@
+
+<!-- src/app/features/profile/contact-prefs-card.component.html -->
+
+<div class="profile-card">
+  <h2 class="text-2xl font-bold mb-6 text-foreground">Contact Preferences</h2>
+  @if (editMode()) {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center">
+          <input type="checkbox" formControlName="email" id="email-pref" class="mr-2" />
+          <label for="email-pref" class="text-sm text-label">Email Notifications</label>
+        </div>
+        <div class="flex items-center">
+          <input type="checkbox" formControlName="push" id="push-pref" class="mr-2" />
+          <label for="push-pref" class="text-sm text-label">Push Notifications</label>
+        </div>
+      </div>
+      <div class="mt-4 flex justify-end gap-2">
+        <button type="button" (click)="toggleEdit()" class="btn btn-neutral">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  } @else {
+    @if (user?.contactPrefs) {
+      <div class="grid grid-cols-2 gap-4 text-body">
+        <div><strong class="text-label">Email: </strong> <span class="text-body">{{ user?.contactPrefs?.email ? 'Enabled' : 'Disabled' }}</span></div>
+        <div><strong class="text-label">Push: </strong> <span class="text-body">{{ user?.contactPrefs?.push ? 'Enabled' : 'Disabled' }}</span></div>
+      </div>
+    } @else {
+      <p class="text-muted">No preferences set.</p>
+    }
+    <div class="mt-4 flex justify-start">
+      <button (click)="toggleEdit()" class="btn btn-primary">Edit</button>
+    </div>
+  }
+</div>

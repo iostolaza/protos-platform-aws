@@ -1,0 +1,25 @@
+
+<!-- src/app/features/profile/profile.component.html -->
+
+<div class="page-wrapper">
+  @if (loading()) {
+    <p class="text-muted-foreground">Loading...</p>
+  } @else {
+
+    <app-profile-title class="col-span-full"></app-profile-title>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-background equal-row-grid">
+
+      <!-- Full-width top card -->
+      <app-personal-info-card class="col-span-full"></app-personal-info-card>
+
+      
+      <!-- Two-per-row with h-full -->
+      <app-address-card class="h-full"></app-address-card>
+      <app-contact-prefs-card class="h-full"></app-contact-prefs-card>
+      <app-payment-card class="h-full"></app-payment-card>
+      <app-emergency-contact-card class="h-full"></app-emergency-contact-card>
+      <app-vehicle-card class="h-full"></app-vehicle-card>
+    </div>
+  }
+</div>
