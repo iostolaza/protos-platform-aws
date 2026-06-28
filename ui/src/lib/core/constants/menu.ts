@@ -42,7 +42,7 @@ export const adminMenu: MenuItem[] = [
       {
         label: 'Timesheet', icon: 'clock', route: null,
         children: [
-          { label: 'Dashboard', route: '/main-layout/timesheet' },
+          { label: 'Overview', route: '/main-layout/timesheet' },
           { label: 'Calendar', route: '/main-layout/timesheet/calendar' },
           { label: 'Review', route: '/main-layout/timesheet/review' },
         ],
@@ -107,7 +107,7 @@ export const portalMenu: MenuItem[] = [
       {
         label: 'Timesheet', icon: 'clock', route: null,
         children: [
-          { label: 'Dashboard', route: '/main-layout/timesheet' },
+          { label: 'Overview', route: '/main-layout/timesheet' },
           { label: 'Calendar', route: '/main-layout/timesheet/calendar' },
           { label: 'My Timesheets', route: '/main-layout/timesheet/list' },
         ],
