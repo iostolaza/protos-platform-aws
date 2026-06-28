@@ -139,6 +139,33 @@ export class FinancialService {
     return account.chargeCodes ?? [];
   }
 
+  // Flatten every charge code across all accounts, annotated with its owning account.
+  async listAllChargeCodes(): Promise<ChargeCode[]> {
+    const accounts = await this.listAccounts();
+    return accounts.flatMap(a =>
+      (a.chargeCodes ?? []).map(cc => ({
+        ...cc,
+        accountId: cc.accountId ?? a.id,
+        linkedAccount: cc.linkedAccount ?? a.name,
+      }))
+    );
+  }
+
+  // Attach an existing charge code (by name) to the given account if not already present.
+  async linkChargeCode(chargeCodeName: string, accountId: string): Promise<Account> {
+    const target = await this.getAccount(accountId);
+    const existing = target.chargeCodes ?? [];
+    if (existing.some(cc => cc.name === chargeCodeName)) return target;
+    const code: ChargeCode = {
+      name: chargeCodeName,
+      createdBy: this.userService.user()?.cognitoId ?? 'system',
+      date: new Date().toISOString(),
+      accountId,
+      linkedAccount: target.name,
+    };
+    return this.updateAccount(accountId, { chargeCodes: [...existing, code] });
+  }
+
   async addFunds(accountId: string, amount: number, description: string = 'Add funds'): Promise<void> {
     const account = await this.getAccount(accountId);
     const newBalance = account.balance + amount;

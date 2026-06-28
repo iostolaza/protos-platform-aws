@@ -7,6 +7,8 @@ export interface ChargeCode {
   name: string;
   createdBy: string;
   date: string;
+  linkedAccount?: string; // display name of the account this code belongs to
+  accountId?: string;     // id of the account this code belongs to
 }
 
 export interface Account {

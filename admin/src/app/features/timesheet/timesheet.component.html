@@ -1,4 +1,24 @@
-<!-- src/app/features/timesheet/timesheet.component.html: Placeholder with centered large title -->
-<div class="flex items-center justify-center h-screen" style="font-size: 2rem; font-weight: bold; text-align: center;">
-  Timesheet Feature In Progress - Check Back Later
+<div class="page-wrapper">
+  <header class="mb-8 flex items-center justify-between">
+    <div>
+      <h1 class="page-title mb-1">Timesheet</h1>
+      <p class="text-muted">Track time, submit periods, and manage charge codes.</p>
+    </div>
+  </header>
+
+  <div class="grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
+    <!-- Create Timesheet -->
+    <div class="profile-card">
+      <h2 class="text-heading mb-2 text-xl font-semibold">Create Timesheet</h2>
+      <p class="text-muted mb-4 grow">Start a new timesheet and add your time entries using the calendar.</p>
+      <a routerLink="/main-layout/timesheet/calendar" class="btn btn-primary inline-block">Go to Calendar</a>
+    </div>
+
+    <!-- Review Timesheets -->
+    <div class="profile-card">
+      <h2 class="text-heading mb-2 text-xl font-semibold">Review Timesheets</h2>
+      <p class="text-muted mb-4 grow">View and manage submitted and approved timesheets.</p>
+      <a routerLink="/main-layout/timesheet/review" class="btn btn-primary inline-block">View Timesheets</a>
+    </div>
+  </div>
 </div>

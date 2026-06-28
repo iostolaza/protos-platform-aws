@@ -71,7 +71,6 @@ export class ReviewListComponent implements OnInit {
   }
 
   goBack(): void {
-  this.router.navigate(['/start']);
-  // Or simply: this.router.navigateByUrl('/start');
-}
+    this.router.navigate(['/main-layout/timesheet']);
+  }
 }

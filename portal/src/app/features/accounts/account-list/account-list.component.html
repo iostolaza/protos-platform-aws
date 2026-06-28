@@ -1,0 +1,59 @@
+<div class="page-wrapper">
+  <div class="mb-8 flex items-center justify-between">
+    <h1 class="page-title mb-0">Account List</h1>
+    <div class="flex gap-2">
+      <a routerLink="/main-layout/accounts/new" class="btn btn-primary">New Account</a>
+      <button type="button" class="btn btn-neutral" (click)="goBack()" aria-label="Back to Accounts">Back</button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="ledger-card mb-6 border-destructive">
+      <p class="balance-negative">{{ error() }}</p>
+    </div>
+  }
+
+  <div class="ledger-card overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-label border-b border-border text-left">
+          <th class="px-3 py-2 font-semibold">Account #</th>
+          <th class="px-3 py-2 font-semibold">Name</th>
+          <th class="px-3 py-2 font-semibold">Details</th>
+          <th class="px-3 py-2 font-semibold">Type</th>
+          <th class="px-3 py-2 text-right font-semibold">Balance</th>
+          <th class="px-3 py-2 text-right font-semibold">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (account of accounts(); track account.id) {
+          <tr class="table-row-hover">
+            <td class="text-body px-3 py-2 font-mono text-xs">{{ account.accountNumber }}</td>
+            <td class="text-body px-3 py-2 font-medium">{{ account.name }}</td>
+            <td class="text-muted px-3 py-2">{{ account.details || '—' }}</td>
+            <td class="text-muted px-3 py-2">{{ account.type || '—' }}</td>
+            <td
+              class="px-3 py-2 text-right"
+              [ngClass]="account.balance > 0 ? 'balance-positive' : account.balance < 0 ? 'balance-negative' : 'balance-zero'"
+            >
+              {{ account.balance | currency }}
+            </td>
+            <td class="px-3 py-2 text-right">
+              <div class="flex justify-end gap-2">
+                <button type="button" class="btn btn-neutral px-3 py-1 text-xs" (click)="editAccount(account)">Edit</button>
+                <button type="button" class="btn btn-neutral px-3 py-1 text-xs" (click)="openLedger()">Ledger</button>
+                <button type="button" class="btn btn-destructive px-3 py-1 text-xs" (click)="deleteAccount(account)">Delete</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="text-muted px-3 py-8 text-center">
+              @if (loading()) { Loading accounts… } @else { No accounts yet. Create your first account. }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,90 @@
+<div class="page-wrapper">
+  <!-- Header -->
+  <header class="mb-8 flex items-center justify-between">
+    <div>
+      <h1 class="page-title mb-1">Manage Accounts</h1>
+      <p class="text-muted">All accounts, charge codes, and financial coordination with timesheets.</p>
+    </div>
+    <button type="button" class="btn btn-neutral" (click)="goBack()" aria-label="Back to Dashboard">Back</button>
+  </header>
+
+  @if (error()) {
+    <div class="ledger-card mb-6 border-destructive">
+      <p class="balance-negative">{{ error() }}</p>
+    </div>
+  }
+
+  <!-- Action Cards -->
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <!-- Create Account -->
+    <div class="profile-card">
+      <h2 class="text-heading mb-2 text-xl font-semibold">Create Account</h2>
+      <p class="text-muted mb-4 grow">Create a new financial account with details and an optional starting balance.</p>
+      <button type="button" class="btn btn-primary w-full" (click)="createAccount()" aria-label="Create New Account">
+        Create Account
+      </button>
+    </div>
+
+    <!-- View Accounts -->
+    <div class="profile-card">
+      <h2 class="text-heading mb-2 text-xl font-semibold">View Accounts</h2>
+      <p class="text-muted mb-4 grow">Browse and manage all financial accounts and their balances.</p>
+      <a routerLink="/main-layout/accounts/list" class="btn btn-primary w-full" aria-label="View Accounts List">
+        View Accounts
+      </a>
+    </div>
+
+    <!-- Edit Account -->
+    <div class="profile-card">
+      <h2 class="text-heading mb-2 text-xl font-semibold">Edit Account</h2>
+      <p class="text-muted mb-4 grow">Select an account to edit details, balances, or charge codes.</p>
+      <select [(ngModel)]="selectedAccountId" class="mb-4 w-full" aria-label="Select account to edit">
+        <option value="">Select an account</option>
+        @for (account of accounts(); track account.id) {
+          <option [value]="account.id">{{ account.name }} ({{ account.accountNumber }})</option>
+        }
+      </select>
+      @if (selectedAccountId) {
+        <button type="button" class="btn btn-neutral w-full" (click)="editSelectedAccount()">
+          Edit Selected Account
+        </button>
+      }
+    </div>
+
+    <!-- Manage Charge Codes -->
+    <div class="profile-card">
+      <h2 class="text-heading mb-2 text-xl font-semibold">Manage Charge Codes</h2>
+      <p class="text-muted mb-4 grow">Link charge codes to accounts (used by timesheets).</p>
+      <select [(ngModel)]="selectedChargeCode" class="mb-4 w-full" aria-label="Select charge code">
+        <option value="">Select charge code…</option>
+        @for (code of chargeCodes(); track code.name) {
+          <option [value]="code.name">{{ code.name }} ({{ code.linkedAccount || 'Unlinked' }})</option>
+        }
+      </select>
+      <button
+        type="button"
+        class="btn btn-primary w-full"
+        (click)="linkChargeCodeToAccount()"
+        [disabled]="!selectedChargeCode || !selectedAccountId"
+      >
+        Link to Selected Account
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+    <div class="ledger-card">
+      <p class="text-muted text-sm">Total Accounts</p>
+      <p class="text-heading text-4xl font-bold">{{ accounts().length }}</p>
+    </div>
+    <div class="ledger-card">
+      <p class="text-muted text-sm">Total Balance Across Accounts</p>
+      <p class="text-4xl font-bold balance-positive">{{ totalBalance() | currency }}</p>
+    </div>
+    <div class="ledger-card">
+      <p class="text-muted text-sm">Charge Codes in Use</p>
+      <p class="text-heading text-4xl font-bold">{{ chargeCodes().length }}</p>
+    </div>
+  </div>
+</div>

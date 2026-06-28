@@ -609,7 +609,7 @@ async submitTimesheet() {
       await this.tsService.updateTimesheet(tsData);
       this.events.set([]);
       this.updateSummary();
-      this.router.navigate(['/review', timesheetId]);
+      this.router.navigate(['/main-layout/timesheet/review']);
       this.openSuccess('Timesheet submitted.');
       console.log('Timesheet submitted', { timesheetId });
     } catch (error: any) {

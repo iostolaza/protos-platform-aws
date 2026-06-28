@@ -38,14 +38,13 @@ export const adminMenu: MenuItem[] = [
         ],
       },
       { label: 'Documents', icon: 'document-text', route: '/main-layout/documents' },
-      { label: 'Financial', icon: 'chart-bar-square', route: '/main-layout/financials' },
       { label: 'Analytics', icon: 'chart-bar', route: '/main-layout/analytics' },
       {
         label: 'Timesheet', icon: 'clock', route: null,
         children: [
-          { label: 'Submitted', route: '/main-layout/timesheet/submitted' },
-          { label: 'Pending', route: '/main-layout/timesheet/pending' },
-          { label: 'Approved', route: '/main-layout/timesheet/approved' },
+          { label: 'Dashboard', route: '/main-layout/timesheet' },
+          { label: 'Calendar', route: '/main-layout/timesheet/calendar' },
+          { label: 'Review', route: '/main-layout/timesheet/review' },
         ],
       },
       {
@@ -54,6 +53,15 @@ export const adminMenu: MenuItem[] = [
           { label: 'Calendar', route: '/main-layout/schedule/calendar' },
         ],
       },
+    ],
+  },
+  {
+    group: 'Accounts & Finance',
+    separator: true,
+    items: [
+      { label: 'Manage Accounts', icon: 'banknotes', route: '/main-layout/accounts' },
+      { label: 'Account List', icon: 'table-cells', route: '/main-layout/accounts/list' },
+      { label: 'Financial', icon: 'chart-bar-square', route: '/main-layout/financials' },
     ],
   },
   {
@@ -96,10 +104,10 @@ export const portalMenu: MenuItem[] = [
     items: [
       { label: 'My Tickets', icon: 'ticket', route: '/main-layout/ticket-management/tickets' },
       { label: 'My Documents', icon: 'document-text', route: '/main-layout/documents' },
-      { label: 'My Financials', icon: 'chart-bar-square', route: '/main-layout/financials' },
       {
         label: 'Timesheet', icon: 'clock', route: null,
         children: [
+          { label: 'Dashboard', route: '/main-layout/timesheet' },
           { label: 'Calendar', route: '/main-layout/timesheet/calendar' },
           { label: 'My Timesheets', route: '/main-layout/timesheet/list' },
         ],
@@ -110,6 +118,15 @@ export const portalMenu: MenuItem[] = [
           { label: 'Calendar', route: '/main-layout/schedule/calendar' },
         ],
       },
+    ],
+  },
+  {
+    group: 'Accounts & Finance',
+    separator: true,
+    items: [
+      { label: 'Manage Accounts', icon: 'banknotes', route: '/main-layout/accounts' },
+      { label: 'Account List', icon: 'table-cells', route: '/main-layout/accounts/list' },
+      { label: 'My Financials', icon: 'chart-bar-square', route: '/main-layout/financials' },
     ],
   },
   {

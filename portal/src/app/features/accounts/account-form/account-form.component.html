@@ -1,0 +1,56 @@
+<div class="page-wrapper max-w-2xl">
+  <div class="mb-8 flex items-center justify-between">
+    <h1 class="page-title mb-0">{{ isEdit() ? 'Edit Account' : 'Create Account' }}</h1>
+    <button type="button" class="btn btn-neutral" (click)="cancel()" aria-label="Cancel">Cancel</button>
+  </div>
+
+  @if (error()) {
+    <div class="ledger-card mb-6 border-destructive">
+      <p class="balance-negative">{{ error() }}</p>
+    </div>
+  }
+
+  <form class="ledger-card flex flex-col gap-5" (ngSubmit)="save()">
+    @if (isEdit()) {
+      <div>
+        <label class="text-label mb-1 block text-sm font-medium">Account Number</label>
+        <input type="text" [value]="accountNumber()" disabled class="font-mono" />
+      </div>
+    }
+
+    <div>
+      <label class="text-label mb-1 block text-sm font-medium">Name <span class="text-destructive">*</span></label>
+      <input type="text" name="name" [(ngModel)]="model.name" placeholder="Account name" required />
+    </div>
+
+    <div>
+      <label class="text-label mb-1 block text-sm font-medium">Details</label>
+      <textarea name="details" [(ngModel)]="model.details" rows="3" placeholder="Optional description"></textarea>
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div>
+        <label class="text-label mb-1 block text-sm font-medium">
+          {{ isEdit() ? 'Starting Balance' : 'Initial Balance' }}
+        </label>
+        <input type="number" name="startingBalance" [(ngModel)]="model.startingBalance" step="0.01" />
+      </div>
+      <div>
+        <label class="text-label mb-1 block text-sm font-medium">Type</label>
+        <select name="type" [(ngModel)]="model.type">
+          <option value="">Unspecified</option>
+          @for (t of types; track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2">
+      <button type="button" class="btn btn-neutral" (click)="cancel()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Account') }}
+      </button>
+    </div>
+  </form>
+</div>
