@@ -259,6 +259,26 @@ const schema = a.schema({
       allow.group('user_Facilities').to(['read'])
     ]),
 
+
+  Account: a.model({
+    id: a.id().required(),
+    accountNumber: a.string().required(),
+    name: a.string().required(),
+    details: a.string(),
+    balance: a.float().required(),
+    startingBalance: a.float(),
+    endingBalance: a.float(),
+    date: a.date().required(),
+    type: a.enum(['Asset', 'Liability', 'Equity', 'Revenue', 'Expense']),
+    chargeCodesJson: a.string().default('[]'),
+  })
+    .secondaryIndexes(index => [index('accountNumber')])
+    .authorization(allow => [
+      allow.group('user_Admin').to(['create', 'read', 'update', 'delete']),
+      allow.group('user_Manager').to(['create', 'read', 'update']),
+      allow.authenticated().to(['read']),
+    ]),
+
   Transaction: a.model({
     transactionId: a.id().required(),
     accountId: a.string().required(),

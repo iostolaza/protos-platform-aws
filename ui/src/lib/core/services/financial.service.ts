@@ -6,7 +6,7 @@ import { from, Observable, throwError, of, forkJoin } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { RoleService } from './role.service';
 import { AuthService } from './auth.service';
-import { Transaction, Invoice, InvoiceItem, Account } from '../models/financial.model';
+import { Transaction, Invoice, InvoiceItem, Account, ChargeCode } from '../models/financial.model';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -21,12 +21,134 @@ export class FinancialService {
     private userService: UserService
   ) {}
 
-  // TODO: adapt to new financial service
-  // The ported timesheet entry UI expects a charge-code-bearing Account model.
-  // The merged schema has no Account model yet, so this returns an empty list
-  // until the charge-code → account mapping is re-implemented.
+  // ═══════════ ACCOUNT CRUD (for timesheet charge codes) ═══════════
+
+  private mapAccountFromSchema(data: any): Account {
+    let chargeCodes: ChargeCode[] = [];
+    if (data.chargeCodesJson) {
+      try { chargeCodes = JSON.parse(data.chargeCodesJson); } catch { chargeCodes = []; }
+    }
+    return {
+      id: data.id,
+      accountNumber: data.accountNumber,
+      name: data.name,
+      details: data.details,
+      balance: data.balance,
+      startingBalance: data.startingBalance ?? 0,
+      endingBalance: data.endingBalance,
+      date: data.date,
+      type: data.type,
+      chargeCodes,
+    };
+  }
+
+  private generateAccountNumber(id: string): string {
+    const digits = Array.from(id).map(c => c.charCodeAt(0)).join('');
+    return (digits + '0000000000000000').slice(0, 16);
+  }
+
   async listAccounts(): Promise<Account[]> {
-    return [];
+    const { data, errors } = await this.client.models.Account.list({ limit: 100 });
+    if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
+    return data.map((d: any) => this.mapAccountFromSchema(d));
+  }
+
+  async getAccount(id: string): Promise<Account> {
+    const { data, errors } = await this.client.models.Account.get({ id });
+    if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
+    if (!data) throw new Error('Account not found');
+    return this.mapAccountFromSchema(data);
+  }
+
+  async createAccount(account: Omit<Account, 'id' | 'accountNumber'>): Promise<Account> {
+    const id = crypto.randomUUID();
+    const accountNumber = this.generateAccountNumber(id);
+    const input: any = {
+      id,
+      accountNumber,
+      name: account.name,
+      details: account.details ?? null,
+      balance: account.balance ?? 0,
+      startingBalance: account.startingBalance ?? account.balance ?? 0,
+      endingBalance: account.endingBalance ?? account.balance ?? 0,
+      date: account.date ?? new Date().toISOString().split('T')[0],
+      type: account.type ?? null,
+      chargeCodesJson: JSON.stringify(account.chargeCodes ?? []),
+    };
+    const { data, errors } = await this.client.models.Account.create(input);
+    if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
+    if (!data) throw new Error('Create failed');
+    return this.mapAccountFromSchema(data);
+  }
+
+  async updateAccount(id: string, updates: Partial<Account>): Promise<Account> {
+    const current = await this.getAccount(id);
+    const input: any = {
+      id,
+      accountNumber: updates.accountNumber ?? current.accountNumber,
+      name: updates.name ?? current.name,
+      balance: updates.balance ?? current.balance,
+      date: updates.date ?? current.date,
+      type: updates.type ?? current.type,
+      details: updates.details ?? current.details,
+      startingBalance: updates.startingBalance ?? current.startingBalance,
+      endingBalance: updates.endingBalance ?? current.endingBalance,
+      chargeCodesJson: updates.chargeCodes
+        ? JSON.stringify(updates.chargeCodes)
+        : JSON.stringify(current.chargeCodes ?? []),
+    };
+    const { data, errors } = await this.client.models.Account.update(input);
+    if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
+    if (!data) throw new Error('Update failed');
+    return this.mapAccountFromSchema(data);
+  }
+
+  async deleteAccount(id: string): Promise<void> {
+    const { errors } = await this.client.models.Account.delete({ id });
+    if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
+  }
+
+  async getAccountByChargeCode(chargeCode: string): Promise<Account | null> {
+    const accounts = await this.listAccounts();
+    return accounts.find(a => a.chargeCodes?.some(cc => cc.name === chargeCode)) || null;
+  }
+
+  async createChargeCode(account: Account): Promise<ChargeCode> {
+    if (!account.accountNumber) throw new Error('Account number required');
+    const short = (account.name || '').replace(/[^A-Z0-9]/gi, '').slice(0, 2).toUpperCase() || 'CC';
+    const mid = account.accountNumber.slice(-3);
+    const rand = Math.floor(100 + Math.random() * 900);
+    const name = `${short}-${mid}-${rand}`;
+    const chargeCode: ChargeCode = {
+      name,
+      createdBy: this.userService.user()?.cognitoId ?? 'system',
+      date: new Date().toISOString(),
+    };
+    const updatedCodes = [...(account.chargeCodes ?? []), chargeCode];
+    await this.updateAccount(account.id, {
+      accountNumber: account.accountNumber,
+      balance: account.balance,
+      endingBalance: account.endingBalance,
+      chargeCodes: updatedCodes,
+    });
+    return chargeCode;
+  }
+
+  async listChargeCodes(accountId: string): Promise<ChargeCode[]> {
+    const account = await this.getAccount(accountId);
+    return account.chargeCodes ?? [];
+  }
+
+  async addFunds(accountId: string, amount: number, description: string = 'Add funds'): Promise<void> {
+    const account = await this.getAccount(accountId);
+    const newBalance = account.balance + amount;
+    await this.updateAccount(accountId, { balance: newBalance, endingBalance: newBalance });
+  }
+
+  async subtractFunds(accountId: string, amount: number, description: string = 'Subtract funds'): Promise<void> {
+    const account = await this.getAccount(accountId);
+    const newBalance = account.balance - amount;
+    await this.updateAccount(accountId, { balance: newBalance, endingBalance: newBalance });
   }
 
   private getLastBalance(accountId: string): Observable<number> {

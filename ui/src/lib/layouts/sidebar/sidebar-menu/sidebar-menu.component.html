@@ -8,67 +8,53 @@
   }
   <ul class="flex flex-col">
     @for (item of menu.items; track item.label) {
-      @if (!item.adminOnly) {
-        <li>
-          <button
-            type="button"
-            (click)="toggleMenu(item)"
-            class="nav-hover text-foreground group relative flex w-full grow items-center gap-4 rounded-lg px-2 py-2 text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          >
-            <div [ngClass]="item.active ? 'text-primary' : ''">
-              @if (item.icon) {
-                <svg-icon [src]="getIconPath(item.icon)" svgClass="h-5 w-5"></svg-icon>
-              }
-            </div>
-            <ng-container [ngTemplateOutlet]="item.children ? childMenu : parentMenu" [ngTemplateOutletContext]="{ item: item }"></ng-container>
-            <ng-template #parentMenu let-item="item">
-              @if (item.route === '/logout') {
-                <span class="inline-flex h-[36px] w-full items-center justify-start rounded-sm px-2 text-xs font-semibold text-foreground">
-                  {{ item.label }}
-                </span>
-              } @else {
-                <a
-                  [routerLink]="item.route"
-                  routerLinkActive="text-primary"
-                  class="inline-flex h-[36px] w-full items-center justify-start rounded-sm px-2 text-xs font-semibold text-foreground"
-                >
+      <li *ngIf="item.route !== '/main-layout/admin' || roleService.isAdmin$()">
+        <div (click)="toggleMenu(item)" [ngClass]="{'hover:bg-primary/10': !menuService.showSideBar && item.active, 'hover:bg-muted/50': !menuService.showSideBar}" class="nav-hover text-foreground group relative flex grow items-center gap-4 rounded-lg px-2">
+          <div [ngClass]="item.active && !menuService.showSideBar ? 'text-primary' : ''">
+            @if (item.icon) {
+              <svg-icon [src]="getIconPath(item.icon)" svgClass="h-5 w-5 text-foreground group-hover:text-muted-foreground"></svg-icon>
+            }
+          </div>
+          <ng-container [ngTemplateOutlet]="item.children ? childMenu : parentMenu" [ngTemplateOutletContext]="{ item: item }"></ng-container>
+          <ng-template #parentMenu let-item="item">
+            @if (item.route === '/logout') {
+              <button (click)="$event.stopPropagation(); menuService.logout()" class="nav-hover inline-flex h-[36px] w-full items-center justify-start rounded-sm px-2 text-xs font-semibold text-foreground group-hover:text-muted-foreground">
+                {{ item.label }}
+              </button>
+            } @else {
+              <div routerLink="{{ item.route }}" class="nav-hover flex h-[36px] cursor-pointer items-center justify-start rounded-sm">
+                <a [ngClass]="{ hidden: !menuService.showSideBar }" routerLinkActive="text-primary" class="text-foreground truncate text-xs font-semibold tracking-wide focus:outline-hidden group-hover:text-muted-foreground">
                   {{ item.label }}
                 </a>
+              </div>
+            }
+          </ng-template>
+          <ng-template #childMenu let-item="item">
+            <div class="flex h-9 grow cursor-pointer items-center justify-start rounded-sm">
+              <a [ngClass]="{ hidden: !menuService.showSideBar }" class="text-foreground group-hover:text-muted-foreground truncate text-xs font-semibold tracking-wide focus:outline-hidden">
+                {{ item.label }}
+              </a>
+            </div>
+          </ng-template>
+          @if (item.children) {
+            <button [ngClass]="{ hidden: !menuService.showSideBar }" class="text-foreground flex cursor-pointer items-center justify-end p-0 transition-all duration-500 group-hover:text-muted-foreground">
+              @if (!item.expanded) {
+                <svg-icon [src]="getIconPath('plus')" svgClass="h-4 w-4 text-success text-foreground group-hover:text-muted-foreground"></svg-icon>
+              } @else {
+                <svg-icon [src]="getIconPath('minus')" svgClass="h-4 w-4 text-destructive text-foreground group-hover:text-muted-foreground"></svg-icon>
               }
-            </ng-template>
-            <ng-template #childMenu let-item="item">
-              <span class="inline-flex h-9 grow items-center justify-start rounded-sm px-2 text-xs font-semibold text-foreground">
+            </button>
+          }
+          @if (!menuService.showSideBar) {
+            <div class="z-1 fixed h-[36px]">
+              <span class="z-1 bg-foreground text-background absolute w-auto min-w-max translate-y-[2px] scale-0 rounded-md p-2 text-xs font-bold shadow-md transition-all duration-200 group-hover:scale-100 ltr:origin-left ltr:translate-x-10 rtl:origin-right rtl:-translate-x-10 text-foreground">
                 {{ item.label }}
               </span>
-            </ng-template>
-            @if (item.children) {
-              <span class="flex cursor-pointer items-center justify-end p-0 transition-all duration-500">
-                @if (!item.expanded) {
-                  <svg-icon [src]="getIconPath('plus')" svgClass="h-4 w-4 text-success"></svg-icon>
-                } @else {
-                  <svg-icon [src]="getIconPath('minus')" svgClass="h-4 w-4 text-destructive"></svg-icon>
-                }
-              </span>
-            }
-           @if (!menuService.showSideBar) {
-  <span
-    role="tooltip"
-    class="pointer-events-none absolute left-full top-1/2 z-50 ml-3
-           -translate-y-1/2 -translate-x-1
-           whitespace-nowrap rounded-lg
-           bg-foreground text-background
-           px-3 py-1.5 text-sm font-medium
-           shadow-xl opacity-0
-           transition-all duration-200
-           group-hover:opacity-100 group-hover:translate-x-0"
-  >
-    {{ item.label }}
-  </span>
-}
-          </button>
-          <lib-sidebar-submenu [submenu]="item"></lib-sidebar-submenu>
-        </li>
-      }
+            </div>
+          }
+        </div>
+        <lib-sidebar-submenu [submenu]="item"></lib-sidebar-submenu>
+      </li>
     }
   </ul>
   @if (menu.separator) {

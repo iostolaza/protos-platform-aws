@@ -247,3 +247,82 @@ svg-icon svg path {
 .auth-card [data-amplify-authenticator] [data-amplify-container] {
   width: 100% !important;
 }
+
+/* ============ PORTED FROM protos-admin-aws (Tailwind v3) ============ */
+:root {
+  --text-heading: #0f1724;
+  --text-body: #111827;
+  --text-label: #374151;
+  --text-placeholder: #9ca3af;
+  --text-muted: #6b7280;
+  --form-bg: #ffffff;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #111827;
+  --success-foreground: #ffffff;
+  --destructive-foreground: #ffffff;
+  --shadow-1: 0 1px 2px rgba(16,24,40,0.04);
+  --shadow-2: 0 6px 18px rgba(16,24,40,0.08);
+}
+.dark {
+  --text-heading: #eef2ff;
+  --text-body: #e6eef8;
+  --text-label: #cbd5e1;
+  --text-placeholder: #94a3b8;
+  --text-muted: #9aa7bb;
+  --form-bg: #111827;
+  --secondary: #111827;
+  --secondary-foreground: #e6eef8;
+  --success-foreground: #06121a;
+  --destructive-foreground: #06121a;
+  --shadow-1: 0 1px 2px rgba(2,6,23,0.6);
+  --shadow-2: 0 8px 30px rgba(2,6,23,0.55);
+}
+@keyframes fade-in-down { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes fade-in-up { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+
+@layer components {
+  .text-heading { color: var(--text-heading); }
+  .text-body { color: var(--text-body); }
+  .text-label { color: var(--text-label); }
+
+  [type='text'], [type='email'], [type='url'], [type='password'],
+  [type='number'], [type='date'], [type='datetime-local'],
+  [type='month'], [type='search'], [type='tel'], [type='time'],
+  [type='week'], [multiple], textarea, select {
+    @apply w-full rounded-md border px-4 py-2 text-sm transition-all;
+    border-color: var(--border);
+    background-color: var(--form-bg);
+    color: var(--foreground);
+  }
+  [type='text']:focus, [type='email']:focus, [type='password']:focus,
+  [type='number']:focus, [type='date']:focus, [type='search']:focus,
+  [type='tel']:focus, textarea:focus, select:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition; border: 1px solid transparent; box-shadow: var(--shadow-1); }
+  .btn-primary { background-color: var(--primary); color: var(--primary-foreground); }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-neutral { background-color: var(--muted); color: var(--muted-foreground); border-color: var(--border); }
+  .btn-destructive { background-color: var(--destructive); color: var(--destructive-foreground); }
+  .btn-success { background-color: var(--success); color: var(--success-foreground); }
+
+  .balance-positive { color: var(--success); font-weight: 700; }
+  .balance-negative { color: var(--destructive); font-weight: 700; }
+  .balance-zero { color: var(--text-muted); font-weight: 600; }
+
+  .table-row-hover { @apply border-b border-dashed hover:bg-gray-50; border-color: var(--border); }
+  .dark .table-row-hover { @apply hover:bg-gray-800; }
+
+  svg-icon svg { color: var(--primary); }
+
+  .chat-item-hover { @apply flex items-center justify-between gap-3 p-4 cursor-pointer rounded-md; }
+  .chat-item-hover:hover { background-color: var(--muted); }
+
+  .page-wrapper { @apply w-full max-w-7xl mx-auto px-4 py-6 flex flex-col min-h-0 flex-1; }
+  .page-title { @apply text-2xl font-bold mb-6; color: var(--foreground); }
+  .profile-card { @apply p-6 rounded-lg flex flex-col h-full; background-color: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-1); }
+  .ledger-card { @apply rounded-lg px-8 py-8 border; background-color: var(--card); border-color: var(--border); }
+}
