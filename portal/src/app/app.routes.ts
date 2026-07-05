@@ -53,8 +53,6 @@ export const appRoutes: Routes = [
       { path: 'timesheet/list', loadComponent: () => import('./features/timesheet/review-list/review-list.component').then(m => m.ReviewListComponent) },
       { path: 'timesheet/submitted', redirectTo: 'timesheet/list', pathMatch: 'full' },
 
-      { path: 'schedule/calendar', loadComponent: () => import('./features/calendar/calendar.component').then(m => m.Calendar) },
-
       { path: 'settings', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent) },
 
       { path: 'logout', loadComponent: () => import('./features/auth/sign-in.component').then(m => m.SignInComponent) },

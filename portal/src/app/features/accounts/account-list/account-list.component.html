@@ -1,10 +1,10 @@
 <div class="page-wrapper">
-  <div class="mb-8 flex items-center justify-between">
-    <h1 class="page-title mb-0">Account List</h1>
-    <div class="flex gap-2">
-      <a routerLink="/main-layout/accounts/new" class="btn btn-primary">New Account</a>
-      <button type="button" class="btn btn-neutral" (click)="goBack()" aria-label="Back to Accounts">Back</button>
+  <div class="ledger-card mb-8 flex items-center justify-between">
+    <div>
+      <h2 class="text-primary mb-1 text-2xl font-bold">Account List</h2>
+      <p class="text-body text-lg">Browse, edit, and manage all financial accounts and their balances.</p>
     </div>
+    <a routerLink="/main-layout/accounts/new" class="btn btn-primary">New Account</a>
   </div>
 
   @if (error()) {

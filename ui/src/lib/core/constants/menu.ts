@@ -29,7 +29,7 @@ export const adminMenu: MenuItem[] = [
     separator: true,
     items: [
       {
-        label: 'Ticket Management', icon: 'ticket', route: null,
+        label: 'Tickets', icon: 'ticket', route: null,
         children: [
           { label: 'Tickets', route: '/main-layout/ticket-management/tickets' },
           { label: 'Teams', route: '/main-layout/ticket-management/teams' },
@@ -38,19 +38,12 @@ export const adminMenu: MenuItem[] = [
         ],
       },
       { label: 'Documents', icon: 'document-text', route: '/main-layout/documents' },
-      { label: 'Analytics', icon: 'chart-bar', route: '/main-layout/analytics' },
       {
         label: 'Timesheet', icon: 'clock', route: null,
         children: [
           { label: 'Overview', route: '/main-layout/timesheet' },
           { label: 'Calendar', route: '/main-layout/timesheet/calendar' },
           { label: 'Review', route: '/main-layout/timesheet/review' },
-        ],
-      },
-      {
-        label: 'Schedule', icon: 'calendar-date-range', route: null,
-        children: [
-          { label: 'Calendar', route: '/main-layout/schedule/calendar' },
         ],
       },
     ],
@@ -61,14 +54,7 @@ export const adminMenu: MenuItem[] = [
     items: [
       { label: 'Manage Accounts', icon: 'banknotes', route: '/main-layout/accounts' },
       { label: 'Account List', icon: 'table-cells', route: '/main-layout/accounts/list' },
-      { label: 'Financial', icon: 'chart-bar-square', route: '/main-layout/financials' },
-    ],
-  },
-  {
-    group: 'Administration',
-    separator: true,
-    items: [
-      { label: 'Admin Dashboard', icon: 'shield-check', route: '/main-layout/admin' },
+      { label: 'Financials', icon: 'chart-bar-square', route: '/main-layout/financials' },
     ],
   },
   {
@@ -102,20 +88,14 @@ export const portalMenu: MenuItem[] = [
     group: 'Productivity',
     separator: true,
     items: [
-      { label: 'My Tickets', icon: 'ticket', route: '/main-layout/ticket-management/tickets' },
-      { label: 'My Documents', icon: 'document-text', route: '/main-layout/documents' },
+      { label: 'Tickets', icon: 'ticket', route: '/main-layout/ticket-management/tickets' },
+      { label: 'Documents', icon: 'document-text', route: '/main-layout/documents' },
       {
         label: 'Timesheet', icon: 'clock', route: null,
         children: [
           { label: 'Overview', route: '/main-layout/timesheet' },
           { label: 'Calendar', route: '/main-layout/timesheet/calendar' },
           { label: 'My Timesheets', route: '/main-layout/timesheet/list' },
-        ],
-      },
-      {
-        label: 'Schedule', icon: 'calendar-date-range', route: null,
-        children: [
-          { label: 'Calendar', route: '/main-layout/schedule/calendar' },
         ],
       },
     ],
@@ -126,7 +106,7 @@ export const portalMenu: MenuItem[] = [
     items: [
       { label: 'Manage Accounts', icon: 'banknotes', route: '/main-layout/accounts' },
       { label: 'Account List', icon: 'table-cells', route: '/main-layout/accounts/list' },
-      { label: 'My Financials', icon: 'chart-bar-square', route: '/main-layout/financials' },
+      { label: 'Financials', icon: 'chart-bar-square', route: '/main-layout/financials' },
     ],
   },
   {

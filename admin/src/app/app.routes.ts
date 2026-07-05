@@ -20,8 +20,6 @@ export const appRoutes: Routes = [
         canActivate: [adminGuard],
       },
 
-      { path: 'analytics', loadComponent: () => import('./features/analytics/analytics.component').then(m => m.Analytics) },
-
       { path: 'profile', loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent) },
 
       { path: 'messages', redirectTo: 'messages/incoming', pathMatch: 'full' },
@@ -62,8 +60,6 @@ export const appRoutes: Routes = [
       { path: 'timesheet/submitted', redirectTo: 'timesheet/review', pathMatch: 'full' },
       { path: 'timesheet/pending', redirectTo: 'timesheet/review', pathMatch: 'full' },
       { path: 'timesheet/approved', redirectTo: 'timesheet/review', pathMatch: 'full' },
-
-      { path: 'schedule/calendar', loadComponent: () => import('./features/calendar/calendar.component').then(m => m.Calendar) },
 
       { path: 'settings', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent) },
 

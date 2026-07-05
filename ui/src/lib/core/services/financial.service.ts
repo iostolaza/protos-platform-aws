@@ -23,6 +23,19 @@ export class FinancialService {
 
   // ═══════════ ACCOUNT CRUD (for timesheet charge codes) ═══════════
 
+  // Guards against the Account model being absent from the deployed schema
+  // (e.g. amplify_outputs.json not yet regenerated after a backend deploy),
+  // which would otherwise surface as a cryptic "reading 'list' of undefined".
+  private get accountModel() {
+    const model = (this.client.models as any).Account;
+    if (!model) {
+      throw new Error(
+        'Accounts are not available yet. The backend schema has not been deployed — redeploy Amplify and re-sync amplify_outputs.json.'
+      );
+    }
+    return model;
+  }
+
   private mapAccountFromSchema(data: any): Account {
     let chargeCodes: ChargeCode[] = [];
     if (data.chargeCodesJson) {
@@ -48,13 +61,13 @@ export class FinancialService {
   }
 
   async listAccounts(): Promise<Account[]> {
-    const { data, errors } = await this.client.models.Account.list({ limit: 100 });
+    const { data, errors } = await this.accountModel.list({ limit: 100 });
     if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
     return data.map((d: any) => this.mapAccountFromSchema(d));
   }
 
   async getAccount(id: string): Promise<Account> {
-    const { data, errors } = await this.client.models.Account.get({ id });
+    const { data, errors } = await this.accountModel.get({ id });
     if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
     if (!data) throw new Error('Account not found');
     return this.mapAccountFromSchema(data);
@@ -75,7 +88,7 @@ export class FinancialService {
       type: account.type ?? null,
       chargeCodesJson: JSON.stringify(account.chargeCodes ?? []),
     };
-    const { data, errors } = await this.client.models.Account.create(input);
+    const { data, errors } = await this.accountModel.create(input);
     if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
     if (!data) throw new Error('Create failed');
     return this.mapAccountFromSchema(data);
@@ -97,14 +110,14 @@ export class FinancialService {
         ? JSON.stringify(updates.chargeCodes)
         : JSON.stringify(current.chargeCodes ?? []),
     };
-    const { data, errors } = await this.client.models.Account.update(input);
+    const { data, errors } = await this.accountModel.update(input);
     if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
     if (!data) throw new Error('Update failed');
     return this.mapAccountFromSchema(data);
   }
 
   async deleteAccount(id: string): Promise<void> {
-    const { errors } = await this.client.models.Account.delete({ id });
+    const { errors } = await this.accountModel.delete({ id });
     if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
   }
 
