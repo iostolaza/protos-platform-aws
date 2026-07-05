@@ -1,6 +1,6 @@
 // src/app/features/ticket-management/generate-tickets/generate-tickets.component.ts
 
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, AbstractControl, ValidationErrors } from '@angular/forms';
 import { TicketService } from '@ui';
@@ -20,7 +20,10 @@ export class GenerateTicketsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private currentUserId = '';
 
-  constructor(private fb: FormBuilder, private ticketService: TicketService) {
+  private fb = inject(FormBuilder);
+  private ticketService = inject(TicketService);
+
+  constructor() {
     this.form = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(4)]],
       description: ['', Validators.required],

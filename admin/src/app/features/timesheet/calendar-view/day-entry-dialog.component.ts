@@ -1,7 +1,7 @@
 
 // src/app/timesheet/calendar-view/day-entry-dialog.component.ts
 
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -35,11 +35,11 @@ export class DayEntryDialogComponent {
   form: FormGroup;
   saving = false;
 
-  constructor(
-    public dialogRef: MatDialogRef<DayEntryDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData,
-    private fb: FormBuilder
-  ) {
+  dialogRef = inject(MatDialogRef<DayEntryDialogComponent>);
+  data = inject<DialogData>(MAT_DIALOG_DATA);
+  private fb = inject(FormBuilder);
+
+  constructor() {
     this.form = this.fb.group({
       chargeCode: [this.data.entry.chargeCode || '', Validators.required],
       description: [this.data.entry.description || '', Validators.required],

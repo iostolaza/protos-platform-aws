@@ -15,8 +15,8 @@
 
       <!-- Type Selection (from current) -->
       <div class="mb-6">
-        <label class="block text-sm font-medium text-label mb-2">Select Type:</label>
-        <select formControlName="selectedType" (change)="onTypeChange()" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
+        <label for="edit-inv-type" class="block text-sm font-medium text-label mb-2">Select Type:</label>
+        <select id="edit-inv-type" formControlName="selectedType" (change)="onTypeChange()" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
           <option value="">Select Type</option>
           <option value="wedding">Wedding</option>
           <option value="real_estate">Real Estate</option>
@@ -26,30 +26,30 @@
       <!-- Status and Date Row -->
       <div class="grid grid-cols-2 gap-8 mb-6">
         <div>
-          <label class="block text-sm font-medium text-label mb-1">Order Status:</label>
-          <select formControlName="orderStatus" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
+          <label for="edit-inv-status" class="block text-sm font-medium text-label mb-1">Order Status:</label>
+          <select id="edit-inv-status" formControlName="orderStatus" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
             @for (status of orderStatuses; track status) {
               <option [value]="status">{{ status }}</option>
             }
           </select>
         </div>
         <div class="text-right">
-          <label class="block text-sm font-medium text-label mb-1">Order Date:</label>
-          <input type="text" formControlName="orderDate" class="w-full p-2 bg-background border border-border rounded-lg text-right" placeholder="DD-MM-YYYY">
+          <label for="edit-inv-date" class="block text-sm font-medium text-label mb-1">Order Date:</label>
+          <input id="edit-inv-date" type="text" formControlName="orderDate" class="w-full p-2 bg-background border border-border rounded-lg text-right" placeholder="DD-MM-YYYY">
         </div>
       </div>
 
       <!-- Bill From/To Row (Enhanced with separate addresses, tenant link) -->
       <div class="grid grid-cols-2 gap-8 mb-6">
         <div>
-          <label class="block text-sm font-medium text-label mb-1">Bill From:</label>
-          <input type="text" formControlName="billFrom" class="w-full p-3 bg-background border border-border rounded-lg mb-2" placeholder="Enter company name">
-          <label class="block text-sm font-medium text-label mb-1">From Address:</label>
-          <textarea formControlName="fromAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
+          <label for="edit-bill-from" class="block text-sm font-medium text-label mb-1">Bill From:</label>
+          <input id="edit-bill-from" type="text" formControlName="billFrom" class="w-full p-3 bg-background border border-border rounded-lg mb-2" placeholder="Enter company name">
+          <label for="edit-from-address" class="block text-sm font-medium text-label mb-1">From Address:</label>
+          <textarea id="edit-from-address" formControlName="fromAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
         </div>
         <div>
-          <label class="block text-sm font-medium text-label mb-1">Bill To:</label>
-            <select formControlName="tenantId" class="w-full p-3 bg-background border border-border rounded-lg">
+          <label for="edit-tenant" class="block text-sm font-medium text-label mb-1">Bill To:</label>
+            <select id="edit-tenant" formControlName="tenantId" class="w-full p-3 bg-background border border-border rounded-lg">
                 <option value="">Select Recipient</option>
                 @for (contact of contacts(); track trackUser($index, contact)) {
                   <option [value]="contact.cognitoId">
@@ -57,8 +57,8 @@
                   </option>
                 }
           </select>
-          <label class="block text-sm font-medium text-label mb-1 mt-2">To Address:</label>
-          <textarea formControlName="toAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
+          <label for="edit-to-address" class="block text-sm font-medium text-label mb-1 mt-2">To Address:</label>
+          <textarea id="edit-to-address" formControlName="toAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
 
           <!-- Building (if manager, from current) -->
           @if (isManager && assignedBuildings.length > 0) {
@@ -73,8 +73,8 @@
       </div>
 
       <div class="mb-6">
-        <label class="block text-sm font-medium text-label mb-1">Description:</label>
-        <textarea formControlName="description" rows="2" class="w-full p-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary" placeholder="Invoice summary (e.g., Monthly service fees)"></textarea>
+        <label for="edit-description" class="block text-sm font-medium text-label mb-1">Description:</label>
+        <textarea id="edit-description" formControlName="description" rows="2" class="w-full p-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary" placeholder="Invoice summary (e.g., Monthly service fees)"></textarea>
       </div>
 
       <!-- Items Table -->
@@ -111,8 +111,8 @@
 
         <!-- Add Item Dropdown (from current, enhanced) -->
         <div class="mt-4 w-full">
-          <label class="block text-sm font-medium text-label mb-1">Add Item:</label>
-          <select #addSelect (change)="onAddItemChange(addSelect.value); addSelect.selectedIndex = 0"
+          <label for="edit-add-item" class="block text-sm font-medium text-label mb-1">Add Item:</label>
+          <select id="edit-add-item" #addSelect (change)="onAddItemChange(addSelect.value); addSelect.selectedIndex = 0"
                   class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary" [disabled]="selectedType() === ''">
             <option value="">Add Item</option>
             @for (item of filteredItems(); track trackItemOption($index, item)) {

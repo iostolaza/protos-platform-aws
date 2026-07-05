@@ -1,5 +1,5 @@
 // src/app/features/ticket-management/ticket-details/ticket-details.component.ts
-import { Component, Input, Output, EventEmitter, effect } from '@angular/core';
+import { Component, Input, Output, EventEmitter, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AngularSvgIconModule } from 'angular-svg-icon';
@@ -18,14 +18,16 @@ import { StatusClassPipe } from '@ui';  // Added
 })
 export class TicketDetailsComponent {
   @Input() ticket!: FlatTicket;
-  @Output() close = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
   @Output() edit = new EventEmitter<FlatTicket>();
 
-  newNote: string = '';
+  newNote = '';
 
   getIconPath = getIconPath;
 
-  constructor(private ticketService: TicketService) {
+  private ticketService = inject(TicketService);
+
+  constructor() {
     effect(() => {
       this.ticket.comments?.sort((a: TicketComment, b: TicketComment) => new Date(a.date).getTime() - new Date(b.date).getTime());
     });
@@ -37,7 +39,7 @@ export class TicketDetailsComponent {
 
   async deleteTicket() {
     await this.ticketService.deleteTicket(this.ticket.id);
-    this.close.emit();
+    this.closed.emit();
   }
 
   async addNote() {

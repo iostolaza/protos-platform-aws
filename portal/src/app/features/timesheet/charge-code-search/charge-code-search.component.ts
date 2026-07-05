@@ -1,6 +1,6 @@
 
 // file: src/app/timesheet/calendar-view/charge-code-search-dialog.component.ts
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
@@ -25,10 +25,10 @@ export class ChargeCodeSearchDialogComponent implements OnInit {
   filteredCodes: Observable<ChargeCode[]>;
   selectedCode: ChargeCode | '' = '';
 
-  constructor(
-    public dialogRef: MatDialogRef<ChargeCodeSearchDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { chargeCodes: ChargeCode[] }
-  ) {
+  dialogRef = inject(MatDialogRef<ChargeCodeSearchDialogComponent>);
+  data = inject<{ chargeCodes: ChargeCode[] }>(MAT_DIALOG_DATA);
+
+  constructor() {
     this.filteredCodes = this.searchControl.valueChanges.pipe(
       startWith(''),
       map(value => this.filterCodes(value || ''))

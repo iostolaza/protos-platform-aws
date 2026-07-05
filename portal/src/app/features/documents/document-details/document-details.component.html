@@ -7,6 +7,6 @@
     <p class="text-sm text-muted-foreground mb-2">Description: {{ document.description || 'N/A' }}</p>
     <p class="text-sm text-muted-foreground mb-4">Uploaded: {{ document.uploadDate | date:'short' }}</p>
     <a [href]="documentUrl()" target="_blank" class="bg-primary text-primary-foreground p-2 rounded hover:bg-primary/90 mr-2">Download/View</a>
-    <button (click)="close.emit()" class="bg-destructive text-destructive-foreground p-2 rounded hover:bg-destructive/90">Close</button>
+    <button (click)="closed.emit()" class="bg-destructive text-destructive-foreground p-2 rounded hover:bg-destructive/90">Close</button>
   </div>
 </div>

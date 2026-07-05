@@ -47,10 +47,14 @@
   </div>
 
   <!-- Ticket Details Card -->
-  <app-ticket-details *ngIf="selectedTicket()" [ticket]="selectedTicket()!" (close)="selectedTicket.set(null)" (edit)="startEditing($event)"></app-ticket-details>
+  @if (selectedTicket()) {
+    <app-ticket-details [ticket]="selectedTicket()!" (closed)="selectedTicket.set(null)" (edit)="startEditing($event)"></app-ticket-details>
+  }
 
   <!-- Edit Ticket (Conditional) -->
-  <app-edit-ticket *ngIf="editingTicket()" [ticket]="editingTicket()!" (update)="onTicketUpdate($event)" (cancel)="editingTicket.set(null)"></app-edit-ticket>
+  @if (editingTicket()) {
+    <app-edit-ticket [ticket]="editingTicket()!" (update)="onTicketUpdate($event)" (cancelled)="editingTicket.set(null)"></app-edit-ticket>
+  }
 
   <!-- Ticket List Card (Table) -->
   <app-ticket-list></app-ticket-list>
@@ -61,9 +65,13 @@
   <!-- Team List Card -->
   <app-team-list (view)="viewTeam($event)" (edit)="editTeam($event)"></app-team-list>
 
-  <!-- Team Details Card -->  <!-- NEW: Conditional details -->
-  <app-team-details *ngIf="selectedTeam()" [team]="selectedTeam()!" (close)="selectedTeam.set(null)" (edit)="editTeam($event)"></app-team-details>
+  <!-- Team Details Card -->
+  @if (selectedTeam()) {
+    <app-team-details [team]="selectedTeam()!" (closed)="selectedTeam.set(null)" (edit)="editTeam($event)"></app-team-details>
+  }
 
   <!-- Team Edit (Conditional) -->
-  <app-team-edit *ngIf="editingTeam()" [team]="editingTeam()!" (update)="onTeamUpdate($event)" (cancel)="editingTicket.set(null)"></app-team-edit>
+  @if (editingTeam()) {
+    <app-team-edit [team]="editingTeam()!" (update)="onTeamUpdate($event)" (cancelled)="editingTicket.set(null)"></app-team-edit>
+  }
 </div>

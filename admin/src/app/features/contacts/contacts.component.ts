@@ -1,5 +1,5 @@
 // src/app/features/contacts/contacts.component.ts 
-import { Component, OnInit, OnDestroy, signal } from '@angular/core'; 
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContactService } from '@ui';
@@ -26,18 +26,16 @@ type UserType = Schema['User']['type'];
 export class ContactsComponent implements OnInit, OnDestroy {
   public contacts = signal<InputContact[]>([]); 
   public searchResults = signal<InputContact[]>([]); 
-  public searchQuery: string = '';
-  public updatedAgo: string = 'a moment ago';
-  public onlineContacts: number = 0;
+  public searchQuery = '';
+  public updatedAgo = 'a moment ago';
+  public onlineContacts = 0;
   public recentContacts: InputContact[] = [];
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
-  constructor(
-    private contactsService: ContactService, 
-    private userService: UserService,
-    private router: Router 
-  ) {}
+  private contactsService = inject(ContactService);
+  private userService = inject(UserService);
+  private router = inject(Router);
 
   getIconPath = getIconPath;
 
@@ -79,7 +77,7 @@ private async loadContacts(): Promise<void> {
       const filtered = users.filter((u) => u.cognitoId && !existingIds.has(u.cognitoId) && u.cognitoId !== userId);
       const extendedFiltered = await Promise.all(
         filtered.map(async (u) => {
-          let imageUrl: string = 'assets/profile/avatar-default.svg';
+          let imageUrl = 'assets/profile/avatar-default.svg';
           if (u.profileImageKey) {
             try {
               const { url } = await getUrl({

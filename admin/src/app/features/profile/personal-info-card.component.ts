@@ -1,6 +1,6 @@
 
 // src/app/features/profile/personal-info-card.component.ts
-import { Component, effect, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UserService, UserProfile } from '@ui';
@@ -17,7 +17,10 @@ export class PersonalInfoCardComponent {
   user: UserProfile | null = null;
   profileImageUrl: string | null = null;
  
-  constructor(private fb: FormBuilder, private userService: UserService) {
+  private fb = inject(FormBuilder);
+  private userService = inject(UserService);
+
+  constructor() {
     this.form = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],

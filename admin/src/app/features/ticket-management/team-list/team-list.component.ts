@@ -1,12 +1,11 @@
 // src/app/features/ticket-management/team-list/team-list.component.ts
 
-import { Component, Output, EventEmitter, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common'; 
+import { Component, Output, EventEmitter, OnDestroy, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { getIconPath } from '@ui';
 import { TeamService } from '@ui';
 import { EditTeamComponent } from '../edit-team/edit-team.component';
-import { signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -24,7 +23,9 @@ export class TeamListComponent implements OnDestroy {
   editingTeam = signal<any | null>(null);
   private sub?: Subscription;
 
-  constructor(private teamService: TeamService) {
+  private teamService = inject(TeamService);
+
+  constructor() {
     this.loadTeams();
     this.sub = this.teamService.observeTeams().subscribe(() => {
       this.loadTeams();

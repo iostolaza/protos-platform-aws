@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { UserService } from './user.service';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@amplify-schema';
@@ -14,12 +14,9 @@ import 'jspdf-autotable';
 export class FinancialService {
   private client = generateClient<Schema>();
   private taxRate = 0.0825;
-
-  constructor(
-    private roleService: RoleService,
-    private authService: AuthService,
-    private userService: UserService
-  ) {}
+  private roleService = inject(RoleService);
+  private authService = inject(AuthService);
+  private userService = inject(UserService);
 
   // ═══════════ ACCOUNT CRUD (for timesheet charge codes) ═══════════
 
@@ -179,13 +176,13 @@ export class FinancialService {
     return this.updateAccount(accountId, { chargeCodes: [...existing, code] });
   }
 
-  async addFunds(accountId: string, amount: number, description: string = 'Add funds'): Promise<void> {
+  async addFunds(accountId: string, amount: number, description = 'Add funds'): Promise<void> {
     const account = await this.getAccount(accountId);
     const newBalance = account.balance + amount;
     await this.updateAccount(accountId, { balance: newBalance, endingBalance: newBalance });
   }
 
-  async subtractFunds(accountId: string, amount: number, description: string = 'Subtract funds'): Promise<void> {
+  async subtractFunds(accountId: string, amount: number, description = 'Subtract funds'): Promise<void> {
     const account = await this.getAccount(accountId);
     const newBalance = account.balance - amount;
     await this.updateAccount(accountId, { balance: newBalance, endingBalance: newBalance });

@@ -1,7 +1,7 @@
 
 // src/app/features/financials/financials.component.ts
 
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FinancialService } from '@ui';
@@ -23,7 +23,7 @@ import { Router } from '@angular/router';
   imports: [CommonModule, FinancialTitleCardComponent, CreateInvoiceComponent, InvoiceLedgerComponent, BalanceCardComponent, BalanceLedgerComponent, InvoiceDetailsComponent],
   templateUrl: './financials.component.html',
 })
-export class FinancialsComponent {
+export class FinancialsComponent implements OnInit {
   financialService = inject(FinancialService);
   roleService = inject(RoleService);
   authService = inject(AuthService);

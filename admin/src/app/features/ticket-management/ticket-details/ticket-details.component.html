@@ -4,7 +4,7 @@
   <!-- UPDATED: Enhanced header with larger title for visibility (text-3xl like balance emphasis) -->
   <div class="flex justify-between items-center mb-4">
     <h3 class="accent-title text-label text-3xl">{{ ticket.title }}</h3>
-    <button (click)="close.emit()" class="icon-btn-hover text-destructive hover:text-foreground">
+    <button (click)="closed.emit()" class="icon-btn-hover text-destructive hover:text-foreground">
       <svg-icon [src]="getIconPath('x-mark')" svgClass="h-5 w-5 text-destructive"></svg-icon>
     </button>
   </div>

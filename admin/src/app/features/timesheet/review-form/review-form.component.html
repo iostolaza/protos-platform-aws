@@ -17,14 +17,15 @@
 
     <p class="text-gray-600 mb-6">Status: <strong>{{ timesheet()?.status }}</strong></p>
 
-  <div class="bg-white shadow-md rounded-lg p-6 mb-6 overflow-x-auto" *ngIf="timesheet(); else loadingCalendar">
-    <full-calendar [options]="calendarOptions()"></full-calendar>
-  </div>
-  <ng-template #loadingCalendar>
+  @if (timesheet()) {
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6 overflow-x-auto">
+      <full-calendar [options]="calendarOptions()"></full-calendar>
+    </div>
+  } @else {
     <div class="bg-white shadow-md rounded-lg p-6 mb-6 overflow-x-auto text-center">
       Loading timesheet data...
     </div>
-  </ng-template>
+  }
 
   <h2 class="text-2xl font-semibold mb-4">Daily Aggregates</h2>
   <table mat-table [dataSource]="dailyAggregates()" class="table w-full mb-6">
@@ -121,40 +122,40 @@
 
     <div class="mt-auto flex justify-end gap-4">
       <!-- Save Changes Button -->
-      <button mat-raised-button
-              color="primary"
-              class="min-w-48 !h-14 !text-lg !font-bold !rounded-xl !shadow-lg hover:!shadow-2xl hover:!scale-105 transform transition-all duration-300"
-              *ngIf="canEmployeeEdit() || isAdminOrManager()"
-              (click)="saveChanges()">
-        <span class="flex items-center gap-3">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-          </svg>
-          Save Changes
-        </span>
-      </button>
+      @if (canEmployeeEdit() || isAdminOrManager()) {
+        <button mat-raised-button
+                color="primary"
+                class="min-w-48 !h-14 !text-lg !font-bold !rounded-xl !shadow-lg hover:!shadow-2xl hover:!scale-105 transform transition-all duration-300"
+                (click)="saveChanges()">
+          <span class="flex items-center gap-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            Save Changes
+          </span>
+        </button>
 
-      <!-- Resubmit Button -->
-      <button mat-raised-button
-              color="accent"
-              class="min-w-48 !h-14 !text-lg !font-bold !rounded-xl !bg-green-600 hover:!bg-green-700 !text-white !shadow-lg hover:!shadow-2xl hover:!scale-105 transform transition-all duration-300 disabled:!opacity-50 disabled:!cursor-not-allowed"
-              *ngIf="canEmployeeEdit() || isAdminOrManager()"
-              (click)="resubmitTimesheet()"
-              [disabled]="timesheet()?.status !== 'rejected'">
-        <span class="flex items-center gap-3">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-          Resubmit
-        </span>
-      </button>
+        <!-- Resubmit Button -->
+        <button mat-raised-button
+                color="accent"
+                class="min-w-48 !h-14 !text-lg !font-bold !rounded-xl !bg-green-600 hover:!bg-green-700 !text-white !shadow-lg hover:!shadow-2xl hover:!scale-105 transform transition-all duration-300 disabled:!opacity-50 disabled:!cursor-not-allowed"
+                (click)="resubmitTimesheet()"
+                [disabled]="timesheet()?.status !== 'rejected'">
+          <span class="flex items-center gap-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Resubmit
+          </span>
+        </button>
+      }
     </div>
   </div>
 
   <!-- Right: Approval Actions -->
-  <div class="bg-white rounded-xl shadow-xl border border-gray-200 p-8 flex flex-col h-full min-h-64"
-       *ngIf="isAdminOrManager()">
+  @if (isAdminOrManager()) {
+  <div class="bg-white rounded-xl shadow-xl border border-gray-200 p-8 flex flex-col h-full min-h-64">
     <h3 class="text-2xl font-bold text-gray-800 mb-8">Approval Actions</h3>
 
     <form [formGroup]="reviewForm" (ngSubmit)="submitReview()" class="space-y-6 flex-1">
@@ -181,12 +182,13 @@
         </mat-radio-button>
       </mat-radio-group>
 
-      <mat-form-field appearance="outline" class="w-full mt-4"
-                      *ngIf="reviewForm.get('action')?.value === 'reject'">
-        <mat-label>Rejection Reason</mat-label>
-        <textarea matInput formControlName="rejectionReason" rows="4" class="text-base"></textarea>
-        <mat-error>Reason is required</mat-error>
-      </mat-form-field>
+      @if (reviewForm.get('action')?.value === 'reject') {
+        <mat-form-field appearance="outline" class="w-full mt-4">
+          <mat-label>Rejection Reason</mat-label>
+          <textarea matInput formControlName="rejectionReason" rows="4" class="text-base"></textarea>
+          <mat-error>Reason is required</mat-error>
+        </mat-form-field>
+      }
     </form>
 
     <!-- Submit Review Button -->
@@ -206,6 +208,7 @@
       </button>
     </div>
   </div>
+  }
 </div>
 
 </div>

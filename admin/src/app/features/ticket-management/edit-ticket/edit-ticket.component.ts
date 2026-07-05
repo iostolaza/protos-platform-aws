@@ -1,6 +1,6 @@
 // src/app/features/ticket-management/edit-ticket/edit-ticket.component.ts
 
-import { Component, Input, Output, EventEmitter, signal, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { UserService } from '@ui';
 import { TicketService } from '@ui';
@@ -23,13 +23,15 @@ function validDate(control: AbstractControl): { [key: string]: boolean } | null 
 export class EditTicketComponent implements OnInit {
   @Input() ticket!: FlatTicket;
   @Output() update = new EventEmitter<FlatTicket>();
-  @Output() cancel = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
 
   form!: FormGroup;
   errorMessage = signal<string | null>(null);
   users = signal<any[]>([]);
 
-  constructor(private fb: FormBuilder, private ticketService: TicketService, private userService: UserService) {}
+  private fb = inject(FormBuilder);
+  private ticketService = inject(TicketService);
+  private userService = inject(UserService);
 
   async ngOnInit() {
     this.form = this.fb.group({

@@ -13,16 +13,16 @@
       }
       <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-label mb-1">*Title:</label>
-          <input formControlName="title" type="text" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+          <label for="ticket-title" class="block text-sm font-medium text-label mb-1">*Title:</label>
+          <input id="ticket-title" formControlName="title" type="text" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
         </div>
         <div>
-          <label class="block text-sm font-medium text-label mb-1">*Description:</label>
-          <textarea formControlName="description" class="w-full p-2 bg-background border border-border rounded-lg text-foreground h-24 focus:ring-2 focus:ring-primary"></textarea> 
+          <label for="ticket-description" class="block text-sm font-medium text-label mb-1">*Description:</label>
+          <textarea id="ticket-description" formControlName="description" class="w-full p-2 bg-background border border-border rounded-lg text-foreground h-24 focus:ring-2 focus:ring-primary"></textarea> 
         </div>
         <div>
-          <label class="block text-sm font-medium text-label mb-1">*Estimated Date:</label>
-          <input formControlName="estimated" type="date" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+          <label for="ticket-estimated" class="block text-sm font-medium text-label mb-1">*Estimated Date:</label>
+          <input id="ticket-estimated" formControlName="estimated" type="date" class="w-full p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
         </div>
         <div>
           <button type="submit" class="btn btn-primary">Create</button> 

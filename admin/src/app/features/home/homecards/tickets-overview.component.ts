@@ -7,7 +7,7 @@ import { FlatTicket, TicketStatus } from '@ui';
 import { CommonModule } from '@angular/common'; 
 import { StatusClassPipe } from '@ui';
 
-declare var p5: any;
+declare let p5: any;
 declare global {
   interface Window {
     p5: {
@@ -49,20 +49,24 @@ declare global {
         <div class="mt-4 flex items-center">
           <div id="ticketsPieChart" class="w-50 h-40"></div>
           <div class="ml-4">
-            <div *ngFor="let label of pieLabels(); let i = index" class="flex items-center mb-1">
+            @for (label of pieLabels(); track label; let i = $index) {
+            <div class="flex items-center mb-1">
               <div class="w-3 h-3 rounded-full" [style.background-color]="colors()[i]"></div>
               <p class="ml-2 text-sm text-gray-600 dark:text-gray-200">{{ label }}</p>
             </div>
+            }
           </div>
         </div>
         <div class="mt-4">
-          <div *ngFor="let ticket of ticketsPreview()" class="bg-gray-600 p-2 rounded-lg flex items-center space-x-2 w-full mt-2">
+          @for (ticket of ticketsPreview(); track ticket.id) {
+          <div class="bg-gray-600 p-2 rounded-lg flex items-center space-x-2 w-full mt-2">
             <span [ngClass]="ticket.status | statusClass" class="rounded-full px-2 py-1 text-white">{{ ticket.status }}</span>
             <div class="flex-1">
               <p class="text-sm text-white">{{ ticket.title }}</p>
               <p class="text-xs text-gray-200">{{ ticket.updatedAt | date:'yyyy-MM-dd' }}</p>
             </div>
           </div>
+          }
         </div>
       </div>
       <div class="flex justify-end mt-2">

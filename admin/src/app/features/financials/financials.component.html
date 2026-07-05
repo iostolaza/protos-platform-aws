@@ -13,7 +13,7 @@
   <app-invoice-ledger [invoices]="invoices()" (view)="selectedInvoice.set($event)"></app-invoice-ledger>
 
   @if (selectedInvoice()) {
-    <app-invoice-details [invoice]="selectedInvoice()!" (close)="selectedInvoice.set(null)" (edit)="editInvoice($event)" (refresh)="onRefresh()"></app-invoice-details>
+    <app-invoice-details [invoice]="selectedInvoice()!" (closed)="selectedInvoice.set(null)" (edit)="editInvoice($event)" (refresh)="onRefresh()"></app-invoice-details>
   }
 
   <!-- NEW: Balance Card (user total; pay button deducts) -->

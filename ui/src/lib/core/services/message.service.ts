@@ -1,6 +1,6 @@
 // src/app/core/services/message.service.ts
 
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { generateClient } from 'aws-amplify/data';
 import { getUrl, uploadData } from 'aws-amplify/storage';
 import type { Schema } from '@amplify-schema';
@@ -12,14 +12,14 @@ import { UserService } from './user.service';
 import { ChatItem, Message } from '../models/message.model';
 
 @Injectable({ providedIn: 'root' })
-export class MessageService {
+export class MessageService implements OnDestroy {
   private client = generateClient<Schema>();
   private destroy$ = new Subject<void>();
   private recentChats = signal<ChatItem[]>([]);
   private messages = signal<Message[]>([]);
   private channelMembersCache = new Map<string, string[]>();
 
-  constructor(private userService: UserService) {} // Removed ContactService
+  private userService = inject(UserService);
 
   async getCurrentUserId(): Promise<string> {
     const { userId } = await getCurrentUser();

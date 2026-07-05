@@ -1,7 +1,7 @@
 
 // src/app/core/services/contact.service.ts
 
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { generateClient } from 'aws-amplify/data';
 import { getUrl } from 'aws-amplify/storage';
 import { getCurrentUser } from 'aws-amplify/auth';
@@ -16,15 +16,12 @@ import { InputContact } from '../models/contact';
 @Injectable({
   providedIn: 'root',
 })
-export class ContactService {
+export class ContactService implements OnDestroy {
   private client = generateClient<Schema>();
   private destroy$ = new Subject<void>();
   private contacts = signal<InputContact[]>([]);
-
-  constructor(
-    private userService: UserService,
-    private messageService: MessageService
-  ) {}
+  private userService = inject(UserService);
+  private messageService = inject(MessageService);
 
   // Method to get authenticated user
   async getAuthenticatedUser(): Promise<Schema['User']['type'] | null> {

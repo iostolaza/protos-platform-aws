@@ -7,24 +7,24 @@
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="grid grid-cols-2 gap-4">
         <div class="col-span-2">
-          <label class="block text-sm text-label">Line 1</label>
-          <input formControlName="line1" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter address line 1" />
+          <label for="addr-line1" class="block text-sm text-label">Line 1</label>
+          <input id="addr-line1" formControlName="line1" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter address line 1" />
         </div>
         <div>
-          <label class="block text-sm text-label">City</label>
-          <input formControlName="city" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter city" />
+          <label for="addr-city" class="block text-sm text-label">City</label>
+          <input id="addr-city" formControlName="city" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter city" />
         </div>
         <div>
-          <label class="block text-sm text-label">State</label>
-          <input formControlName="state" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter state" />
+          <label for="addr-state" class="block text-sm text-label">State</label>
+          <input id="addr-state" formControlName="state" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter state" />
         </div>
         <div>
-          <label class="block text-sm text-label">Zip</label>
-          <input formControlName="zip" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter zip code" />
+          <label for="addr-zip" class="block text-sm text-label">Zip</label>
+          <input id="addr-zip" formControlName="zip" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter zip code" />
         </div>
         <div>
-          <label class="block text-sm text-label">Country</label>
-          <input formControlName="country" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter country" />
+          <label for="addr-country" class="block text-sm text-label">Country</label>
+          <input id="addr-country" formControlName="country" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter country" />
         </div>
       </div>
       <div class="mt-4 flex justify-end gap-2">

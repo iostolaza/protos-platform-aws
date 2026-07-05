@@ -1,0 +1,15 @@
+{
+  "auth": {
+    "user_pool_id": "STUB",
+    "aws_region": "us-west-1",
+    "user_pool_client_id": "STUB",
+    "identity_pool_id": "STUB"
+  },
+  "data": {
+    "url": "https://stub.appsync-api.us-west-1.amazonaws.com/graphql",
+    "aws_region": "us-west-1",
+    "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
+    "authorization_types": []
+  },
+  "version": "1.4"
+}

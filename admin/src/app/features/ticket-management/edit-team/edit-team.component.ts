@@ -1,6 +1,6 @@
 // src/app/features/ticket-management/edit-team/edit-team.component.ts
 
-import { Component, Input, Output, OnInit, OnDestroy, signal, EventEmitter } from '@angular/core';
+import { Component, Input, Output, OnInit, OnDestroy, inject, signal, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormsModule, FormGroup, Validators } from '@angular/forms';  // Added Validators
 import { UserService } from '@ui';
@@ -21,7 +21,7 @@ type UserType = Schema['User']['type'];
 export class EditTeamComponent implements OnInit, OnDestroy {
   @Input() team!: any;
   @Output() update = new EventEmitter<any>();
-  @Output() cancel = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
 
   form: FormGroup;
   members = signal<any[]>([]);
@@ -31,7 +31,11 @@ export class EditTeamComponent implements OnInit, OnDestroy {
   getIconPath = getIconPath;
   private subs: Subscription[] = [];
 
-  constructor(private fb: FormBuilder, private userService: UserService, private teamService: TeamService) {
+  private fb = inject(FormBuilder);
+  private userService = inject(UserService);
+  private teamService = inject(TeamService);
+
+  constructor() {
     this.form = this.fb.group({
       name: ['', Validators.required],
       description: [''],

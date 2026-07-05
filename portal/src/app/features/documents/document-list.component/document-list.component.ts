@@ -1,6 +1,6 @@
 // src/app/features/documents/document-list/document-list.component.ts (Full edited script)
 
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AngularSvgIconModule } from 'angular-svg-icon';
@@ -35,7 +35,10 @@ export class DocumentListComponent {
     )
   );
 
-  constructor(private documentService: DocumentService, private sanitizer: DomSanitizer) {
+  private documentService = inject(DocumentService);
+  private sanitizer = inject(DomSanitizer);
+
+  constructor() {
     this.categories.set([...this.documentService.getCategories()]);
     this.documentService.listDocuments().subscribe(docs => this.documents.set(docs));
   }

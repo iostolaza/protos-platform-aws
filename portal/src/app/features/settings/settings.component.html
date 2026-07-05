@@ -9,7 +9,7 @@
       <span class="text-foreground text-xs font-semibold">Color</span>
       <div class="mt-2 grid grid-cols-2 gap-2">
         @for (item of themeColors; track $index) {
-          <div (click)="toggleThemeColor(item.name)" [ngClass]="{ 'border-muted-foreground/30 bg-background': item.name == themeService.theme().color }" class="focus-visible:ring-ring border-border bg-background text-muted-foreground hover:bg-muted-foreground hover:text-foreground shadow-xs inline-flex h-8 cursor-pointer items-center justify-start space-x-2 whitespace-nowrap rounded-md border border-dashed px-3 text-xs font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50">
+          <div (click)="toggleThemeColor(item.name)" (keyup.enter)="toggleThemeColor(item.name)" tabindex="0" role="button" [ngClass]="{ 'border-muted-foreground/30 bg-background': item.name === themeService.theme().color }" class="focus-visible:ring-ring border-border bg-background text-muted-foreground hover:bg-muted-foreground hover:text-foreground shadow-xs inline-flex h-8 cursor-pointer items-center justify-start space-x-2 whitespace-nowrap rounded-md border border-dashed px-3 text-xs font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50">
             <span [style.backgroundColor]="item.code" class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"></span>
             <p class="capitalize">{{ item.name }}</p>
           </div>
@@ -35,7 +35,7 @@
 
     <!-- Toggle Switch -->
     <div
-      (click)="toggleThemeMode()"
+      (click)="toggleThemeMode()" (keyup.enter)="toggleThemeMode()" tabindex="0" role="button"
       [class.bg-primary]="themeService.isDark"
       [class.bg-muted]="!themeService.isDark"
       class="relative flex items-center justify-between w-20 h-10 rounded-full cursor-pointer transition-all duration-300 px-1"
@@ -63,16 +63,16 @@
     <h2 class="text-lg font-semibold mb-4 text-foreground">Security</h2>
     <form [formGroup]="passwordForm" (ngSubmit)="savePassword()">
       <div class="mb-4">
-        <label class="block text-sm text-muted-foreground">Current Password</label>
-        <input formControlName="current" type="password" class="w-full p-2 border border-border rounded bg-background text-foreground" />
+        <label for="set-current-pw" class="block text-sm text-muted-foreground">Current Password</label>
+        <input id="set-current-pw" formControlName="current" type="password" class="w-full p-2 border border-border rounded bg-background text-foreground" />
       </div>
       <div class="mb-4">
-        <label class="block text-sm text-muted-foreground">New Password</label>
-        <input formControlName="new" type="password" class="w-full p-2 border border-border rounded bg-background text-foreground" />
+        <label for="set-new-pw" class="block text-sm text-muted-foreground">New Password</label>
+        <input id="set-new-pw" formControlName="new" type="password" class="w-full p-2 border border-border rounded bg-background text-foreground" />
       </div>
       <div class="mb-4">
-        <label class="block text-sm text-muted-foreground">Confirm</label>
-        <input formControlName="confirm" type="password" class="w-full p-2 border border-border rounded bg-background text-foreground" />
+        <label for="set-confirm-pw" class="block text-sm text-muted-foreground">Confirm</label>
+        <input id="set-confirm-pw" formControlName="confirm" type="password" class="w-full p-2 border border-border rounded bg-background text-foreground" />
         @if (passwordForm.hasError('mismatch')) {
           <p class="text-destructive text-sm">Passwords don't match</p>
         }
@@ -80,8 +80,8 @@
       <button type="submit" class="px-4 py-2 bg-primary text-foreground rounded hover:bg-primary/90">Save</button>
     </form>
     <div class="mt-4">
-      <label class="block text-sm text-muted-foreground">2FA</label>
-      <input type="checkbox" class="border-border" /> Enable (mock)
+      <label for="set-2fa" class="block text-sm text-muted-foreground">2FA</label>
+      <input id="set-2fa" type="checkbox" class="border-border" /> Enable (mock)
     </div>
   </div>
 

@@ -33,7 +33,7 @@
     <!-- Edit Form (Conditional) -->
     @if (editingTeam()) {
       <div class="mt-4">
-        <app-team-edit [team]="editingTeam()!" (update)="onTeamUpdate($event)" (cancel)="editingTeam.set(null)"></app-team-edit>
+        <app-team-edit [team]="editingTeam()!" (update)="onTeamUpdate($event)" (cancelled)="editingTeam.set(null)"></app-team-edit>
       </div>
     }
   </div>

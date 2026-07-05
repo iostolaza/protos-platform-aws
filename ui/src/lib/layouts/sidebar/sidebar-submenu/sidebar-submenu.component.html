@@ -2,7 +2,7 @@
   <ul class="border-border text-foreground flex flex-col border-dashed ltr:border-l ltr:pl-2 rtl:border-r rtl:pr-2">
     @for (sub of submenu.children; track sub.label) {
       <li>
-        <div class="relative flex nav-hover" (click)="toggleMenu(sub)">
+        <div class="relative flex nav-hover" (click)="toggleMenu(sub)" (keyup.enter)="toggleMenu(sub)" tabindex="0" role="button">
           <ng-container [ngTemplateOutlet]="sub.children ? childMenu : parentMenu" [ngTemplateOutletContext]="{ sub: sub }"></ng-container>
           <ng-template #parentMenu let-sub="sub">
             @if (sub.route !== '/logout') {

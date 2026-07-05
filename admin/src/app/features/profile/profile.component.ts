@@ -4,7 +4,7 @@
  * Best practice: Standalone, signals for v20+, reactive forms in children.
  * Cite: Angular components - https://angular.dev/guide/components
  */
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserService } from '@ui';
 import { PersonalInfoCardComponent } from './personal-info-card.component';
@@ -30,7 +30,7 @@ import { ProfileTitleComponent } from './profile-title.component';
 export class ProfileComponent implements OnInit {
   loading = signal(true);
   
-  constructor(private userService: UserService) {}
+  private userService = inject(UserService);
   
   async ngOnInit() {
     await this.userService.load();

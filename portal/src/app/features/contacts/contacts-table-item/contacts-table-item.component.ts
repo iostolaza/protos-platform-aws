@@ -5,6 +5,7 @@ import { AngularSvgIconModule } from 'angular-svg-icon';
 import { InputContact } from '@ui';
 
 @Component({
+  // eslint-disable-next-line @angular-eslint/component-selector
   selector: '[contacts-table-item]',
   templateUrl: './contacts-table-item.component.html',
   standalone: true,

@@ -4,7 +4,7 @@
 <div class="ledger-card">
   <div class="flex justify-between items-center mb-4">
     <h3 class="accent-title">{{ team.name }}</h3> 
-    <button (click)="close.emit()" class="icon-btn-hover text-destructive hover:text-foreground"> 
+    <button (click)="closed.emit()" class="icon-btn-hover text-destructive hover:text-foreground"> 
       <svg-icon [src]="getIconPath('x-mark')" svgClass="h-5 w-5 text-destructive"></svg-icon>
     </button>
   </div>
@@ -14,15 +14,15 @@
   } @else {
     <div class="space-y-4">
       <div class="flex items-center gap-1">  
-        <label class="text-sm font-bold text-label w-1/5">Team ID:</label> 
+        <span class="text-sm font-bold text-label w-1/5">Team ID:</span> 
         <span class="text-foreground">{{ team.id.slice(-8) }}</span> 
       </div>
       <div class="flex items-center gap-1">
-        <label class="text-sm font-bold text-label w-1/5">Name:</label>
+        <span class="text-sm font-bold text-label w-1/5">Name:</span>
         <span class="text-foreground">{{ team.name }}</span> 
       </div>
       <div class="flex items-center gap-1">
-        <label class="text-sm font-bold text-label w-1/5">Date Created:</label>
+        <span class="text-sm font-bold text-label w-1/5">Date Created:</span>
         <span class="text-foreground">{{ team.createdAt | date:'shortDate' }}</span> 
       </div>
       <div>

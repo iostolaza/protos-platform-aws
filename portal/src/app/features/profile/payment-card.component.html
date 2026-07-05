@@ -23,12 +23,12 @@
       <form [formGroup]="form" (ngSubmit)="savePayment()">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm text-label">Type</label>
-            <input formControlName="type" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter payment type (e.g., Credit Card)" />
+            <label for="pay-type" class="block text-sm text-label">Type</label>
+            <input id="pay-type" formControlName="type" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter payment type (e.g., Credit Card)" />
           </div>
           <div>
-            <label class="block text-sm text-label">Name</label>
-            <input formControlName="name" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter payment name (e.g., Visa ****1234)" />
+            <label for="pay-name" class="block text-sm text-label">Name</label>
+            <input id="pay-name" formControlName="name" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter payment name (e.g., Visa ****1234)" />
           </div>
         </div>
         <div class="mt-4 flex justify-end gap-2">

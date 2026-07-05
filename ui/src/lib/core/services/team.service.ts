@@ -1,6 +1,6 @@
 // src/app/core/services/team.service.ts
 
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@amplify-schema';
 import { getCurrentUser } from 'aws-amplify/auth';
@@ -15,7 +15,7 @@ export class TeamService {
   public teams = signal<Schema['Team']['type'][]>([]);
   public members = signal<Schema['User']['type'][]>([]);
 
-  constructor(private userService: UserService) {}
+  private userService = inject(UserService);
 
   async createTeam(name: string, inviteUserIds: string[]): Promise<Schema['Team']['type']> {
     try {

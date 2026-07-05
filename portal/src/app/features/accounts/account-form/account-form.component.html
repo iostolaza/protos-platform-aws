@@ -13,31 +13,31 @@
   <form class="ledger-card flex flex-col gap-5" (ngSubmit)="save()">
     @if (isEdit()) {
       <div>
-        <label class="text-label mb-1 block text-sm font-medium">Account Number</label>
-        <input type="text" [value]="accountNumber()" disabled class="font-mono" />
+        <label for="acct-number" class="text-label mb-1 block text-sm font-medium">Account Number</label>
+        <input id="acct-number" type="text" [value]="accountNumber()" disabled class="font-mono" />
       </div>
     }
 
     <div>
-      <label class="text-label mb-1 block text-sm font-medium">Name <span class="text-destructive">*</span></label>
-      <input type="text" name="name" [(ngModel)]="model.name" placeholder="Account name" required />
+      <label for="acct-name" class="text-label mb-1 block text-sm font-medium">Name <span class="text-destructive">*</span></label>
+      <input id="acct-name" type="text" name="name" [(ngModel)]="model.name" placeholder="Account name" required />
     </div>
 
     <div>
-      <label class="text-label mb-1 block text-sm font-medium">Details</label>
-      <textarea name="details" [(ngModel)]="model.details" rows="3" placeholder="Optional description"></textarea>
+      <label for="acct-details" class="text-label mb-1 block text-sm font-medium">Details</label>
+      <textarea id="acct-details" name="details" [(ngModel)]="model.details" rows="3" placeholder="Optional description"></textarea>
     </div>
 
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
       <div>
-        <label class="text-label mb-1 block text-sm font-medium">
+        <label for="acct-balance" class="text-label mb-1 block text-sm font-medium">
           {{ isEdit() ? 'Starting Balance' : 'Initial Balance' }}
         </label>
-        <input type="number" name="startingBalance" [(ngModel)]="model.startingBalance" step="0.01" />
+        <input id="acct-balance" type="number" name="startingBalance" [(ngModel)]="model.startingBalance" step="0.01" />
       </div>
       <div>
-        <label class="text-label mb-1 block text-sm font-medium">Type</label>
-        <select name="type" [(ngModel)]="model.type">
+        <label for="acct-type" class="text-label mb-1 block text-sm font-medium">Type</label>
+        <select id="acct-type" name="type" [(ngModel)]="model.type">
           <option value="">Unspecified</option>
           @for (t of types; track t) {
             <option [value]="t">{{ t }}</option>

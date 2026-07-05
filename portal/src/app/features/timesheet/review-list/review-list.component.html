@@ -13,7 +13,8 @@
       
   </div>
   <!-- Table Section -->
-  <div class="card" *ngIf="dataSource.length > 0; else noData">
+  @if (dataSource.length > 0) {
+  <div class="card">
     <table mat-table [dataSource]="dataSource" class="table w-full">
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef class="text-gray-900 font-semibold">Timesheet ID:</th>
@@ -45,7 +46,7 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumns" class="hover:bg-gray-100"></tr>
     </table>
   </div>
-  <ng-template #noData>
+  } @else {
     <div class="text-gray-500 text-center p-8">No timesheets to review</div>
-  </ng-template>
+  }
 </div>

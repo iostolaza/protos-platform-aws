@@ -1,7 +1,7 @@
 
 /* Edited settings: Add theme arrays/toggles from snippets. */
 
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '@ui';
@@ -28,7 +28,10 @@ export class SettingsComponent {
   ];
   themeMode = ['light', 'dark'];
 
-  constructor(private fb: FormBuilder, public themeService: ThemeService) {
+  private fb = inject(FormBuilder);
+  themeService = inject(ThemeService);
+
+  constructor() {
     this.passwordForm = this.fb.group({
       current: ['', Validators.required],
       new: ['', [Validators.required, Validators.minLength(8)]],

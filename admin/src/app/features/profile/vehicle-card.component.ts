@@ -1,6 +1,6 @@
 // src/app/features/profile/vehicle-card.component.ts
 
-import { Component, effect, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UserService, UserProfile } from '@ui';
@@ -16,7 +16,10 @@ export class VehicleCardComponent {
   form: FormGroup;
   user: UserProfile | null = null;
 
-  constructor(private fb: FormBuilder, private userService: UserService) {
+  private fb = inject(FormBuilder);
+  private userService = inject(UserService);
+
+  constructor() {
     this.form = this.fb.group({
       make: [''],
       model: [''],

@@ -40,8 +40,6 @@ export class DocumentService {
     { value: 'ViolationNotice', label: 'Violation Notice' }
   ];
 
-  constructor() {}
-
   getCategories(): ReadonlyArray<Category> {
     return this.categories;
   }

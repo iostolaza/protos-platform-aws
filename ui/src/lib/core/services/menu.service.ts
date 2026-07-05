@@ -38,14 +38,15 @@ export class MenuService implements OnDestroy {
   }
 
   get showSideBar() { return this._showSidebar(); }
-  get showMobileMenu() { return this._showMobileMenu(); }
-  get pagesMenu() { return computed(() => this._pagesMenu()); }
-
- set showSideBar(value: boolean) {
+  set showSideBar(value: boolean) {
     this._showSidebar.set(value);
     if (!value) this.collapseAll();
   }
+
+  get showMobileMenu() { return this._showMobileMenu(); }
   set showMobileMenu(value: boolean) { this._showMobileMenu.set(value); }
+
+  get pagesMenu() { return computed(() => this._pagesMenu()); }
 
   public setMenu(menu: MenuItem[]) {
     this._pagesMenu.set(menu);

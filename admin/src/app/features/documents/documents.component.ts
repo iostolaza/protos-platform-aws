@@ -1,6 +1,6 @@
 // src/app/features/documents/documents.component.ts
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { DocumentListComponent } from './document-list.component/document-list.component';
 import { GenerateDocumentsComponent } from './generate-documents/generate-documents';
@@ -40,7 +40,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
     return counts;
   });
 
-  constructor(private documentService: DocumentService) {}
+  private documentService = inject(DocumentService);
 
   ngOnInit(): void {
     this.subs.push(

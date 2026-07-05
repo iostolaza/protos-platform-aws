@@ -1,7 +1,7 @@
 
 // src/app/features/ticket-management/ticket-list/ticket-list.component.ts
 
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { TicketService } from '@ui';
 import { AngularSvgIconModule } from 'angular-svg-icon';
@@ -23,7 +23,7 @@ export class TicketListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   getIconPath = getIconPath;
 
-  constructor(private ticketService: TicketService) {}
+  private ticketService = inject(TicketService);
 
   async ngOnInit(): Promise<void> {
     await this.loadTickets();

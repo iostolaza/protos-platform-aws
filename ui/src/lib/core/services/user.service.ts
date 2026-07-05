@@ -1,4 +1,4 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, OnDestroy } from '@angular/core';
 import { generateClient } from 'aws-amplify/data';
 import { uploadData, getUrl } from 'aws-amplify/storage';
 import type { Schema } from '@amplify-schema';
@@ -17,7 +17,7 @@ export type UserProfile = UserType & { profileImageUrl?: string };
 @Injectable({
   providedIn: 'root',
 })
-export class UserService {
+export class UserService implements OnDestroy {
   private client = generateClient<Schema>();
   public user = signal<UserProfile | null>(null);
   public allUsers = signal<UserType[]>([]);

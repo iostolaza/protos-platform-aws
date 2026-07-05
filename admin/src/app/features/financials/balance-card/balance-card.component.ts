@@ -13,7 +13,7 @@ import { AuthService } from '@ui';
   templateUrl: './balance-card.component.html',
 })
 export class BalanceCardComponent implements OnInit {
-  @Input() balance: number = 0;
+  @Input() balance = 0;
   @Output() pay = new EventEmitter<number>();
   financialService = inject(FinancialService);
   auth = inject(AuthService);

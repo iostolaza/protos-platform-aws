@@ -1,5 +1,5 @@
 // src/app/features/financials/create-invoice/create-invoice.component.ts
-import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -24,8 +24,8 @@ interface DictItem {
   providers: [DecimalPipe],
 })
 export class CreateInvoiceComponent implements OnInit {
-  @Input() accountId: string = '';
-  @Input() isManager: boolean = false;
+  @Input() accountId = '';
+  @Input() isManager = false;
   @Input() assignedBuildings: string[] = [];
   @Output() created = new EventEmitter<Invoice>();
 
@@ -40,14 +40,14 @@ export class CreateInvoiceComponent implements OnInit {
     real_estate: [{ description: 'Property Inspection', price: 500 }, { description: 'Closing Fees', price: 1000 }],
   };
 
-  constructor(
-    private fb: FormBuilder,
-    private financialService: FinancialService,
-    private auth: AuthService,
-    private userService: UserService,
-    private contactService: ContactService,
-    private router: Router
-  ) {
+  private fb = inject(FormBuilder);
+  private financialService = inject(FinancialService);
+  private auth = inject(AuthService);
+  private userService = inject(UserService);
+  private contactService = inject(ContactService);
+  private router = inject(Router);
+
+  constructor() {
     this.form = this.fb.group({
       invoiceNumber: [{ value: '', disabled: true }],
       selectedType: [''],

@@ -1,6 +1,6 @@
 // src/app/features/documents/generate-documents/generate-documents.ts (Full edited script)
 
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DocumentService } from '@ui';
@@ -19,7 +19,10 @@ export class GenerateDocumentsComponent {
   successMessage = signal<string>('');
   categories: ReadonlyArray<{ value: string; label: string }> = [];  // Init empty; set in constructor
 
-  constructor(private fb: FormBuilder, private documentService: DocumentService) {
+  private fb = inject(FormBuilder);
+  private documentService = inject(DocumentService);
+
+  constructor() {
     this.categories = this.documentService.getCategories();  // Set after injection
 
     this.form = this.fb.group({

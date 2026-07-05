@@ -1,6 +1,6 @@
 // src/app/features/documents/document-details/document-details.component.ts
 
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { DocumentService } from '@ui';
 import { signal } from '@angular/core';
@@ -13,10 +13,9 @@ import { signal } from '@angular/core';
 })
 export class DocumentDetailsComponent implements OnInit {
   @Input() document!: any;
-  @Output() close = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
   documentUrl = signal<string>('');
-
-  constructor(private documentService: DocumentService) {}
+  private documentService = inject(DocumentService);
 
   ngOnInit(): void {
     this.documentService.getDocumentUrl(this.document.fileKey)

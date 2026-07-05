@@ -1,7 +1,7 @@
 
 // src/app/features/financials/balance-card/invoice-details/invoice-details.component.ts
 
-import { Component, Input, OnInit, Output, EventEmitter, signal, computed } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter, inject, signal, computed } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -28,7 +28,7 @@ interface DictItem {
 })
 export class InvoiceDetailsComponent implements OnInit {
   @Input() invoice!: Invoice;
-  @Output() close = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
   @Output() edit = new EventEmitter<string>(); // Keep for parent nav if needed
   @Output() refresh = new EventEmitter<void>(); // NEW: For ledger refresh on save
 
@@ -54,15 +54,15 @@ export class InvoiceDetailsComponent implements OnInit {
     return contact ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unknown' : 'Unknown';
   });
 
-  constructor(
-    private fb: FormBuilder,
-    private financialService: FinancialService,
-    private role: RoleService,
-    private auth: AuthService,
-    private userService: UserService,
-    private contactService: ContactService,
-    private router: Router
-  ) {
+  private fb = inject(FormBuilder);
+  private financialService = inject(FinancialService);
+  private role = inject(RoleService);
+  private auth = inject(AuthService);
+  private userService = inject(UserService);
+  private contactService = inject(ContactService);
+  private router = inject(Router);
+
+  constructor() {
     this.form = this.fb.group({
       invoiceNumber: [{ value: '', disabled: true }],
       selectedType: [''],
@@ -252,7 +252,7 @@ export class InvoiceDetailsComponent implements OnInit {
               alert('Invoice updated successfully!'); // NEW: Feedback
               this.toggleEdit();
               this.refresh.emit(); // NEW: Trigger parent ledger refresh
-              this.close.emit();
+              this.closed.emit();
             },
             error: err => console.error('Send after update failed:', err),
           });

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -38,15 +38,15 @@ export class EditInvoiceComponent implements OnInit {
   isManager = false;
   assignedBuildings: string[] = [];
 
-  constructor(
-    private fb: FormBuilder,
-    private financialService: FinancialService,
-    private role: RoleService,
-    private auth: AuthService,
-    private userService: UserService,
-    private contactService: ContactService,
-    private router: Router
-  ) {
+  private fb = inject(FormBuilder);
+  private financialService = inject(FinancialService);
+  private role = inject(RoleService);
+  private auth = inject(AuthService);
+  private userService = inject(UserService);
+  private contactService = inject(ContactService);
+  private router = inject(Router);
+
+  constructor() {
     this.form = this.fb.group({
       invoiceNumber: [{ value: '', disabled: true }],
       selectedType: [''],

@@ -46,7 +46,9 @@
   </div>
 
   <!-- Document Details Card -->
-  <app-document-details *ngIf="selectedDocument()" [document]="selectedDocument()!" (close)="selectedDocument.set(null)"></app-document-details>
+  @if (selectedDocument()) {
+  <app-document-details [document]="selectedDocument()!" (closed)="selectedDocument.set(null)"></app-document-details>
+}
 
   <!-- Document List Card (Table with search/filter) -->
   <app-document-list (filterCategory)="applyFilter($event)"></app-document-list>

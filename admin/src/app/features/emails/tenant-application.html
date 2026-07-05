@@ -20,30 +20,30 @@
             <h2 class="text-2xl font-bold text-center mb-6">Step 1: Basic Information</h2>
             <form id="quick-apply-form" class="space-y-4" onsubmit="saveProgress(event, 'quick-apply')">
                 <!-- All your fields from the original -->
-                <div><label class="block font-medium">Full Name</label><input type="text" name="full-name" required class="w-full border rounded px-3 py-2" /></div>
-                <div><label class="block font-medium">Email</label><input type="email" name="email" required class="w-full border rounded px-3 py-2" value="{{email}}" readonly /></div>
-                <div><label class="block font-medium">Phone</label><input type="tel" name="phone" required class="w-full border rounded px-3 py-2" /></div>
-                <div><label class="block font-medium">Property Address / Unit</label><input type="text" name="property-address" required class="w-full border rounded px-3 py-2" /></div>
-                <div><label class="block font-medium">Desired Move-in Date</label><input type="date" name="move-in-date" required class="w-full border rounded px-3 py-2" /></div>
-                <div><label class="block font-medium">Lease Term</label>
-                    <select name="lease-term" required class="w-full border rounded px-3 py-2">
+                <div><label for="ta-full-name" class="block font-medium">Full Name</label><input id="ta-full-name" type="text" name="full-name" required class="w-full border rounded px-3 py-2" /></div>
+                <div><label for="ta-email" class="block font-medium">Email</label><input id="ta-email" type="email" name="email" required class="w-full border rounded px-3 py-2" value="{{email}}" readonly /></div>
+                <div><label for="ta-phone" class="block font-medium">Phone</label><input id="ta-phone" type="tel" name="phone" required class="w-full border rounded px-3 py-2" /></div>
+                <div><label for="ta-property-address" class="block font-medium">Property Address / Unit</label><input id="ta-property-address" type="text" name="property-address" required class="w-full border rounded px-3 py-2" /></div>
+                <div><label for="ta-move-in-date" class="block font-medium">Desired Move-in Date</label><input id="ta-move-in-date" type="date" name="move-in-date" required class="w-full border rounded px-3 py-2" /></div>
+                <div><label for="ta-lease-term" class="block font-medium">Lease Term</label>
+                    <select id="ta-lease-term" name="lease-term" required class="w-full border rounded px-3 py-2">
                         <option>6 Months</option><option>12 Months</option><option>Flexible</option>
                     </select>
                 </div>
-                <div><label class="block font-medium">Number of Occupants</label><input type="number" name="occupants" min="1" required class="w-full border rounded px-3 py-2" /></div>
-                <div><label class="block font-medium">Monthly Income Range</label>
-                    <select name="income-range" required class="w-full border rounded px-3 py-2">
+                <div><label for="ta-occupants" class="block font-medium">Number of Occupants</label><input id="ta-occupants" type="number" name="occupants" min="1" required class="w-full border rounded px-3 py-2" /></div>
+                <div><label for="ta-income-range" class="block font-medium">Monthly Income Range</label>
+                    <select id="ta-income-range" name="income-range" required class="w-full border rounded px-3 py-2">
                         <option>$0 - $2,000</option><option>$2,001 - $4,000</option><option>$4,001 - $6,000</option><option>$6,001+</option>
                     </select>
                 </div>
-                <div><label class="block font-medium">Any Pets?</label>
-                    <select name="pets" onchange="togglePetDetails(this)" class="w-full border rounded px-3 py-2">
+                <div><label for="ta-pets" class="block font-medium">Any Pets?</label>
+                    <select id="ta-pets" name="pets" onchange="togglePetDetails(this)" class="w-full border rounded px-3 py-2">
                         <option>No</option><option>Yes</option>
                     </select>
                     <textarea name="pet-details" class="w-full border rounded px-3 py-2 mt-2 hidden" placeholder="Describe pets"></textarea>
                 </div>
-                <div><label class="block font-medium">Smoking?</label>
-                    <select name="smoking" class="w-full border rounded px-3 py-2"><option>No</option><option>Yes</option></select>
+                <div><label for="ta-smoking" class="block font-medium">Smoking?</label>
+                    <select id="ta-smoking" name="smoking" class="w-full border rounded px-3 py-2"><option>No</option><option>Yes</option></select>
                 </div>
                 <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700">Continue to Step 2</button>
             </form>

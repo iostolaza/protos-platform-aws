@@ -13,12 +13,12 @@
       }
       <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
         <div class="flex items-start">
-          <label class="text-sm font-medium text-label mr-4 w-1/4">*Name:</label> 
-          <input formControlName="name" type="text" class="w-3/4 p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
+          <label for="team-name" class="text-sm font-medium text-label mr-4 w-1/4">*Name:</label> 
+          <input id="team-name" formControlName="name" type="text" class="w-3/4 p-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary" /> 
         </div>
      
         <div class="flex items-start">
-          <label class="text-sm font-medium text-label mr-4 w-1/4">Invite Users:</label>
+          <p class="text-sm font-medium text-label mr-4 w-1/4">Invite Users:</p>
           <div class="w-3/4 space-y-2">
             <div formArrayName="inviteUserIds">
               @for (invite of inviteUserIds.controls; track $index) {

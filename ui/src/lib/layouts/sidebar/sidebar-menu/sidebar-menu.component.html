@@ -8,8 +8,9 @@
   }
   <ul class="flex flex-col">
     @for (item of menu.items; track item.label) {
-      <li *ngIf="item.route !== '/main-layout/admin' || roleService.isAdmin$()">
-        <div (click)="toggleMenu(item)" [ngClass]="{'hover:bg-primary/10': !menuService.showSideBar && item.active, 'hover:bg-muted/50': !menuService.showSideBar}" class="nav-hover text-foreground group relative flex grow items-center gap-4 rounded-lg px-2">
+      @if (item.route !== '/main-layout/admin' || roleService.isAdmin$()) {
+      <li>
+        <div (click)="toggleMenu(item)" (keyup.enter)="toggleMenu(item)" tabindex="0" role="button" [ngClass]="{'hover:bg-primary/10': !menuService.showSideBar && item.active, 'hover:bg-muted/50': !menuService.showSideBar}" class="nav-hover text-foreground group relative flex grow items-center gap-4 rounded-lg px-2">
           <div [ngClass]="item.active && !menuService.showSideBar ? 'text-primary' : ''">
             @if (item.icon) {
               <svg-icon [src]="getIconPath(item.icon)" svgClass="h-5 w-5 text-foreground group-hover:text-muted-foreground"></svg-icon>
@@ -55,6 +56,7 @@
         </div>
         <lib-sidebar-submenu [submenu]="item"></lib-sidebar-submenu>
       </li>
+      }
     }
   </ul>
   @if (menu.separator) {

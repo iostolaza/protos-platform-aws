@@ -7,24 +7,24 @@
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm text-label">Make</label>
-          <input formControlName="make" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter make (e.g., Toyota)" />
+          <label for="veh-make" class="block text-sm text-label">Make</label>
+          <input id="veh-make" formControlName="make" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter make (e.g., Toyota)" />
         </div>
         <div>
-          <label class="block text-sm text-label">Model</label>
-          <input formControlName="model" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter model (e.g., Camry)" />
+          <label for="veh-model" class="block text-sm text-label">Model</label>
+          <input id="veh-model" formControlName="model" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter model (e.g., Camry)" />
         </div>
         <div>
-          <label class="block text-sm text-label">Color</label>
-          <input formControlName="color" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter color (e.g., Blue)" />
+          <label for="veh-color" class="block text-sm text-label">Color</label>
+          <input id="veh-color" formControlName="color" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter color (e.g., Blue)" />
         </div>
         <div>
-          <label class="block text-sm text-label">License</label>
-          <input formControlName="license" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter license plate" />
+          <label for="veh-license" class="block text-sm text-label">License</label>
+          <input id="veh-license" formControlName="license" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter license plate" />
         </div>
         <div>
-          <label class="block text-sm text-label">Year</label>
-          <input formControlName="year" type="number" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter year (e.g., 2020)" />
+          <label for="veh-year" class="block text-sm text-label">Year</label>
+          <input id="veh-year" formControlName="year" type="number" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter year (e.g., 2020)" />
         </div>
       </div>
       <div class="mt-4 flex justify-end gap-2">

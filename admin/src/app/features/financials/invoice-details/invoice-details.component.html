@@ -15,8 +15,8 @@
 
         <!-- Type Selection -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-label mb-2">Select Type:</label>
-          <select formControlName="selectedType" (change)="onTypeChange()" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
+          <label for="det-type" class="block text-sm font-medium text-label mb-2">Select Type:</label>
+          <select id="det-type" formControlName="selectedType" (change)="onTypeChange()" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
             <option value="">Select Type</option>
             <option value="wedding">Wedding</option>
             <option value="real_estate">Real Estate</option>
@@ -26,30 +26,30 @@
         <!-- Status and Date Row -->
         <div class="grid grid-cols-2 gap-8 mb-6">
           <div>
-            <label class="block text-sm font-medium text-label mb-1">Order Status:</label>
-            <select formControlName="orderStatus" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
+            <label for="det-status" class="block text-sm font-medium text-label mb-1">Order Status:</label>
+            <select id="det-status" formControlName="orderStatus" class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary">
               @for (status of orderStatuses; track status) {
                 <option [value]="status">{{ status }}</option>
               }
             </select>
           </div>
           <div class="text-right">
-            <label class="block text-sm font-medium text-label mb-1">Order Date:</label>
-            <input type="date" formControlName="orderDate" class="w-full p-2 bg-background border border-border rounded-lg text-right">
+            <label for="det-date" class="block text-sm font-medium text-label mb-1">Order Date:</label>
+            <input id="det-date" type="date" formControlName="orderDate" class="w-full p-2 bg-background border border-border rounded-lg text-right">
           </div>
         </div>
 
         <!-- Bill From/To Row -->
         <div class="grid grid-cols-2 gap-8 mb-6">
           <div>
-            <label class="block text-sm font-medium text-label mb-1">Bill From:</label>
-            <input type="text" formControlName="billFrom" class="w-full p-3 bg-background border border-border rounded-lg mb-2" placeholder="Enter company name" [disabled]="true">
-            <label class="block text-sm font-medium text-label mb-1">From Address:</label>
-            <textarea formControlName="fromAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
+            <label for="det-bill-from" class="block text-sm font-medium text-label mb-1">Bill From:</label>
+            <input id="det-bill-from" type="text" formControlName="billFrom" class="w-full p-3 bg-background border border-border rounded-lg mb-2" placeholder="Enter company name" [disabled]="true">
+            <label for="det-from-address" class="block text-sm font-medium text-label mb-1">From Address:</label>
+            <textarea id="det-from-address" formControlName="fromAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
           </div>
           <div>
-            <label class="block text-sm font-medium text-label mb-1">Bill To:</label>
-            <select formControlName="tenantId" class="w-full p-3 bg-background border border-border rounded-lg">
+            <label for="det-tenant" class="block text-sm font-medium text-label mb-1">Bill To:</label>
+            <select id="det-tenant" formControlName="tenantId" class="w-full p-3 bg-background border border-border rounded-lg">
               <option value="">Select Recipient</option>
               @for (contact of contacts(); track trackUser($index, contact)) {
                 <option [value]="contact.cognitoId">
@@ -57,8 +57,8 @@
                 </option>
               }
             </select>
-            <label class="block text-sm font-medium text-label mb-1 mt-2">To Address:</label>
-            <textarea formControlName="toAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
+            <label for="det-to-address" class="block text-sm font-medium text-label mb-1 mt-2">To Address:</label>
+            <textarea id="det-to-address" formControlName="toAddress" rows="3" class="w-full p-3 bg-background border border-border rounded-lg" placeholder="Enter address"></textarea>
 
             @if (isManager && assignedBuildings.length > 0) {
               <select formControlName="building" class="w-full p-3 bg-background border border-border rounded-lg mt-2">
@@ -72,8 +72,8 @@
         </div>
 
         <div class="mb-6">
-          <label class="block text-sm font-medium text-label mb-1">Description:</label>
-          <textarea formControlName="description" rows="2" class="w-full p-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary" placeholder="Invoice summary (e.g., Monthly service fees)"></textarea>
+          <label for="det-description" class="block text-sm font-medium text-label mb-1">Description:</label>
+          <textarea id="det-description" formControlName="description" rows="2" class="w-full p-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary" placeholder="Invoice summary (e.g., Monthly service fees)"></textarea>
         </div>
 
         <!-- Items Table -->
@@ -110,8 +110,8 @@
 
           <!-- Add Item Dropdown -->
           <div class="mt-4 w-full">
-            <label class="block text-sm font-medium text-label mb-1">Add Item:</label>
-            <select #addSelect (change)="onAddItemChange(addSelect.value); addSelect.selectedIndex = 0"
+            <label for="det-add-item" class="block text-sm font-medium text-label mb-1">Add Item:</label>
+            <select id="det-add-item" #addSelect (change)="onAddItemChange(addSelect.value); addSelect.selectedIndex = 0"
                     class="w-full p-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary" [disabled]="selectedType() === ''">
               <option value="">Add Item</option>
               @for (item of filteredItems(); track trackItemOption($index, item)) {
@@ -150,11 +150,11 @@
       <!-- Status and Date Row -->
       <div class="grid grid-cols-2 gap-8 mb-6">
         <div>
-          <label class="block text-sm font-medium text-label mb-1">Order Status:</label>
+          <p class="block text-sm font-medium text-label mb-1">Order Status:</p>
           <span class="w-full p-2 text-body">{{ invoice.status }}</span>
         </div>
         <div class="text-right">
-          <label class="block text-sm font-medium text-label mb-1">Order Date:</label>
+          <p class="block text-sm font-medium text-label mb-1">Order Date:</p>
           <span class="w-full p-2 text-body text-right">{{ invoice.date }}</span>
         </div>
       </div>
@@ -162,15 +162,15 @@
       <!-- Bill From/To Row -->
       <div class="grid grid-cols-2 gap-8 mb-6">
         <div>
-          <label class="block text-sm font-medium text-label mb-1">Bill From:</label>
+          <p class="block text-sm font-medium text-label mb-1">Bill From:</p>
           <p class="w-full p-3 text-body mb-2">{{ currentUser()?.firstName }} {{ currentUser()?.lastName }} ({{ currentUser()?.email }})</p>
-          <label class="block text-sm font-medium text-label mb-1">From Address:</label>
+          <p class="block text-sm font-medium text-label mb-1">From Address:</p>
           <p class="w-full p-3 text-body">{{ invoice.fromAddress || 'N/A' }}</p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-label mb-1">Bill To:</label>
+          <p class="block text-sm font-medium text-label mb-1">Bill To:</p>
           <p class="w-full p-3 text-body mb-8">{{ billToName() }}</p>
-          <label class="block text-sm font-medium text-label mb-1 mt-2">To Address:</label>
+          <p class="block text-sm font-medium text-label mb-1 mt-2">To Address:</p>
           <p class="w-full p-3 text-body">{{ invoice.toAddress || 'N/A' }}</p>
           @if (invoice.building) {
             <p class="mt-2 text-sm text-muted">Building: {{ invoice.building }}</p>
@@ -179,7 +179,7 @@
       </div>
 
       <div class="mb-6">
-        <label class="block text-sm font-medium text-label mb-1">Description:</label>
+        <p class="block text-sm font-medium text-label mb-1">Description:</p>
         <p class="w-full p-3 text-body ">{{ invoice.description || 'N/A' }}</p>
       </div>
 
@@ -225,7 +225,7 @@
           <button type="button" (click)="sendInvoice()" class="btn btn-success">Send Invoice</button>
         }
         <button type="button" (click)="editInvoice()" class="btn btn-primary">Edit</button>
-        <button type="button" (click)="close.emit()" class="btn btn-neutral">Close</button>
+        <button type="button" (click)="closed.emit()" class="btn btn-neutral">Close</button>
       </div>
     </div>
   }

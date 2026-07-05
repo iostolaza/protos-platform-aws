@@ -1,7 +1,8 @@
 <!-- src/app/features/messages/chatlayout/chat-list.component.html -->
 <div class="flex-1 overflow-y-auto">
   <ul>
-    <li *ngFor="let chat of chats()" class="chat-item-hover group relative shadow-sm" (click)="chatSelected.emit(chat)">
+    @for (chat of chats(); track chat.id) {
+    <li class="chat-item-hover group relative shadow-sm" (click)="chatSelected.emit(chat)" (keyup.enter)="chatSelected.emit(chat)" tabindex="0" role="button">
       <div class="flex items-center gap-3 flex-1 min-w-0">
         <img [src]="chat.avatar || 'assets/profile/avatar-default.svg'" alt="User" class="w-8 h-8 rounded-full flex-shrink-0" />
         <div class="flex flex-col min-w-0">
@@ -16,5 +17,6 @@
         </button>
       </div>
     </li>
+    }
   </ul>
 </div>

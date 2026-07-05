@@ -1,6 +1,6 @@
 // src/app/features/ticket-management/generate-team/generate-team.component.ts
 
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, FormArray, ValidationErrors, AbstractControl } from '@angular/forms';
 import { TicketService } from '@ui';
@@ -25,7 +25,11 @@ export class GenerateTeamComponent {
   successMessage = signal<string | null>(null);
    getIconPath = getIconPath;
 
-  constructor(private fb: FormBuilder, private userService: UserService, private teamService: TeamService) {
+  private fb = inject(FormBuilder);
+  private userService = inject(UserService);
+  private teamService = inject(TeamService);
+
+  constructor() {
     this.form = this.fb.group({
       name: ['', Validators.required],
       inviteUserIds: this.fb.array([]),

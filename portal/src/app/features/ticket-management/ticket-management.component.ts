@@ -1,6 +1,6 @@
 // src/app/features/ticket-management/ticket-management.component.ts
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { TicketListComponent } from './ticket-list/ticket-list.component';  
@@ -57,7 +57,10 @@ export class TicketManagementComponent implements OnInit, OnDestroy {
       .slice(0, 3)
   );
 
-  constructor(private ticketService: TicketService, private teamService: TeamService) {
+  private ticketService = inject(TicketService);
+  private teamService = inject(TeamService);
+
+  constructor() {
     this.subs.push(
       this.ticketService.observeTickets().subscribe(() => {
         this.loadTickets();

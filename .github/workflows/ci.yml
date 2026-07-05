@@ -35,6 +35,13 @@ jobs:
       # have internal version mismatches that npm ci rejects.
       - run: npm install --no-audit --no-fund
 
+      - run: |
+          if [ ! -f amplify_outputs.json ]; then
+            cp amplify_outputs.stub.json amplify_outputs.json
+          fi
+          cp amplify_outputs.json admin/src/ 2>/dev/null || true
+          cp amplify_outputs.json portal/src/ 2>/dev/null || true
+
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       - run: npx nx run-many -t lint test build
