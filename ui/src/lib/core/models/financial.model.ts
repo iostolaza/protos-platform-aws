@@ -15,6 +15,7 @@ export interface Account {
   id: string;
   accountNumber: string;
   name: string;
+  organizationId?: string;
   details: string | null;
   balance: number;
   startingBalance: number | null;
@@ -27,6 +28,7 @@ export interface Account {
 export interface Transaction {
   transactionId: string;
   accountId: string;
+  organizationId: string;
   type: 'assessment' | 'payment' | 'charge' | 'other';
   date: string; 
   docNumber?: string;
@@ -53,6 +55,7 @@ export interface Invoice {
   status: 'pending' | 'open' | 'closed';
   billFromId: string;
   billToId: string;
+  organizationId: string;
   fromAddress?: string;
   toAddress?: string;
   description?: string;  
@@ -68,8 +71,9 @@ export interface Invoice {
 
 export interface InvoiceItem {
   invoiceItemId: string;
-  invoiceId?: string;  
+  invoiceId?: string;
   name: string;
+  organizationId?: string;
   unitPrice: number;
   units: number;
   total: number;

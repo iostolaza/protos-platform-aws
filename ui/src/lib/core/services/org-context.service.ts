@@ -89,9 +89,13 @@ export class OrgContextService {
     return { and: [existing, orgClause] };
   }
 
-  /** Stamp value for create operations. */
-  stampOrgId<T extends Record<string, unknown>>(payload: T): T & { organizationId: string | null } {
-    return { ...payload, organizationId: this.getEffectiveOrgId() };
+  /** Stamp value for create operations. Throws if no org context is available. */
+  stampOrgId<T extends Record<string, unknown>>(payload: T): T & { organizationId: string } {
+    const orgId = this.getEffectiveOrgId();
+    if (!orgId) {
+      throw new Error('organizationId is required to create records but none is set in context');
+    }
+    return { ...payload, organizationId: orgId };
   }
 
   private warnIfNoOrgForRegularUser(source: string): void {

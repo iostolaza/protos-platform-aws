@@ -26,7 +26,7 @@ const schema = a.schema({
 
   User: a.model({
     cognitoId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     firstName: a.string(),
     lastName: a.string(),
     username: a.string(),
@@ -88,7 +88,7 @@ const schema = a.schema({
 
   PaymentMethod: a.model({
     userCognitoId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     type: a.string().required(),
     name: a.string().required(),
     createdAt: a.datetime(),
@@ -100,7 +100,7 @@ const schema = a.schema({
   Friend: a.model({
     ownerCognitoId: a.string().required(),
     friendCognitoId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     addedAt: a.datetime().required(),
     owner: a.belongsTo('User', 'ownerCognitoId'),
     friend: a.belongsTo('User', 'friendCognitoId'),
@@ -116,7 +116,7 @@ const schema = a.schema({
   Channel: a.model({
     name: a.string(),
     creatorCognitoId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     type: a.enum(['direct', 'group']),
     directKey: a.string(),
     createdAt: a.datetime(),
@@ -134,7 +134,7 @@ const schema = a.schema({
   UserChannel: a.model({
     userCognitoId: a.string().required(),
     channelId: a.id().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     createdAt: a.datetime(),
     updatedAt: a.datetime(),
     user: a.belongsTo('User', 'userCognitoId'),
@@ -152,7 +152,7 @@ const schema = a.schema({
     content: a.string(),
     senderCognitoId: a.string().required(),
     channelId: a.id().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     timestamp: a.datetime().required(),
     attachment: a.string(),
     readBy: a.string().array(),
@@ -172,7 +172,7 @@ const schema = a.schema({
     name: a.string().required(),
     description: a.string(),
     teamLeadCognitoId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     teamLeadName: a.string(),
     memberCount: a.integer().default(0),
     createdAt: a.datetime(),
@@ -190,7 +190,7 @@ const schema = a.schema({
   TeamMember: a.model({
     teamId: a.id().required(),
     userCognitoId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     createdAt: a.datetime(),
     updatedAt: a.datetime(),
     user: a.belongsTo('User', 'userCognitoId'),
@@ -205,7 +205,7 @@ const schema = a.schema({
     id: a.id().required(),
     title: a.string().required(),
     description: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     labels: a.string().array(),
     status: a.enum(['OPEN', 'QUEUED', 'IN_PROGRESS', 'COMPLETE', 'CLOSED', 'REOPENED']),
     estimated: a.date().required(),
@@ -231,7 +231,7 @@ const schema = a.schema({
     content: a.string().required(),
     createdAt: a.datetime().required(),
     userCognitoId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     user: a.belongsTo('User', 'userCognitoId'),
     ticketId: a.id().required(),
     ticket: a.belongsTo('Ticket', 'ticketId'),
@@ -247,7 +247,7 @@ const schema = a.schema({
     type: a.enum(['team', 'ticket', 'viewTeam']),
     nameType: a.string(),
     userCognitoId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     user: a.belongsTo('User', 'userCognitoId'),
     isRead: a.boolean().default(false),
   })
@@ -276,7 +276,7 @@ const schema = a.schema({
     size: a.integer(),
     createdAt: a.datetime(),
     updatedAt: a.datetime(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     tenantId: a.string(),
   })
     .identifier(['docId'])
@@ -299,7 +299,7 @@ const schema = a.schema({
     id: a.id().required(),
     accountNumber: a.string().required(),
     name: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     details: a.string(),
     balance: a.float().required(),
     startingBalance: a.float(),
@@ -318,7 +318,7 @@ const schema = a.schema({
   Transaction: a.model({
     transactionId: a.id().required(),
     accountId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     type: a.enum(['assessment', 'payment', 'charge', 'other']),
     date: a.date().required(),
     docNumber: a.string(),
@@ -355,7 +355,7 @@ const schema = a.schema({
     status: a.enum(['pending', 'open', 'closed']),
     billFromId: a.string().required(),
     billToId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     fromAddress: a.string(),
     toAddress: a.string(),
     description: a.string(),
@@ -385,7 +385,7 @@ const schema = a.schema({
     invoiceItemId: a.id().required(),
     invoiceId: a.id().required(),
     name: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     unitPrice: a.float().required(),
     units: a.integer().required(),
     total: a.float().required(),
@@ -406,7 +406,7 @@ const schema = a.schema({
     totalHours: a.float().required(),
     totalCost: a.float(),
     userId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
     rejectionReason: a.string(),
     associatedChargeCodesJson: a.string().default('[]').required(),
     dailyAggregatesJson: a.string().default('[]'),
@@ -433,7 +433,7 @@ const schema = a.schema({
     description: a.string().required(),
     chargeCode: a.string().required(),
     userId: a.string().required(),
-    organizationId: a.string(),
+    organizationId: a.string().required(),
   })
     .authorization(allow => [
       allow.authenticated().to(['create', 'read', 'update']),

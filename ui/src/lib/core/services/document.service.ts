@@ -103,7 +103,7 @@ export class DocumentService {
       selectionSet: [
         'docId', 'category', 'subcategory', 'fileName', 'fileKey', 'fileType', 'description',
         'effectiveDate', 'uploadDate', 'expiryDate', 'status', 'version', 'permissions',
-        'tags', 'size', 'createdAt', 'updatedAt', 'tenantId', 'ownerIdentityId'  // Added
+        'tags', 'size', 'createdAt', 'updatedAt', 'tenantId', 'ownerIdentityId', 'organizationId'
       ]
     }).pipe(
       takeUntil(destroyer$)

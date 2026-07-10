@@ -16,9 +16,6 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "paths": {
-      "@temp-project-angular-admin-portal/ui": ["./ui/src/index.ts"],
-      "@temp-project-angular-admin-portal/ui/*": ["./ui/src/lib/*"],
-      "@temp-project-angular-admin-portal/core/*": ["./ui/src/lib/core/*"],
       "@ui": ["./ui/src/index.ts"],
       "@amplify-schema": ["./amplify/data/resource.ts"]
     }

@@ -47,12 +47,17 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
   const { data: existing } = await client.models.User.get({ cognitoId: sub });
 
   if (existing) {
+    const resolvedOrgId = organizationId ?? existing.organizationId;
+    if (!resolvedOrgId) {
+      throw new Error('organizationId is required but missing on user activation');
+    }
+
     const { errors } = await client.models.User.update({
       cognitoId: sub,
       email: email ?? existing.email,
       firstName: firstName || existing.firstName,
       lastName: lastName || existing.lastName,
-      organizationId: organizationId ?? existing.organizationId,
+      organizationId: resolvedOrgId,
       status: 'active',
       updatedAt: now,
     });
@@ -62,6 +67,10 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
     }
 
     return event;
+  }
+
+  if (!organizationId) {
+    throw new Error('custom:organizationId is required for self-signup user creation');
   }
 
   const { errors } = await client.models.User.create({

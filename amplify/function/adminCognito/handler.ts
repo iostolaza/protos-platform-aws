@@ -339,7 +339,7 @@ async function createInvitedUserRecord(input: {
   email: string;
   firstName: string;
   lastName: string;
-  organizationId?: string;
+  organizationId: string;
   role: string;
 }): Promise<void> {
   const now = new Date().toISOString();
@@ -395,14 +395,15 @@ export const handler = async (event: { action?: string; payload?: Record<string,
       if (!firstName || !lastName) {
         throw new Error('firstName and lastName are required');
       }
+      if (!organizationId) {
+        throw new Error('organizationId is required');
+      }
+      if (!isValidOrgId(organizationId)) {
+        throw new Error('Invalid organizationId format');
+      }
+      await assertOrganizationExists(organizationId);
       if (!isValidInviteRole(role)) {
         throw new Error(`Invalid role. Must be one of: Admin, Manager, Facilities, Tenant`);
-      }
-      if (organizationId) {
-        if (!isValidOrgId(organizationId)) {
-          throw new Error('Invalid organizationId format');
-        }
-        await assertOrganizationExists(organizationId);
       }
 
       const tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
@@ -418,7 +419,7 @@ export const handler = async (event: { action?: string; payload?: Record<string,
           { Name: 'email_verified', Value: 'true' },
           { Name: 'given_name', Value: firstName },
           { Name: 'family_name', Value: lastName },
-          ...(organizationId ? [{ Name: 'custom:organizationId', Value: organizationId }] : []),
+          { Name: 'custom:organizationId', Value: organizationId },
         ],
         MessageAction: 'SUPPRESS',
       }));

@@ -31,6 +31,7 @@ export * from './lib/core/services/org-context.service';
 export * from './lib/core/services/organization.service';
 export * from './lib/core/providers/org-context.provider';
 export * from './lib/core/utils/validation';
+export * from './lib/core/utils/trusted-url';
 
 // Models
 export * from './lib/core/models/menu.model';

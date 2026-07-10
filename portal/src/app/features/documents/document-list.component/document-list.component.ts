@@ -4,7 +4,7 @@ import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AngularSvgIconModule } from 'angular-svg-icon';
-import { getIconPath } from '@ui';
+import { getIconPath, isTrustedDocumentPreviewUrl } from '@ui';
 import { DocumentService, Category } from '@ui';
 import { signal, computed } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -24,7 +24,13 @@ export class DocumentListComponent {
   showModal = signal<boolean>(false);
   selectedDocUrl = signal<string>('');
   selectedDoc = signal<any | null>(null);
-  safeUrl = computed<SafeResourceUrl>(() => this.sanitizer.bypassSecurityTrustResourceUrl(this.selectedDocUrl()));
+  safeUrl = computed<SafeResourceUrl>(() => {
+    const url = this.selectedDocUrl();
+    if (!isTrustedDocumentPreviewUrl(url)) {
+      return this.sanitizer.bypassSecurityTrustResourceUrl('about:blank');
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  });
 
   getIconPath = getIconPath;
 
@@ -50,6 +56,10 @@ export class DocumentListComponent {
   async onView(doc: any) {
     try {
       const url = await this.documentService.getDocumentUrl(doc.fileKey, doc.ownerIdentityId);
+      if (!isTrustedDocumentPreviewUrl(url)) {
+        console.error('Rejected untrusted document preview URL');
+        return;
+      }
       this.selectedDocUrl.set(url);
       this.selectedDoc.set(doc);
       this.showModal.set(true);
