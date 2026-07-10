@@ -61,7 +61,29 @@ backend:
             npx ampx pipeline-deploy --branch "$AWS_BRANCH" --app-id "$AWS_APP_ID"
           else
             echo "PORTAL app: reusing ADMIN backend ($ADMIN_APP_ID)"
-            npx ampx generate outputs --branch main --app-id "$ADMIN_APP_ID"
+            attempt=1
+            max_attempts=10
+            while [ "$attempt" -le "$max_attempts" ]; do
+              echo "generate outputs attempt ${attempt}/${max_attempts}"
+              output="$(npx ampx generate outputs --branch main --app-id "$ADMIN_APP_ID" 2>&1)" && {
+                echo "$output"
+                echo "generate outputs succeeded on attempt ${attempt}"
+                break
+              }
+              echo "$output"
+              if echo "$output" | grep -qE 'DeploymentInProgressError|Deployment is currently in progress'; then
+                if [ "$attempt" -eq "$max_attempts" ]; then
+                  echo "generate outputs failed after ${max_attempts} attempts (admin deploy still in progress)"
+                  exit 1
+                fi
+                echo "Admin deploy in progress; waiting 30s before retry..."
+                sleep 30
+                attempt=$((attempt + 1))
+              else
+                echo "generate outputs failed with a non-retryable error"
+                exit 1
+              fi
+            done
           fi
 frontend:
   phases:
