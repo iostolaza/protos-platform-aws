@@ -44,6 +44,7 @@ export class FinancialService {
       id: data.id,
       accountNumber: data.accountNumber,
       name: data.name,
+      ownerCognitoId: data.ownerCognitoId ?? undefined, // schema field not deployed yet
       details: data.details,
       balance: data.balance,
       startingBalance: data.startingBalance ?? 0,
@@ -209,10 +210,49 @@ export class FinancialService {
     );
   }
 
+  private accountAccessCache = new Map<string, boolean>();
+
+  private isAdminOrManager(): boolean {
+    return this.roleService.isAdmin$() || this.roleService.isManager$();
+  }
+
+  /**
+   * Transaction visibility (client-side, defense-in-depth on top of org filter):
+   * - Admin / Manager: all transactions in the org list result.
+   * - Tenant: only transactions billed to them (accountId === cognitoId, legacy invoice
+   *   ledger) or on an Account they own (ownerCognitoId — dormant until Account schema ships).
+   */
   private async canViewTransaction(trans: Transaction): Promise<boolean> {
-    if (this.roleService.isAdmin$() || this.roleService.isManager$()) return true;
-    const currentUser = this.userService.user();
-    return currentUser?.cognitoId === trans.accountId;
+    if (this.isAdminOrManager()) return true;
+
+    const cognitoId = this.userService.user()?.cognitoId;
+    if (!cognitoId) return false;
+
+    if (trans.accountId === cognitoId) return true;
+
+    return this.isAccountOwnedByTenant(trans.accountId, cognitoId);
+  }
+
+  /**
+   * Account ownership check for tenant transaction visibility.
+   * INERT until Account.ownerCognitoId is added to amplify/data/resource.ts and deployed —
+   * the field is not in the schema today, so ownerCognitoId is always undefined and this
+   * always returns false. Tenants currently see only bill-to rows (accountId === cognitoId).
+   */
+  private async isAccountOwnedByTenant(accountId: string, cognitoId: string): Promise<boolean> {
+    const cacheKey = `${accountId}:${cognitoId}`;
+    const cached = this.accountAccessCache.get(cacheKey);
+    if (cached !== undefined) return cached;
+
+    try {
+      const account = await this.getAccount(accountId);
+      const allowed = account.ownerCognitoId === cognitoId;
+      this.accountAccessCache.set(cacheKey, allowed);
+      return allowed;
+    } catch {
+      this.accountAccessCache.set(cacheKey, false);
+      return false;
+    }
   }
 
   createTransaction(transData: Partial<Transaction> & { accountId: string }): Observable<Transaction> {
@@ -256,8 +296,7 @@ export class FinancialService {
   }
 
   listTransactions(filter: { accountId?: string; startDate?: string; endDate?: string; limit?: number } = {}): Observable<Transaction[]> {
-    const isManager = this.roleService.isManager$();
-    const baseFilter = isManager ? {} : (filter.accountId ? { accountId: { eq: filter.accountId } } : {});
+    const baseFilter = filter.accountId ? { accountId: { eq: filter.accountId } } : {};
     const conditions: any[] = [];
     if (filter.startDate) conditions.push({ date: { ge: filter.startDate } });
     if (filter.endDate) conditions.push({ date: { le: filter.endDate } });
@@ -310,8 +349,9 @@ export class FinancialService {
   }
 
   subscribeNewTransactions(accountId: string): Observable<Transaction[]> {
-    const isManager = this.roleService.isManager$();
-    const filter = isManager ? {} : { accountId: { eq: accountId } };
+    const filter = this.isAdminOrManager()
+      ? (accountId ? { accountId: { eq: accountId } } : {})
+      : { accountId: { eq: accountId } };
 
     return this.client.models.Transaction.observeQuery({ filter }).pipe(
       switchMap(snapshot => from(Promise.all(snapshot.items.map(async (trans: any) => {
@@ -503,8 +543,8 @@ export class FinancialService {
       return throwError(() => new Error('No current user'));
     }
 
-    const isAdmin = this.roleService.isAdmin$();
-    const queryFilter = isAdmin ? {} : { billToId: { eq: currentUser.cognitoId } };
+    const isAdminOrManager = this.isAdminOrManager();
+    const queryFilter = isAdminOrManager ? {} : { billToId: { eq: currentUser.cognitoId } };
     const listFilter = this.orgContext.mergeWithOrgFilter(queryFilter);
 
     return from(this.client.models.Invoice.list({
@@ -528,15 +568,13 @@ export class FinancialService {
     );
   }
 
-  getCurrentBalance(accountId: string): Observable<number> {
-    const isManager = this.roleService.isManager$();
-    if (isManager) {
-      return this.listTransactions({}).pipe(
+  getCurrentBalance(accountId = ''): Observable<number> {
+    if (this.isAdminOrManager()) {
+      return this.listTransactions(accountId ? { accountId } : {}).pipe(
         map(trans => trans.reduce((sum, t) => sum + t.balance, 0))
       );
-    } else {
-      return this.getLastBalance(accountId);
     }
+    return this.getLastBalance(accountId);
   }
 
   payBalance(accountId: string, amount: number): Observable<Transaction | null> {

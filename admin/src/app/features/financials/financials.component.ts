@@ -56,16 +56,18 @@ export class FinancialsComponent implements OnInit {
       this.assignedBuildings.set(await this.authService.getAssignedBuildings());
       console.log('assignedBuildings set to', this.assignedBuildings());
       const id = await this.authService.getUserId();
+      const adminOrManager = this.roleService.isAdmin$() || this.roleService.isManager$();
       this.accountId.set(id || '');
       console.log('accountId set to', id);
-      if (id) {
-        console.log('Loading balance transactions for accountId:', id);
-        this.financialService.subscribeNewTransactions(id).pipe(
+      if (id || adminOrManager) {
+        const ledgerAccountKey = adminOrManager ? '' : (id ?? '');
+        console.log('Loading balance transactions for accountId:', ledgerAccountKey || '(org-wide)');
+        this.financialService.subscribeNewTransactions(ledgerAccountKey).pipe(
           takeUntilDestroyed(this.destroyRef)
         ).subscribe(trans => {
           this.transactions.set(trans.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
         });
-        this.financialService.getCurrentBalance(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(bal => this.currentBalance.set(bal));
+        this.financialService.getCurrentBalance(adminOrManager ? '' : (id ?? '')).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(bal => this.currentBalance.set(bal));
         console.log('Loading invoices for ledger refresh...');
         this.financialService.listInvoices().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(invs => {
           this.invoices.set(invs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
@@ -81,9 +83,11 @@ export class FinancialsComponent implements OnInit {
   }
 
   loadTransactions() {
+    const adminOrManager = this.roleService.isAdmin$() || this.roleService.isManager$();
     const id = this.accountId();
-    if (!id) return;
-    this.financialService.listTransactions({ accountId: id }).subscribe(trans => {
+    if (!id && !adminOrManager) return;
+    const ledgerAccountKey = adminOrManager ? undefined : id;
+    this.financialService.listTransactions(ledgerAccountKey ? { accountId: ledgerAccountKey } : {}).subscribe(trans => {
       console.log('Loaded transactions:', trans);
       this.transactions.set(trans.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     });
