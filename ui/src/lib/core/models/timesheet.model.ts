@@ -27,6 +27,8 @@ export interface Timesheet {
   netTotal?: number;
   startDate?: string;
   endDate?: string;
+  postedToLedger?: boolean;
+  ledgerPostingError?: string;
 }
 
 export interface TimesheetEntry {

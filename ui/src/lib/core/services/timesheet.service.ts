@@ -2,11 +2,25 @@
 import { Injectable, inject } from '@angular/core';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@amplify-schema';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 import { FinancialService } from './financial.service';
 import { OrgContextService } from './org-context.service';
 import { Timesheet, TimesheetEntry, DailyAggregate } from '../models/timesheet.model';
 import { ChargeCode } from '../models/financial.model';
+
+export interface LedgerPostingResult {
+  posted: boolean;
+  transactionCount: number;
+  errors: string[];
+}
+
+type TimesheetWorker = {
+  rate?: number | null;
+  otMultiplier?: number | null;
+  firstName?: string | null;
+  lastName?: string | null;
+};
 
 @Injectable({
   providedIn: 'root',
@@ -39,6 +53,8 @@ export class TimesheetService {
       netTotal: data.netTotal ?? 0,
       startDate: data.startDate ?? undefined,
       endDate: data.endDate ?? undefined,
+      postedToLedger: data.postedToLedger ?? false,
+      ledgerPostingError: data.ledgerPostingError ?? undefined,
       entries: [],
     };
   }
@@ -209,19 +225,9 @@ export class TimesheetService {
       }
     }
 
-    // Compute the labor cost for the timesheet from the user's rate.
-    const totalCost = ts.entries.reduce(
-      (sum, entry) => sum + entry.hours * (user.rate ?? 0),
-      0
-    );
-
-    // TODO: adapt to new financial service
-    // The original timesheet app posted one Transaction per charge code and
-    // decremented an Account balance via FinancialService.getAccountByChargeCode/
-    // getAccount and a charge-code-keyed Account model. The protos-admin financial
-    // service (Transaction/Invoice based) has a different API and there is no
-    // Account model in the merged schema, so the ledger integration is stubbed
-    // here until the charge-code → account mapping is re-implemented.
+    // Compute labor cost (OT-aware, allocated per charge code).
+    const chargeAmounts = this.computeChargeCodeAmounts(ts.entries, user);
+    const totalCost = [...chargeAmounts.values()].reduce((sum, amount) => sum + amount, 0);
 
     // ───── Mark timesheet as approved ─────
     const { data, errors } = await this.client.models.Timesheet.update({
@@ -234,8 +240,155 @@ export class TimesheetService {
       throw new Error(errors.map((e) => e.message).join(', '));
     }
 
-    console.log(`Timesheet ${id} approved – total deducted: ${totalCost}`);
-    return this.mapTimesheetFromSchema(data!);
+    const approved = this.mapTimesheetFromSchema(data!);
+
+    // Post to ledger after approval; failures do not roll back approval.
+    const posting = await this.postTimesheetToLedger({ ...approved, entries: ts.entries }, user);
+    const ledgerUpdate: Partial<Schema['Timesheet']['type']> & { id: string } = {
+      id,
+      postedToLedger: posting.posted,
+      ledgerPostingError: posting.errors.length ? posting.errors.join('; ') : null,
+    };
+    const { data: withLedger, errors: ledgerErrors } = await this.client.models.Timesheet.update(ledgerUpdate);
+    if (ledgerErrors?.length) {
+      console.warn('Failed to persist ledger posting status', ledgerErrors);
+    }
+
+    if (posting.errors.length) {
+      console.warn(`Timesheet ${id} approved but ledger posting had errors`, posting.errors);
+    } else {
+      console.log(`Timesheet ${id} approved – ${posting.transactionCount} transaction(s), total: ${totalCost}`);
+    }
+
+    return this.mapTimesheetFromSchema(withLedger ?? data!);
+  }
+
+  /** Retry ledger posting for an already-approved timesheet (idempotent). */
+  async retryTimesheetLedgerPosting(id: string): Promise<LedgerPostingResult> {
+    if (!(await this.canApprove(await this.authService.getCurrentUserId() ?? ''))) {
+      throw new Error('Unauthorized to post timesheet ledger entries');
+    }
+
+    const ts = await this.getTimesheetWithEntries(id);
+    if (ts.status !== 'approved') {
+      throw new Error('Only approved timesheets can be posted to the ledger');
+    }
+
+    const user = await this.authService.getUserById(ts.userId);
+    if (!user) throw new Error('User not found');
+
+    const posting = await this.postTimesheetToLedger(ts, user);
+    await this.client.models.Timesheet.update({
+      id,
+      postedToLedger: posting.posted,
+      ledgerPostingError: posting.errors.length ? posting.errors.join('; ') : null,
+    });
+    return posting;
+  }
+
+  /**
+   * Posts one charge Transaction per charge code on the timesheet.
+   * Uses recurringId `timesheet:{id}:{chargeCode}` for idempotency.
+   */
+  async postTimesheetToLedger(
+    ts: Timesheet & { entries?: TimesheetEntry[] },
+    worker: TimesheetWorker
+  ): Promise<LedgerPostingResult> {
+    const entries = ts.entries?.length
+      ? ts.entries
+      : (await this.getTimesheetWithEntries(ts.id)).entries;
+    const chargeAmounts = this.computeChargeCodeAmounts(entries, worker);
+    const periodLabel = this.formatTimesheetPeriod(ts.startDate, ts.endDate);
+    const workerName = `${worker.firstName ?? ''} ${worker.lastName ?? ''}`.trim() || ts.userId;
+    const transactionDate = ts.endDate ?? new Date().toISOString().split('T')[0];
+
+    const errors: string[] = [];
+    let transactionCount = 0;
+
+    for (const [chargeCode, amount] of chargeAmounts) {
+      if (amount <= 0) continue;
+
+      const recurringId = `timesheet:${ts.id}:${chargeCode}`;
+      if (await this.hasExistingLedgerPosting(recurringId)) {
+        transactionCount++;
+        continue;
+      }
+
+      const account = await this.financialService.getAccountByChargeCode(chargeCode);
+      if (!account) {
+        errors.push(`No account linked to charge code "${chargeCode}"`);
+        continue;
+      }
+
+      try {
+        await firstValueFrom(
+          this.financialService.createTransaction({
+            accountId: account.id,
+            type: 'charge',
+            date: transactionDate,
+            docNumber: `TS-${ts.id.slice(0, 8).toUpperCase()}-${chargeCode.replace(/[^A-Z0-9]/gi, '').slice(0, 12)}`,
+            description: `Timesheet ${ts.id.slice(-6)} (${periodLabel}) – ${workerName} – ${chargeCode}`,
+            chargeAmount: Math.round(amount * 100) / 100,
+            paymentAmount: 0,
+            status: 'pending',
+            category: 'timesheet-labor',
+            recurringId,
+          })
+        );
+        transactionCount++;
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push(`Charge code "${chargeCode}": ${message}`);
+      }
+    }
+
+    const expectedCodes = [...chargeAmounts.entries()].filter(([, amount]) => amount > 0).length;
+    const posted = errors.length === 0 && expectedCodes > 0 && transactionCount >= expectedCodes;
+    return { posted, transactionCount, errors };
+  }
+
+  private formatTimesheetPeriod(startDate?: string, endDate?: string): string {
+    if (startDate && endDate) return `${startDate} – ${endDate}`;
+    if (startDate) return startDate;
+    if (endDate) return endDate;
+    return 'period n/a';
+  }
+
+  /** OT-aware labor cost per charge code (proportional daily OT allocation). */
+  private computeChargeCodeAmounts(
+    entries: TimesheetEntry[],
+    worker: TimesheetWorker
+  ): Map<string, number> {
+    const rate = worker.rate ?? 0;
+    const otMultiplier = worker.otMultiplier ?? 1.5;
+    const byDate = new Map<string, Map<string, number>>();
+
+    for (const entry of entries) {
+      if (!entry.chargeCode?.trim()) continue;
+      if (!byDate.has(entry.date)) byDate.set(entry.date, new Map());
+      const codeMap = byDate.get(entry.date)!;
+      codeMap.set(entry.chargeCode, (codeMap.get(entry.chargeCode) ?? 0) + entry.hours);
+    }
+
+    const amounts = new Map<string, number>();
+    for (const codeMap of byDate.values()) {
+      const dayTotalHours = [...codeMap.values()].reduce((sum, h) => sum + h, 0);
+      const baseHours = Math.min(8, dayTotalHours);
+      const otHours = Math.max(0, dayTotalHours - 8);
+      const dayPay = baseHours * rate + otHours * rate * otMultiplier;
+
+      for (const [code, hours] of codeMap) {
+        const share = dayTotalHours > 0 ? (hours / dayTotalHours) * dayPay : 0;
+        amounts.set(code, (amounts.get(code) ?? 0) + share);
+      }
+    }
+    return amounts;
+  }
+
+  private async hasExistingLedgerPosting(recurringId: string): Promise<boolean> {
+    const filter = this.orgContext.mergeWithOrgFilter({ recurringId: { eq: recurringId } });
+    const { data } = await this.client.models.Transaction.list({ filter, limit: 1 });
+    return (data?.length ?? 0) > 0;
   }
 
   async rejectTimesheet(id: string, reason: string): Promise<Timesheet> {

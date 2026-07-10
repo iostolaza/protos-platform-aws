@@ -1,6 +1,8 @@
 // amplify/backend.ts
 import { defineBackend } from '@aws-amplify/backend';
 import { Function as LambdaFunction } from 'aws-cdk-lib/aws-lambda';
+import { EmailIdentity } from 'aws-cdk-lib/aws-ses';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { IConstruct } from 'constructs';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
@@ -31,9 +33,35 @@ function findAuthLambda(scope: IConstruct, nameFragment: string): LambdaFunction
 const adminCognitoLambda = findAuthLambda(backend.data.stack, 'adminCognito');
 const postConfirmationLambda = findAuthLambda(backend.auth.stack, 'postconfirmation');
 const userPool = backend.auth.resources.userPool;
+const sesSenderEmail = process.env.SES_SENDER_EMAIL?.trim();
 
 if (adminCognitoLambda) {
   adminCognitoLambda.addEnvironment('AUTH_USERPOOLID', userPool.userPoolId);
+  if (sesSenderEmail) {
+    adminCognitoLambda.addEnvironment('SES_SENDER_EMAIL', sesSenderEmail);
+    const senderIdentity = EmailIdentity.fromEmailIdentityName(
+      backend.data.stack,
+      'AdminInviteSesSender',
+      sesSenderEmail
+    );
+    senderIdentity.grantSendEmail(adminCognitoLambda);
+    // SES sandbox authorizes SendEmail against the recipient identity ARN too.
+    // Constrain sends to our verified From address while allowing any in-account identity as To.
+    adminCognitoLambda.addToRolePolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+        resources: [
+          `arn:aws:ses:${backend.data.stack.region}:${backend.data.stack.account}:identity/*`,
+        ],
+        conditions: {
+          StringEquals: {
+            'ses:FromAddress': sesSenderEmail,
+          },
+        },
+      })
+    );
+  }
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminCreateUser');
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminAddUserToGroup');
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminRemoveUserFromGroup');

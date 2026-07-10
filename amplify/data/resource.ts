@@ -344,7 +344,7 @@ const schema = a.schema({
     .authorization(allow => [
       allow.ownerDefinedIn('accountId').identityClaim('sub').to(['read']),
       allow.group('user_Admin').to(['create', 'read', 'update', 'delete']),
-      allow.group('user_Manager').to(['read', 'update']),
+      allow.group('user_Manager').to(['create', 'read', 'update']),
       allow.group('user_Tenant').to(['read'])
     ]),
 
@@ -415,6 +415,8 @@ const schema = a.schema({
     netTotal: a.float(),
     startDate: a.date(),
     endDate: a.date(),
+    postedToLedger: a.boolean().default(false),
+    ledgerPostingError: a.string(),
   })
     .authorization(allow => [
       allow.authenticated().to(['create', 'read']),

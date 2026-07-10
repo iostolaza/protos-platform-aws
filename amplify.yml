@@ -4,6 +4,47 @@ version: 1
 # in the console/CLI, so we branch on $AWS_APP_ID instead:
 #   - ADMIN app  -> deploys the shared Gen 2 backend, builds the admin frontend
 #   - PORTAL app -> reuses the admin backend (no deploy), builds portal frontend
+#
+# CSP / security headers below target PROD (main branch, app d11yajkly52yyj).
+# Sandbox (ampx sandbox --profile amplify-admin) uses different endpoints — if you
+# serve the sandbox frontend over HTTP locally, CSP is not applied; if you host a
+# sandbox Amplify app, swap in sandbox values, e.g.:
+#   AppSync:  https://46yb2ypsnvfprez2yiuhkde6x4.appsync-api.us-west-1.amazonaws.com
+#             wss://46yb2ypsnvfprez2yiuhkde6x4.appsync-realtime-api.us-west-1.amazonaws.com
+#   S3:       amplify-protosplatformawsso-appfilesbucket23865b9a-ovlpztgv4znw
+# Re-check CSP whenever AppSync or storage bucket changes (backend redeploy).
+customHeaders:
+  - pattern: '**/*'
+    headers:
+      - key: Content-Security-Policy
+        value: >-
+          default-src 'self';
+          base-uri 'self';
+          object-src 'none';
+          script-src 'self';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data: blob:
+            https://amplify-d11yajkly52yyj-main-appfilesbucket23865b9a-kmsiwt6coivb.s3.us-west-1.amazonaws.com
+            https://amplify-d11yajkly52yyj-main-appfilesbucket23865b9a-kmsiwt6coivb.s3.amazonaws.com;
+          font-src 'self' data:;
+          connect-src 'self'
+            https://x3hhexitgngg5audumssgymu7u.appsync-api.us-west-1.amazonaws.com
+            wss://x3hhexitgngg5audumssgymu7u.appsync-realtime-api.us-west-1.amazonaws.com
+            https://cognito-idp.us-west-1.amazonaws.com
+            https://cognito-identity.us-west-1.amazonaws.com
+            https://amplify-d11yajkly52yyj-main-appfilesbucket23865b9a-kmsiwt6coivb.s3.us-west-1.amazonaws.com
+            https://amplify-d11yajkly52yyj-main-appfilesbucket23865b9a-kmsiwt6coivb.s3.amazonaws.com;
+          frame-src 'self'
+            https://amplify-d11yajkly52yyj-main-appfilesbucket23865b9a-kmsiwt6coivb.s3.us-west-1.amazonaws.com
+            https://amplify-d11yajkly52yyj-main-appfilesbucket23865b9a-kmsiwt6coivb.s3.amazonaws.com;
+          frame-ancestors 'none';
+          form-action 'self';
+      - key: X-Frame-Options
+        value: DENY
+      - key: X-Content-Type-Options
+        value: nosniff
+      - key: Referrer-Policy
+        value: strict-origin-when-cross-origin
 env:
   variables:
     ADMIN_APP_ID: d11yajkly52yyj

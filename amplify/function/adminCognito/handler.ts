@@ -27,6 +27,42 @@ const cognito = new CognitoIdentityProviderClient({ region: lambdaRegion });
 const ses = new SESClient({ region: lambdaRegion });
 const USER_POOL_ID = process.env.AUTH_USERPOOLID!;
 
+function requireSesSenderEmail(): string {
+  const sender = process.env.SES_SENDER_EMAIL?.trim();
+  if (!sender) {
+    throw new Error(
+      'SES_SENDER_EMAIL is not configured. Set it to a verified SES identity at deploy time.'
+    );
+  }
+  return sender;
+}
+
+function describeSesSendFailure(error: unknown, recipient: string): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const name = error instanceof Error ? error.name : 'Error';
+  const lower = message.toLowerCase();
+
+  if (lower.includes('ses_sender_email is not configured')) {
+    return `SES_SENDER_EMAIL is not configured; invite email to ${recipient} was not sent.`;
+  }
+
+  const unverifiedRecipient =
+    lower.includes('not verified') ||
+    lower.includes('messagerejected') ||
+    lower.includes('email address is not verified') ||
+    lower.includes('address is not verified');
+
+  if (unverifiedRecipient) {
+    return (
+      `SES sandbox rejected invite to unverified recipient ${recipient}. ` +
+      'Verify the recipient in SES (us-west-1) or request production access. ' +
+      `Details: ${name}: ${message}`
+    );
+  }
+
+  return `Invite email to ${recipient} was not sent. Details: ${name}: ${message}`;
+}
+
 const roleToGroup: Record<string, string> = {
   Tenant: 'user_Tenant',
   Manager: 'user_Manager',
@@ -448,8 +484,9 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         .replace(/{{role}}/g, role);
 
       try {
+        const senderEmail = requireSesSenderEmail();
         await ses.send(new SendEmailCommand({
-          Source: 'no-reply@yourdomain.com', // CHANGE TO YOUR VERIFIED SES EMAIL
+          Source: senderEmail,
           Destination: { ToAddresses: [email] },
           Message: {
             Subject: { Data: `Protos – ${applicationType === 'Tenant' ? 'Rental' : 'Employee'} Application` },
@@ -457,7 +494,7 @@ export const handler = async (event: { action?: string; payload?: Record<string,
           },
         }));
       } catch (emailError) {
-        console.warn('Invite email not sent (SES unavailable or unverified sender):', emailError);
+        console.warn(describeSesSendFailure(emailError, email));
       }
 
       return true;
