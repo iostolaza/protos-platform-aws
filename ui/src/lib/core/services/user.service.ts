@@ -43,6 +43,7 @@ export class UserService implements OnDestroy {
           break;
         case 'signedOut':
           this.orgContext.clearOrg();
+          this.roleService.clearGroups();
           this.user.set(null);
           this.allUsers.set([]);
           break;

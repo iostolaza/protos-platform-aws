@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, signOut } from 'aws-amplify/auth';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@amplify-schema';
 import { UserService, UserProfile } from './user.service';
@@ -51,5 +51,10 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  /** Ends the Cognito session; UserService Hub listener clears local profile state. */
+  async logout(): Promise<void> {
+    await signOut();
   }
 }

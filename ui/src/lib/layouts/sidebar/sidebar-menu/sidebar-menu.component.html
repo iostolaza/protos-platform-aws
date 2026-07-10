@@ -1,4 +1,4 @@
-@for (menu of menuService.pagesMenu(); track menu.group) {
+@for (menu of groups; track menu.group) {
   @if (menuService.showSideBar) {
     <div class="mx-1 flex items-center justify-between py-3">
       <small [ngClass]="{ hidden: !menuService.showSideBar }" class="text-foreground text-xs font-semibold">

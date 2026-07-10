@@ -1,12 +1,11 @@
 <nav
   [ngClass]="menuService.showSideBar ? 'w-[210px] xl:w-[280px]' : 'w-[70px]'"
-  class="bg-card hidden h-full flex-col justify-between pt-3 transition-all duration-300 lg:flex"
+  class="bg-card hidden h-full min-h-0 flex-col lg:flex"
 >
-  <div class="overflow-hidden">
-    <!-- Header row -->
+  <div class="flex min-h-0 flex-1 flex-col">
     <div
       [ngClass]="menuService.showSideBar ? 'justify-between' : 'justify-center'"
-      class="mx-4 mb-2 flex h-9 items-center"
+      class="mx-4 mb-2 flex h-9 shrink-0 items-center"
     >
       @if (menuService.showSideBar) {
         <div class="flex items-center">
@@ -22,8 +21,12 @@
       </button>
     </div>
 
-    <div class="scrollbar-thumb--sm scrollbar-track-rounded scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted h-full overflow-auto px-4">
-      <lib-sidebar-menu></lib-sidebar-menu>
+    <div class="scrollbar-thumb--sm scrollbar-track-rounded scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted min-h-0 flex-1 overflow-y-auto px-4">
+      <lib-sidebar-menu [menuGroups]="mainMenuGroups()"></lib-sidebar-menu>
     </div>
+  </div>
+
+  <div class="border-border shrink-0 border-t px-4 py-2">
+    <lib-sidebar-menu [menuGroups]="accountMenuGroups()"></lib-sidebar-menu>
   </div>
 </nav>

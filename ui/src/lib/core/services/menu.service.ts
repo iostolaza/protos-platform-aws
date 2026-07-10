@@ -3,12 +3,14 @@ import { NavigationEnd, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Menu } from '../constants/menu';
 import { MenuItem, SubMenuItem } from '../models/menu.model';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class MenuService implements OnDestroy {
   private router = inject(Router);
+  private authService = inject(AuthService);
 
   private _showSidebar = signal(true);
   private _showMobileMenu = signal(false);
@@ -104,8 +106,14 @@ export class MenuService implements OnDestroy {
     });
   }
 
-  public logout() {
-    this.router.navigate(['/sign-in']);
+  public async logout(): Promise<void> {
+    this.showMobileMenu = false;
+    try {
+      await this.authService.logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+    await this.router.navigateByUrl('/sign-in');
   }
 
   ngOnDestroy(): void {

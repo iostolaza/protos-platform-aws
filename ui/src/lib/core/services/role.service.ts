@@ -28,4 +28,8 @@ export class RoleService {
   hasGroup(group: string): boolean {
     return this.groups().includes(group);
   }
+
+  clearGroups(): void {
+    this.groups.set([]);
+  }
 }
