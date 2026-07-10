@@ -580,7 +580,10 @@ export const handler = async (event: { action?: string; payload?: Record<string,
             Username: email,
           })
         );
-        cognitoId = cognitoIdFromCreateUserResponse(existingUser.User);
+        cognitoId = cognitoIdFromCreateUserResponse({
+          Username: existingUser.Username,
+          Attributes: existingUser.UserAttributes,
+        });
 
         await cognito.send(
           new AdminUpdateUserAttributesCommand({
