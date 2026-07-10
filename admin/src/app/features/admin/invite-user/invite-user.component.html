@@ -42,9 +42,24 @@
     </button>
   </form>
 
+  @if (errorMessage) {
+    <div class="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+      {{ errorMessage }}
+    </div>
+  }
+
   @if (success) {
-    <div class="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-      Invitation sent successfully!
+    <div
+      class="mt-6 p-4 rounded-lg text-sm"
+      [class.bg-green-100]="!successMessage"
+      [class.border-green-400]="!successMessage"
+      [class.text-green-700]="!successMessage"
+      [class.bg-amber-50]="!!successMessage"
+      [class.border-amber-200]="!!successMessage"
+      [class.text-amber-900]="!!successMessage"
+      [class.border]="true"
+    >
+      {{ successMessage || 'Invitation sent successfully!' }}
     </div>
   }
 </div>

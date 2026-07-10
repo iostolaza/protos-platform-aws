@@ -4,6 +4,31 @@ import type { Schema } from '@amplify-schema';
 import { OrgContextService } from './org-context.service';
 import { INVITE_ROLES, type InviteRole } from '../utils/validation';
 
+export type InviteUserResult = {
+  invited: boolean;
+  emailSent: boolean;
+  userAlreadyExisted?: boolean | null;
+  warning?: string | null;
+};
+
+function parseInviteUserResult(data: unknown): InviteUserResult {
+  if (data && typeof data === 'object' && 'invited' in data) {
+    const result = data as InviteUserResult;
+    return {
+      invited: Boolean(result.invited),
+      emailSent: Boolean(result.emailSent),
+      userAlreadyExisted: result.userAlreadyExisted ?? false,
+      warning: result.warning ?? null,
+    };
+  }
+
+  if (data === true) {
+    return { invited: true, emailSent: true, userAlreadyExisted: false, warning: null };
+  }
+
+  throw new Error('Invite succeeded but returned an unexpected response');
+}
+
 export const ROLE_GROUPS = ['user_Admin', 'user_Manager', 'user_Facilities', 'user_Tenant'] as const;
 export const TENANT_GROUP = 'user_Tenant';
 export const EMPLOYEE_GROUP = 'user_Employee';
@@ -38,9 +63,9 @@ export class AdminService {
     role: InviteRole;
     applicationType?: 'Tenant' | 'Employee';
     rate?: number | null;
-  }) {
+  }): Promise<InviteUserResult> {
     const organizationId = this.orgContext.getEffectiveOrgId() ?? undefined;
-    const { errors } = await this.client.mutations.adminInviteUser({
+    const { data: result, errors } = await this.client.mutations.adminInviteUser({
       email: data.email,
       firstName: data.firstName,
       lastName: data.lastName,
@@ -48,13 +73,21 @@ export class AdminService {
       applicationType: data.applicationType ?? 'Employee',
       organizationId,
     });
-    if (errors) {
+    if (errors?.length) {
       throw errors;
     }
 
+    const inviteResult = parseInviteUserResult(result);
+
     if (data.rate != null && !Number.isNaN(data.rate)) {
-      await this.updateUserRateByEmail(data.email, data.rate);
+      try {
+        await this.updateUserRateByEmail(data.email, data.rate);
+      } catch (error) {
+        console.warn('Hourly rate update failed after invite (user was still created):', error);
+      }
     }
+
+    return inviteResult;
   }
 
   async listUsers(): Promise<AdminUserRecord[]> {

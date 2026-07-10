@@ -7,7 +7,7 @@ import {
   AbstractControl,
   ValidationErrors,
 } from '@angular/forms';
-import { AdminService, isValidEmail, sanitizeText, type InviteRole } from '@ui';
+import { AdminService, formatGraphqlError, isValidEmail, sanitizeText, type InviteRole } from '@ui';
 
 function emailValidator(control: AbstractControl): ValidationErrors | null {
   const value = sanitizeText(control.value ?? '');
@@ -86,6 +86,12 @@ function emailValidator(control: AbstractControl): ValidationErrors | null {
             />
           </div>
 
+          @if (successMessage()) {
+            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {{ successMessage() }}
+            </div>
+          }
+
           @if (errorMessage()) {
             <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {{ errorMessage() }}
@@ -98,8 +104,9 @@ function emailValidator(control: AbstractControl): ValidationErrors | null {
               (click)="dialogClosed.emit()"
               class="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
             >
-              Cancel
+              {{ successMessage() ? 'Done' : 'Cancel' }}
             </button>
+            @if (!successMessage()) {
             <button
               type="submit"
               [disabled]="form.invalid || loading()"
@@ -107,6 +114,7 @@ function emailValidator(control: AbstractControl): ValidationErrors | null {
             >
               {{ loading() ? 'Inviting...' : 'Send Invitation' }}
             </button>
+            }
           </div>
         </form>
       </div>
@@ -122,6 +130,7 @@ export class AddEmployeeDialogComponent {
 
   loading = signal(false);
   errorMessage = signal<string | null>(null);
+  successMessage = signal<string | null>(null);
   roles = this.adminService.inviteRoles;
 
   form = this.fb.group({
@@ -134,6 +143,7 @@ export class AddEmployeeDialogComponent {
 
   async onSubmit(): Promise<void> {
     this.errorMessage.set(null);
+    this.successMessage.set(null);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -153,7 +163,7 @@ export class AddEmployeeDialogComponent {
 
     this.loading.set(true);
     try {
-      await this.adminService.inviteUser({
+      const result = await this.adminService.inviteUser({
         firstName,
         lastName,
         email,
@@ -162,10 +172,24 @@ export class AddEmployeeDialogComponent {
         rate,
       });
       this.invited.emit();
+
+      if (!result.emailSent) {
+        this.successMessage.set(
+          result.warning ??
+            'User created — invite email was not sent (SES not configured or recipient not verified).'
+        );
+        return;
+      }
+
+      if (result.warning) {
+        this.successMessage.set(result.warning);
+        return;
+      }
+
       this.dialogClosed.emit();
     } catch (err) {
       console.error('Invite failed:', err);
-      this.errorMessage.set('Failed to send invitation. Please try again.');
+      this.errorMessage.set(formatGraphqlError(err));
     } finally {
       this.loading.set(false);
     }

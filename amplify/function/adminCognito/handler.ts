@@ -3,6 +3,10 @@ import {
   AdminDisableUserCommand,
   AdminEnableUserCommand,
   AdminCreateUserCommand,
+  AdminGetUserCommand,
+  AdminUpdateUserAttributesCommand,
+  AdminSetUserPasswordCommand,
+  AdminListGroupsForUserCommand,
   AdminAddUserToGroupCommand,
   AdminRemoveUserFromGroupCommand,
   ListGroupsCommand,
@@ -367,7 +371,105 @@ function cognitoIdFromCreateUserResponse(
   if (user?.Username) {
     return user.Username;
   }
-  throw new Error('Failed to resolve cognitoId from AdminCreateUser response');
+  throw new Error('Failed to resolve cognitoId from Cognito user');
+}
+
+function isUsernameExistsException(error: unknown): boolean {
+  const name = error instanceof Error ? error.name : '';
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    name === 'UsernameExistsException' ||
+    message.includes('UsernameExistsException') ||
+    message.toLowerCase().includes('already exists')
+  );
+}
+
+function generateTempPassword(): string {
+  return Math.random().toString(36).slice(-10) + 'A1!';
+}
+
+type InviteUserResult = {
+  invited: boolean;
+  emailSent: boolean;
+  userAlreadyExisted?: boolean;
+  warning?: string | null;
+};
+
+async function syncUserRoleGroup(email: string, groupName: string): Promise<void> {
+  const existingGroups = await cognito.send(
+    new AdminListGroupsForUserCommand({
+      UserPoolId: USER_POOL_ID,
+      Username: email,
+    })
+  );
+
+  for (const group of existingGroups.Groups ?? []) {
+    const existingGroupName = group.GroupName;
+    if (existingGroupName && Object.values(roleToGroup).includes(existingGroupName)) {
+      try {
+        await cognito.send(
+          new AdminRemoveUserFromGroupCommand({
+            UserPoolId: USER_POOL_ID,
+            Username: email,
+            GroupName: existingGroupName,
+          })
+        );
+      } catch (error) {
+        console.warn(`Could not remove ${email} from ${existingGroupName}:`, error);
+      }
+    }
+  }
+
+  try {
+    await cognito.send(
+      new AdminAddUserToGroupCommand({
+        UserPoolId: USER_POOL_ID,
+        Username: email,
+        GroupName: groupName,
+      })
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!message.toLowerCase().includes('already')) {
+      throw error;
+    }
+  }
+}
+
+async function sendInviteEmail(input: {
+  email: string;
+  firstName: string;
+  applicationType: string;
+  role: string;
+  tempPassword: string;
+  templateKey: 'Tenant' | 'Employee';
+}): Promise<{ emailSent: boolean; warning: string | null }> {
+  const html = templates[input.templateKey]
+    .replace(/{{firstName}}/g, input.firstName)
+    .replace(/{{email}}/g, input.email)
+    .replace(/{{temporaryPassword}}/g, input.tempPassword)
+    .replace(/{{role}}/g, input.role);
+
+  try {
+    const senderEmail = requireSesSenderEmail();
+    await ses.send(
+      new SendEmailCommand({
+        Source: senderEmail,
+        Destination: { ToAddresses: [input.email] },
+        Message: {
+          Subject: {
+            Data: `Protos – ${input.applicationType === 'Tenant' ? 'Rental' : 'Employee'} Application`,
+          },
+          Body: { Html: { Data: html } },
+        },
+      })
+    );
+    return { emailSent: true, warning: null };
+  } catch (emailError) {
+    const warning = describeSesSendFailure(emailError, input.email);
+    console.warn(warning);
+    return { emailSent: false, warning };
+  }
 }
 
 async function createInvitedUserRecord(input: {
@@ -442,31 +544,67 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         throw new Error(`Invalid role. Must be one of: Admin, Manager, Facilities, Tenant`);
       }
 
-      const tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
       const groupName = roleToGroup[role];
       const templateKey = applicationType === 'Tenant' ? 'Tenant' : 'Employee';
+      let userAlreadyExisted = false;
+      let cognitoId: string;
+      let tempPassword = generateTempPassword();
 
-      const createUserResponse = await cognito.send(new AdminCreateUserCommand({
-        UserPoolId: USER_POOL_ID,
-        Username: email,
-        TemporaryPassword: tempPassword,
-        UserAttributes: [
-          { Name: 'email', Value: email },
-          { Name: 'email_verified', Value: 'true' },
-          { Name: 'given_name', Value: firstName },
-          { Name: 'family_name', Value: lastName },
-          { Name: 'custom:organizationId', Value: organizationId },
-        ],
-        MessageAction: 'SUPPRESS',
-      }));
+      try {
+        const createUserResponse = await cognito.send(
+          new AdminCreateUserCommand({
+            UserPoolId: USER_POOL_ID,
+            Username: email,
+            TemporaryPassword: tempPassword,
+            UserAttributes: [
+              { Name: 'email', Value: email },
+              { Name: 'email_verified', Value: 'true' },
+              { Name: 'given_name', Value: firstName },
+              { Name: 'family_name', Value: lastName },
+              { Name: 'custom:organizationId', Value: organizationId },
+            ],
+            MessageAction: 'SUPPRESS',
+          })
+        );
+        cognitoId = cognitoIdFromCreateUserResponse(createUserResponse.User);
+      } catch (error) {
+        if (!isUsernameExistsException(error)) {
+          throw error;
+        }
 
-      const cognitoId = cognitoIdFromCreateUserResponse(createUserResponse.User);
+        userAlreadyExisted = true;
+        const existingUser = await cognito.send(
+          new AdminGetUserCommand({
+            UserPoolId: USER_POOL_ID,
+            Username: email,
+          })
+        );
+        cognitoId = cognitoIdFromCreateUserResponse(existingUser.User);
 
-      await cognito.send(new AdminAddUserToGroupCommand({
-        UserPoolId: USER_POOL_ID,
-        Username: email,
-        GroupName: groupName,
-      }));
+        await cognito.send(
+          new AdminUpdateUserAttributesCommand({
+            UserPoolId: USER_POOL_ID,
+            Username: email,
+            UserAttributes: [
+              { Name: 'given_name', Value: firstName },
+              { Name: 'family_name', Value: lastName },
+              { Name: 'custom:organizationId', Value: organizationId },
+            ],
+          })
+        );
+
+        tempPassword = generateTempPassword();
+        await cognito.send(
+          new AdminSetUserPasswordCommand({
+            UserPoolId: USER_POOL_ID,
+            Username: email,
+            Password: tempPassword,
+            Permanent: false,
+          })
+        );
+      }
+
+      await syncUserRoleGroup(email, groupName);
 
       await createInvitedUserRecord({
         cognitoId,
@@ -477,27 +615,30 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         role,
       });
 
-      let html = templates[templateKey]
-        .replace(/{{firstName}}/g, firstName)
-        .replace(/{{email}}/g, email)
-        .replace(/{{temporaryPassword}}/g, tempPassword)
-        .replace(/{{role}}/g, role);
+      const { emailSent, warning: emailWarning } = await sendInviteEmail({
+        email,
+        firstName,
+        applicationType,
+        role,
+        tempPassword,
+        templateKey,
+      });
 
-      try {
-        const senderEmail = requireSesSenderEmail();
-        await ses.send(new SendEmailCommand({
-          Source: senderEmail,
-          Destination: { ToAddresses: [email] },
-          Message: {
-            Subject: { Data: `Protos – ${applicationType === 'Tenant' ? 'Rental' : 'Employee'} Application` },
-            Body: { Html: { Data: html } },
-          },
-        }));
-      } catch (emailError) {
-        console.warn(describeSesSendFailure(emailError, email));
+      const warnings: string[] = [];
+      if (userAlreadyExisted) {
+        warnings.push('User already existed in Cognito; profile and role were updated.');
+      }
+      if (emailWarning) {
+        warnings.push(emailWarning);
       }
 
-      return true;
+      const result: InviteUserResult = {
+        invited: true,
+        emailSent,
+        userAlreadyExisted,
+        warning: warnings.length > 0 ? warnings.join(' ') : null,
+      };
+      return result;
     }
 
     case 'listGroups': {

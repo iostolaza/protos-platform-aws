@@ -455,7 +455,14 @@ const schema = a.schema({
       applicationType: a.enum(['Tenant', 'Employee']),
       organizationId: a.string(),
     })
-    .returns(a.boolean())
+    .returns(
+      a.customType({
+        invited: a.boolean().required(),
+        emailSent: a.boolean().required(),
+        userAlreadyExisted: a.boolean(),
+        warning: a.string(),
+      })
+    )
     .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
     .handler(a.handler.function(adminCognito)),
 

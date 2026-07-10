@@ -63,6 +63,10 @@ if (adminCognitoLambda) {
     );
   }
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminCreateUser');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:AdminGetUser');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:AdminUpdateUserAttributes');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:AdminSetUserPassword');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:AdminListGroupsForUser');
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminAddUserToGroup');
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminRemoveUserFromGroup');
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminDisableUser');

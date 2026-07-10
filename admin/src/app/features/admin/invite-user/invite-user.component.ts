@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { AdminService } from '@ui';
+import { AdminService, formatGraphqlError } from '@ui';
 
 @Component({
   selector: 'app-invite-user',
@@ -16,6 +16,8 @@ export class InviteUserComponent {
 
   loading = false;
   success = false;
+  successMessage = '';
+  errorMessage = '';
 
   form = this.fb.group({
     firstName: ['', Validators.required],
@@ -30,16 +32,25 @@ export class InviteUserComponent {
 
     this.loading = true;
     this.success = false;
+    this.successMessage = '';
+    this.errorMessage = '';
 
     try {
-      await this.adminService.inviteUser(this.form.value as any);
+      const result = await this.adminService.inviteUser(this.form.value as any);
       this.success = true;
+      if (!result.emailSent) {
+        this.successMessage =
+          result.warning ??
+          'User created — invite email was not sent (SES not configured or recipient not verified).';
+      } else if (result.warning) {
+        this.successMessage = result.warning;
+      }
       this.form.reset({
         role: 'Tenant',
         applicationType: 'Employee'
       });
     } catch (err) {
-      alert('Failed to send invitation. Check console for details.');
+      this.errorMessage = formatGraphqlError(err);
       console.error(err);
     } finally {
       this.loading = false;
