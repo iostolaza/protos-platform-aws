@@ -41,6 +41,11 @@ export class DocumentListComponent {
     )
   );
 
+  /** Document PK is docId in Amplify; tolerate legacy id alias in UI state. */
+  docIdOf(doc: { docId?: string; id?: string }): string {
+    return doc.docId ?? doc.id ?? '';
+  }
+
   private documentService = inject(DocumentService);
   private sanitizer = inject(DomSanitizer);
 
@@ -68,10 +73,15 @@ export class DocumentListComponent {
     }
   }
 
-  onDelete(id: string, fileKey: string, ownerIdentityId?: string | null) {
-    this.documentService.deleteDocument(id, fileKey, ownerIdentityId)
+  onDelete(doc: { docId?: string; id?: string; fileKey: string; ownerIdentityId?: string | null; fileName?: string }) {
+    const docId = this.docIdOf(doc);
+    if (!docId) return;
+    const label = doc.fileName ?? 'this document';
+    if (!confirm(`Delete "${label}"? This cannot be undone.`)) return;
+
+    this.documentService.deleteDocument(docId, doc.fileKey, doc.ownerIdentityId)
       .then(() => {
-        this.documents.update(docs => docs.filter(d => d.id !== id));
+        this.documents.update(docs => docs.filter(d => this.docIdOf(d) !== docId));
       })
       .catch((error: unknown) => {
         console.error('Delete failed:', error);

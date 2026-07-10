@@ -126,7 +126,7 @@ export class TimesheetService {
   }
 
   async listTimesheets(
-    status?: 'draft' | 'submitted' | 'approved' | 'rejected' | ('submitted' | 'approved')[], 
+    status?: 'draft' | 'submitted' | 'approved' | 'rejected' | ('draft' | 'submitted' | 'approved' | 'rejected')[],
     startDate?: string,
     endDate?: string
   ): Promise<Timesheet[]> {

@@ -26,7 +26,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (doc of filteredDocuments(); track doc.id) {
+        @for (doc of filteredDocuments(); track docIdOf(doc)) {
           <tr class="table-row-hover"> 
             <td class="py-3 text-center text-foreground">{{ doc.uploadDate | date:'shortDate' }}</td> 
             <td class="py-3 text-left text-foreground">{{ doc.fileName | slice:0:60 }}...</td> 
@@ -34,8 +34,11 @@
             <td class="py-3 text-center text-foreground">{{ doc.fileType }}</td> 
             <td class="py-3 text-left text-foreground">{{ doc.category }}</td>
             <td class="py-3 text-right flex justify-end gap-2 pr-4">
-              <button (click)="onView(doc)" class="group icon-btn-hover rounded-full bg-transparent p-1 hover:bg-accent/10"> 
+              <button (click)="onView(doc)" class="group icon-btn-hover rounded-full bg-transparent p-1 hover:bg-accent/10" aria-label="View document"> 
                 <svg-icon [src]="getIconPath('eye')" svgClass="h-4 w-4 text-accent"></svg-icon>
+              </button>
+              <button (click)="onDelete(doc)" class="group icon-btn-hover rounded-full bg-transparent p-1 hover:bg-destructive/10" aria-label="Delete document"> 
+                <svg-icon [src]="getIconPath('trash')" svgClass="h-4 w-4 text-destructive"></svg-icon>
               </button>
             </td>
           </tr>

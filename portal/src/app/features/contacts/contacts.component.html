@@ -87,6 +87,10 @@
             (messaged)="onMessage($event)"
             class="border-b border-dashed border-border hover:bg-card"
           ></tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="py-8 text-center text-muted-foreground">No contacts yet</td>
+          </tr>
           }
         </tbody>
       </table>

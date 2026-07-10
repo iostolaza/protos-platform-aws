@@ -59,7 +59,7 @@ export const appRoutes: Routes = [
 
       { path: 'timesheet', loadComponent: () => import('./features/timesheet/timesheet.component').then(m => m.Timesheet) },
       { path: 'timesheet/calendar', loadComponent: () => import('./features/timesheet/calendar-view/calendar.component').then(m => m.CalendarComponent) },
-      { path: 'timesheet/list', loadComponent: () => import('./features/timesheet/review-list/review-list.component').then(m => m.ReviewListComponent) },
+      { path: 'timesheet/list', loadComponent: () => import('./features/timesheet/my-timesheets-list/my-timesheets-list.component').then(m => m.MyTimesheetsListComponent) },
       { path: 'timesheet/submitted', redirectTo: 'timesheet/list', pathMatch: 'full' },
 
       { path: 'settings', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent) },
