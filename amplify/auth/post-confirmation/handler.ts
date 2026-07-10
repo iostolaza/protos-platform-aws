@@ -26,6 +26,7 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
   const email = event.request.userAttributes.email;
   const firstName = event.request.userAttributes.given_name || '';
   const lastName = event.request.userAttributes.family_name || '';
+  const organizationId = event.request.userAttributes['custom:organizationId'] || null;
 
   const { data: existing } = await client.models.User.get({ cognitoId: sub });
   if (existing) return event;
@@ -36,6 +37,7 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
     firstName,
     lastName,
     username: event.userName || email.split('@')[0],
+    organizationId,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });

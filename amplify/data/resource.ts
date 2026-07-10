@@ -1,10 +1,30 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
+import { preTokenGeneration } from '../auth/pre-token-generation/resource';
 import { adminCognito } from '../function/adminCognito/resource'; 
 
 const schema = a.schema({
+  Organization: a.model({
+    organizationId: a.id().required(),
+    name: a.string().required(),
+    slug: a.string().required(),
+    plan: a.enum(['free', 'starter', 'pro', 'enterprise']),
+    status: a.enum(['active', 'suspended', 'trial']),
+    primaryContactEmail: a.email(),
+    createdAt: a.string().required(),
+    createdBy: a.string().required(),
+  })
+    .identifier(['organizationId'])
+    .secondaryIndexes(index => [index('slug')])
+    .authorization(allow => [
+      allow.groups(['platform_SuperAdmin']).to(['create', 'read', 'update', 'delete']),
+      allow.groups(['user_Admin']).to(['read', 'update']),
+      allow.authenticated().to(['read']),
+    ]),
+
   User: a.model({
     cognitoId: a.string().required(),
+    organizationId: a.string(),
     firstName: a.string(),
     lastName: a.string(),
     username: a.string(),
@@ -64,6 +84,7 @@ const schema = a.schema({
 
   PaymentMethod: a.model({
     userCognitoId: a.string().required(),
+    organizationId: a.string(),
     type: a.string().required(),
     name: a.string().required(),
     createdAt: a.datetime(),
@@ -75,6 +96,7 @@ const schema = a.schema({
   Friend: a.model({
     ownerCognitoId: a.string().required(),
     friendCognitoId: a.string().required(),
+    organizationId: a.string(),
     addedAt: a.datetime().required(),
     owner: a.belongsTo('User', 'ownerCognitoId'),
     friend: a.belongsTo('User', 'friendCognitoId'),
@@ -90,6 +112,7 @@ const schema = a.schema({
   Channel: a.model({
     name: a.string(),
     creatorCognitoId: a.string().required(),
+    organizationId: a.string(),
     type: a.enum(['direct', 'group']),
     directKey: a.string(),
     createdAt: a.datetime(),
@@ -107,6 +130,7 @@ const schema = a.schema({
   UserChannel: a.model({
     userCognitoId: a.string().required(),
     channelId: a.id().required(),
+    organizationId: a.string(),
     createdAt: a.datetime(),
     updatedAt: a.datetime(),
     user: a.belongsTo('User', 'userCognitoId'),
@@ -124,6 +148,7 @@ const schema = a.schema({
     content: a.string(),
     senderCognitoId: a.string().required(),
     channelId: a.id().required(),
+    organizationId: a.string(),
     timestamp: a.datetime().required(),
     attachment: a.string(),
     readBy: a.string().array(),
@@ -143,6 +168,7 @@ const schema = a.schema({
     name: a.string().required(),
     description: a.string(),
     teamLeadCognitoId: a.string().required(),
+    organizationId: a.string(),
     teamLeadName: a.string(),
     memberCount: a.integer().default(0),
     createdAt: a.datetime(),
@@ -160,6 +186,7 @@ const schema = a.schema({
   TeamMember: a.model({
     teamId: a.id().required(),
     userCognitoId: a.string().required(),
+    organizationId: a.string(),
     createdAt: a.datetime(),
     updatedAt: a.datetime(),
     user: a.belongsTo('User', 'userCognitoId'),
@@ -174,6 +201,7 @@ const schema = a.schema({
     id: a.id().required(),
     title: a.string().required(),
     description: a.string().required(),
+    organizationId: a.string(),
     labels: a.string().array(),
     status: a.enum(['OPEN', 'QUEUED', 'IN_PROGRESS', 'COMPLETE', 'CLOSED', 'REOPENED']),
     estimated: a.date().required(),
@@ -199,6 +227,7 @@ const schema = a.schema({
     content: a.string().required(),
     createdAt: a.datetime().required(),
     userCognitoId: a.string().required(),
+    organizationId: a.string(),
     user: a.belongsTo('User', 'userCognitoId'),
     ticketId: a.id().required(),
     ticket: a.belongsTo('Ticket', 'ticketId'),
@@ -214,6 +243,7 @@ const schema = a.schema({
     type: a.enum(['team', 'ticket', 'viewTeam']),
     nameType: a.string(),
     userCognitoId: a.string().required(),
+    organizationId: a.string(),
     user: a.belongsTo('User', 'userCognitoId'),
     isRead: a.boolean().default(false),
   })
@@ -242,6 +272,7 @@ const schema = a.schema({
     size: a.integer(),
     createdAt: a.datetime(),
     updatedAt: a.datetime(),
+    organizationId: a.string(),
     tenantId: a.string(),
   })
     .identifier(['docId'])
@@ -264,6 +295,7 @@ const schema = a.schema({
     id: a.id().required(),
     accountNumber: a.string().required(),
     name: a.string().required(),
+    organizationId: a.string(),
     details: a.string(),
     balance: a.float().required(),
     startingBalance: a.float(),
@@ -282,6 +314,7 @@ const schema = a.schema({
   Transaction: a.model({
     transactionId: a.id().required(),
     accountId: a.string().required(),
+    organizationId: a.string(),
     type: a.enum(['assessment', 'payment', 'charge', 'other']),
     date: a.date().required(),
     docNumber: a.string(),
@@ -318,6 +351,7 @@ const schema = a.schema({
     status: a.enum(['pending', 'open', 'closed']),
     billFromId: a.string().required(),
     billToId: a.string().required(),
+    organizationId: a.string(),
     fromAddress: a.string(),
     toAddress: a.string(),
     description: a.string(),
@@ -347,6 +381,7 @@ const schema = a.schema({
     invoiceItemId: a.id().required(),
     invoiceId: a.id().required(),
     name: a.string().required(),
+    organizationId: a.string(),
     unitPrice: a.float().required(),
     units: a.integer().required(),
     total: a.float().required(),
@@ -367,6 +402,7 @@ const schema = a.schema({
     totalHours: a.float().required(),
     totalCost: a.float(),
     userId: a.string().required(),
+    organizationId: a.string(),
     rejectionReason: a.string(),
     associatedChargeCodesJson: a.string().default('[]').required(),
     dailyAggregatesJson: a.string().default('[]'),
@@ -393,6 +429,7 @@ const schema = a.schema({
     description: a.string().required(),
     chargeCode: a.string().required(),
     userId: a.string().required(),
+    organizationId: a.string(),
   })
     .authorization(allow => [
       allow.authenticated().to(['create', 'read', 'update']),
@@ -408,8 +445,9 @@ const schema = a.schema({
       email: a.string().required(),
       firstName: a.string().required(),
       lastName: a.string().required(),
-      role: a.enum(['Admin', 'Manager', 'Facilities', 'Tenant']), // no .required() here
+      role: a.enum(['Admin', 'Manager', 'Facilities', 'Tenant']),
       applicationType: a.enum(['Tenant', 'Employee']),
+      organizationId: a.string(),
     })
     .returns(a.boolean())
     .authorization(allow => [allow.group('user_Admin')])
@@ -448,7 +486,11 @@ const schema = a.schema({
     .authorization(allow => [allow.group('user_Admin')])
     .handler(a.handler.function(adminCognito)),
 
-}).authorization(allow => [allow.resource(postConfirmation)]);
+}).authorization(allow => [
+  allow.resource(postConfirmation),
+  allow.resource(preTokenGeneration),
+  allow.resource(adminCognito),
+]);
 
 export type Schema = ClientSchema<typeof schema>;
 

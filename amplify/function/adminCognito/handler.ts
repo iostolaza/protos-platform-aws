@@ -9,7 +9,23 @@ import {
   ListUsersInGroupCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { Amplify } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/data';
+import { type Schema } from '../../data/resource';
+import { env } from '$amplify/env/adminCognito';
+import { isValidEmail, isValidInviteRole, isValidOrgId, sanitizeText } from './validation';
 
+Amplify.configure({
+  API: {
+    GraphQL: {
+      endpoint: env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
+      region: env.AWS_REGION,
+      defaultAuthMode: 'iam',
+    },
+  },
+});
+
+const dataClient = generateClient<Schema>({ authMode: 'iam' });
 const cognito = new CognitoIdentityProviderClient({ region: process.env.REGION! });
 const ses = new SESClient({ region: process.env.REGION! });
 const USER_POOL_ID = process.env.AUTH_USERPOOLID!;
@@ -226,12 +242,102 @@ const templates: Record<'Tenant' | 'Employee', string> = {
 </html>`,
 };
 
-export const handler = async (event: { action: string; payload?: any }) => {
-  const { action, payload = {} } = event;
+const GRAPHQL_ACTION_MAP: Record<string, string> = {
+  adminInviteUser: 'inviteUser',
+  adminListGroups: 'listGroups',
+  adminAddUserToGroup: 'addUserToGroup',
+  adminRemoveUserFromGroup: 'removeUserFromGroup',
+  adminListUsersInGroup: 'listUsersInGroup',
+};
+
+interface AdminPayload {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+  applicationType?: string;
+  organizationId?: string;
+  groupName?: string;
+  username?: string;
+}
+
+function toAdminPayload(raw: Record<string, unknown>): AdminPayload {
+  return {
+    email: typeof raw.email === 'string' ? raw.email : undefined,
+    firstName: typeof raw.firstName === 'string' ? raw.firstName : undefined,
+    lastName: typeof raw.lastName === 'string' ? raw.lastName : undefined,
+    role: typeof raw.role === 'string' ? raw.role : undefined,
+    applicationType: typeof raw.applicationType === 'string' ? raw.applicationType : undefined,
+    organizationId: typeof raw.organizationId === 'string' ? raw.organizationId : undefined,
+    groupName: typeof raw.groupName === 'string' ? raw.groupName : undefined,
+    username: typeof raw.username === 'string' ? raw.username : undefined,
+  };
+}
+
+function normalizeEvent(event: {
+  action?: string;
+  payload?: Record<string, unknown>;
+  fieldName?: string;
+  arguments?: Record<string, unknown>;
+}): { action: string; payload: AdminPayload } {
+  if (event.action) {
+    return { action: event.action, payload: toAdminPayload(event.payload ?? {}) };
+  }
+  const fieldName = event.fieldName;
+  const args = event.arguments ?? {};
+  if (fieldName && GRAPHQL_ACTION_MAP[fieldName]) {
+    return { action: GRAPHQL_ACTION_MAP[fieldName], payload: toAdminPayload(args) };
+  }
+  return { action: '', payload: toAdminPayload(args) };
+}
+
+function requireEmail(payload: AdminPayload): string {
+  const email = sanitizeText(payload.email ?? '');
+  if (!isValidEmail(email)) {
+    throw new Error('email is required and must be a valid email address');
+  }
+  return email;
+}
+
+function requireGroupName(payload: AdminPayload): string {
+  const groupName = sanitizeText(payload.groupName ?? '');
+  if (!groupName) {
+    throw new Error('groupName is required');
+  }
+  return groupName;
+}
+
+async function assertOrganizationExists(organizationId: string): Promise<void> {
+  const { data, errors } = await dataClient.models.Organization.get({ organizationId });
+  if (errors?.length || !data) {
+    throw new Error(`organizationId does not match an existing Organization: ${organizationId}`);
+  }
+}
+
+export const handler = async (event: { action?: string; payload?: Record<string, unknown>; fieldName?: string; arguments?: Record<string, unknown> }) => {
+  const { action, payload } = normalizeEvent(event);
 
   switch (action) {
     case 'inviteUser': {
-      const { email, firstName, lastName, role, applicationType = 'Employee' } = payload;
+      const email = requireEmail(payload);
+      const firstName = sanitizeText(payload.firstName ?? '');
+      const lastName = sanitizeText(payload.lastName ?? '');
+      const role = payload.role ?? '';
+      const applicationType = payload.applicationType ?? 'Employee';
+      const organizationId = payload.organizationId ? sanitizeText(payload.organizationId) : undefined;
+      if (!firstName || !lastName) {
+        throw new Error('firstName and lastName are required');
+      }
+      if (!isValidInviteRole(role)) {
+        throw new Error(`Invalid role. Must be one of: Admin, Manager, Facilities, Tenant`);
+      }
+      if (organizationId) {
+        if (!isValidOrgId(organizationId)) {
+          throw new Error('Invalid organizationId format');
+        }
+        await assertOrganizationExists(organizationId);
+      }
+
       const tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
       const groupName = roleToGroup[role];
       const templateKey = applicationType === 'Tenant' ? 'Tenant' : 'Employee';
@@ -245,6 +351,7 @@ export const handler = async (event: { action: string; payload?: any }) => {
           { Name: 'email_verified', Value: 'true' },
           { Name: 'given_name', Value: firstName },
           { Name: 'family_name', Value: lastName },
+          ...(organizationId ? [{ Name: 'custom:organizationId', Value: organizationId }] : []),
         ],
         MessageAction: 'SUPPRESS',
       }));
@@ -279,43 +386,50 @@ export const handler = async (event: { action: string; payload?: any }) => {
     }
 
     case 'createGroup': {
+      const groupName = requireGroupName(payload);
       await cognito.send(new CreateGroupCommand({
         UserPoolId: USER_POOL_ID,
-        GroupName: payload.groupName,
+        GroupName: groupName,
       }));
       return { success: true };
     }
 
     case 'deleteGroup': {
+      const groupName = requireGroupName(payload);
       await cognito.send(new DeleteGroupCommand({
         UserPoolId: USER_POOL_ID,
-        GroupName: payload.groupName,
+        GroupName: groupName,
       }));
       return { success: true };
     }
 
     case 'addUserToGroup': {
+      const email = requireEmail(payload);
+      const groupName = requireGroupName(payload);
       await cognito.send(new AdminAddUserToGroupCommand({
         UserPoolId: USER_POOL_ID,
-        Username: payload.email,
-        GroupName: payload.groupName,
+        Username: email,
+        GroupName: groupName,
       }));
       return { success: true };
     }
 
     case 'removeUserFromGroup': {
+      const email = requireEmail(payload);
+      const groupName = requireGroupName(payload);
       await cognito.send(new AdminRemoveUserFromGroupCommand({
         UserPoolId: USER_POOL_ID,
-        Username: payload.email,
-        GroupName: payload.groupName,
+        Username: email,
+        GroupName: groupName,
       }));
       return { success: true };
     }
 
     case 'listUsersInGroup': {
+      const groupName = requireGroupName(payload);
       const res = await cognito.send(new ListUsersInGroupCommand({
         UserPoolId: USER_POOL_ID,
-        GroupName: payload.groupName,
+        GroupName: groupName,
       }));
       return res.Users?.map((u: any) => ({
         email: u.Attributes?.find((a: any) => a.Name === 'email')?.Value,
