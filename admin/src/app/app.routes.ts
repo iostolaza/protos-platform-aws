@@ -26,6 +26,20 @@ export const appRoutes: Routes = [
         canActivate: [adminGuard],
       },
       {
+        path: 'tenants',
+        loadComponent: () =>
+          import('./features/tenants/tenants.component').then((m) => m.TenantsComponent),
+        canActivate: [adminGuard],
+      },
+      {
+        path: 'tenants/:cognitoId',
+        loadComponent: () =>
+          import('./features/tenants/tenant-detail/tenant-detail.component').then(
+            (m) => m.TenantDetailComponent
+          ),
+        canActivate: [adminGuard],
+      },
+      {
         path: 'organizations',
         loadComponent: () =>
           import('./features/organizations/organizations.component').then(

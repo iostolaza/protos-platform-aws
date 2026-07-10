@@ -62,6 +62,7 @@ export const adminMenu: MenuItem[] = [
     separator: true,
     items: [
       { label: 'Employees', icon: 'users', route: '/main-layout/employees' },
+      { label: 'Tenants', icon: 'user-group', route: '/main-layout/tenants' },
       { label: 'Organizations', icon: 'building-office-2', route: '/main-layout/organizations' },
     ],
   },

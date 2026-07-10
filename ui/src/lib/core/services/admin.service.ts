@@ -5,6 +5,8 @@ import { OrgContextService } from './org-context.service';
 import { INVITE_ROLES, type InviteRole } from '../utils/validation';
 
 export const ROLE_GROUPS = ['user_Admin', 'user_Manager', 'user_Facilities', 'user_Tenant'] as const;
+export const TENANT_GROUP = 'user_Tenant';
+export const EMPLOYEE_GROUP = 'user_Employee';
 
 export const ROLE_TO_GROUP: Record<InviteRole, string> = {
   Admin: 'user_Admin',
@@ -61,6 +63,29 @@ export class AdminService {
     return data ?? [];
   }
 
+  /** Org-scoped users in the user_Tenant Cognito group (portal self-signups). */
+  async listTenants(): Promise<AdminUserRecord[]> {
+    const users = await this.listUsers();
+    const tenants: AdminUserRecord[] = [];
+
+    for (const user of users) {
+      const groups = await this.getUserGroups(user.email);
+      if (groups.includes(TENANT_GROUP)) {
+        tenants.push(user);
+      }
+    }
+
+    return tenants;
+  }
+
+  async getUser(cognitoId: string): Promise<AdminUserRecord | null> {
+    const { data, errors } = await this.client.models.User.get({ cognitoId });
+    if (errors?.length) {
+      throw errors;
+    }
+    return data ?? null;
+  }
+
   async listGroups(): Promise<string[]> {
     const { data } = await this.client.queries.adminListGroups();
     return (data ?? []).filter((g): g is string => typeof g === 'string');
@@ -110,6 +135,22 @@ export class AdminService {
     await this.updateUserRoleByEmail(email, newRole);
   }
 
+  /** Promote a portal tenant to staff: user_Tenant → user_Employee + User.role Employee. */
+  async promoteTenantToEmployee(email: string): Promise<void> {
+    const groups = await this.getUserGroups(email);
+    if (!groups.includes(TENANT_GROUP)) {
+      throw new Error('User is not in the tenant group');
+    }
+
+    await this.removeUserFromGroup(email, TENANT_GROUP);
+    await this.addUserToGroup(email, EMPLOYEE_GROUP);
+    await this.updateUserRoleField(email, 'Employee');
+  }
+
+  isTenantGroupMember(groups: string[]): boolean {
+    return groups.includes(TENANT_GROUP);
+  }
+
   async getUserGroups(email: string): Promise<string[]> {
     const groups = await this.listGroups();
     const userGroups: string[] = [];
@@ -156,6 +197,13 @@ export class AdminService {
   }
 
   private async updateUserRoleByEmail(email: string, role: InviteRole): Promise<void> {
+    await this.updateUserRoleField(email, role);
+  }
+
+  private async updateUserRoleField(
+    email: string,
+    role: NonNullable<AdminUserRecord['role']>
+  ): Promise<void> {
     const user = await this.findUserByEmail(email);
     if (!user) {
       return;
