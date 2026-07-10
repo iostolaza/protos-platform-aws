@@ -1,16 +1,13 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { RoleService } from '../services/role.service';
 import { OrgContextService } from '../services/org-context.service';
 
-export const adminGuard: CanActivateFn = async () => {
-  const roleService = inject(RoleService);
+export const superAdminGuard: CanActivateFn = async () => {
   const orgContext = inject(OrgContextService);
   const router = inject(Router);
 
-  await roleService.refreshGroups();
   await orgContext.resolveOrg();
-  if (!roleService.isAdmin$() && !orgContext.isSuperAdmin()) {
+  if (!orgContext.isSuperAdmin()) {
     return router.createUrlTree(['/main-layout/home']);
   }
   return true;

@@ -1,5 +1,7 @@
 // amplify/backend.ts
 import { defineBackend } from '@aws-amplify/backend';
+import { Function as LambdaFunction } from 'aws-cdk-lib/aws-lambda';
+import { IConstruct } from 'constructs';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { storage } from './storage/resource';
@@ -11,6 +13,36 @@ const backend = defineBackend({
   storage,
   preTokenGeneration,
 });
+
+function findAdminCognitoLambda(scope: IConstruct): LambdaFunction | undefined {
+  let found: LambdaFunction | undefined;
+  const visit = (node: IConstruct): void => {
+    if (node instanceof LambdaFunction && node.node.path.includes('adminCognito')) {
+      found = node;
+    }
+    for (const child of node.node.children) {
+      visit(child);
+    }
+  };
+  visit(scope);
+  return found;
+}
+
+const adminCognitoLambda = findAdminCognitoLambda(backend.data.stack);
+const userPool = backend.auth.resources.userPool;
+
+if (adminCognitoLambda) {
+  adminCognitoLambda.addEnvironment('AUTH_USERPOOLID', userPool.userPoolId);
+  userPool.grant(adminCognitoLambda, 'cognito-idp:AdminCreateUser');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:AdminAddUserToGroup');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:AdminRemoveUserFromGroup');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:AdminDisableUser');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:AdminEnableUser');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:ListGroups');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:CreateGroup');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:DeleteGroup');
+  userPool.grant(adminCognitoLambda, 'cognito-idp:ListUsersInGroup');
+}
 
 // Gen 2 does not yet expose tokenGenerationVersion in defineAuth(); V2_0 is required
 // to inject claims into access tokens (not just ID tokens).

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, noAuthGuard, adminGuard, MainLayoutComponent } from '@ui';
+import { authGuard, noAuthGuard, adminGuard, superAdminGuard, MainLayoutComponent } from '@ui';
 import { SignInComponent } from './features/auth/sign-in.component';
 
 export const appRoutes: Routes = [
@@ -16,8 +16,22 @@ export const appRoutes: Routes = [
 
       {
         path: 'admin',
-        loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent),
+        redirectTo: 'employees',
+        pathMatch: 'full',
+      },
+      {
+        path: 'employees',
+        loadComponent: () =>
+          import('./features/employees/employees.component').then((m) => m.EmployeesComponent),
         canActivate: [adminGuard],
+      },
+      {
+        path: 'organizations',
+        loadComponent: () =>
+          import('./features/organizations/organizations.component').then(
+            (m) => m.OrganizationsComponent
+          ),
+        canActivate: [superAdminGuard],
       },
 
       { path: 'profile', loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent) },

@@ -21,3 +21,10 @@ export function isValidOrgId(input: string): boolean {
   const sanitized = sanitizeText(input);
   return ORG_ID_REGEX.test(sanitized);
 }
+
+export const INVITE_ROLES = ['Admin', 'Manager', 'Facilities', 'Tenant'] as const;
+export type InviteRole = (typeof INVITE_ROLES)[number];
+
+export function isValidInviteRole(role: string): role is InviteRole {
+  return (INVITE_ROLES as readonly string[]).includes(role);
+}

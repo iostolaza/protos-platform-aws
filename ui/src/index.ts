@@ -28,7 +28,9 @@ export * from './lib/core/services/timesheet.service';
 export * from './lib/core/services/storage.service';
 export * from './lib/core/services/subdomain.service';
 export * from './lib/core/services/org-context.service';
+export * from './lib/core/services/organization.service';
 export * from './lib/core/providers/org-context.provider';
+export * from './lib/core/utils/validation';
 
 // Models
 export * from './lib/core/models/menu.model';
@@ -42,6 +44,7 @@ export * from './lib/core/models/user.model';
 // Guards
 export * from './lib/core/guards/auth.guard';
 export * from './lib/core/guards/admin.guard';
+export * from './lib/core/guards/super-admin.guard';
 
 // Pipes
 export * from './lib/core/pipes/status.pipe';

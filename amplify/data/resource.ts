@@ -450,13 +450,13 @@ const schema = a.schema({
       organizationId: a.string(),
     })
     .returns(a.boolean())
-    .authorization(allow => [allow.group('user_Admin')])
+    .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
     .handler(a.handler.function(adminCognito)),
 
   adminListGroups: a
     .query()
     .returns(a.string().array())
-    .authorization(allow => [allow.group('user_Admin')])
+    .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
     .handler(a.handler.function(adminCognito)),
 
   adminAddUserToGroup: a
@@ -466,7 +466,7 @@ const schema = a.schema({
       groupName: a.string().required(),
     })
     .returns(a.boolean())
-    .authorization(allow => [allow.group('user_Admin')])
+    .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
     .handler(a.handler.function(adminCognito)),
 
   adminRemoveUserFromGroup: a
@@ -476,14 +476,28 @@ const schema = a.schema({
       groupName: a.string().required(),
     })
     .returns(a.boolean())
-    .authorization(allow => [allow.group('user_Admin')])
+    .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
     .handler(a.handler.function(adminCognito)),
 
   adminListUsersInGroup: a
     .query()
     .arguments({ groupName: a.string().required() })
     .returns(a.json())
-    .authorization(allow => [allow.group('user_Admin')])
+    .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
+    .handler(a.handler.function(adminCognito)),
+
+  adminDisableUser: a
+    .mutation()
+    .arguments({ email: a.string().required() })
+    .returns(a.boolean())
+    .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
+    .handler(a.handler.function(adminCognito)),
+
+  adminEnableUser: a
+    .mutation()
+    .arguments({ email: a.string().required() })
+    .returns(a.boolean())
+    .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
     .handler(a.handler.function(adminCognito)),
 
 }).authorization(allow => [

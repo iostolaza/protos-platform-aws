@@ -1,5 +1,7 @@
 import {
   CognitoIdentityProviderClient,
+  AdminDisableUserCommand,
+  AdminEnableUserCommand,
   AdminCreateUserCommand,
   AdminAddUserToGroupCommand,
   AdminRemoveUserFromGroupCommand,
@@ -9,25 +11,20 @@ import {
   ListUsersInGroupCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import { type Schema } from '../../data/resource';
 import { env } from '$amplify/env/adminCognito';
 import { isValidEmail, isValidInviteRole, isValidOrgId, sanitizeText } from './validation';
 
-Amplify.configure({
-  API: {
-    GraphQL: {
-      endpoint: env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
-      region: env.AWS_REGION,
-      defaultAuthMode: 'iam',
-    },
-  },
-});
+const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
+Amplify.configure(resourceConfig, libraryOptions);
 
-const dataClient = generateClient<Schema>({ authMode: 'iam' });
-const cognito = new CognitoIdentityProviderClient({ region: process.env.REGION! });
-const ses = new SESClient({ region: process.env.REGION! });
+const dataClient = generateClient<Schema>();
+const lambdaRegion = process.env.AWS_REGION ?? process.env.REGION ?? 'us-west-1';
+const cognito = new CognitoIdentityProviderClient({ region: lambdaRegion });
+const ses = new SESClient({ region: lambdaRegion });
 const USER_POOL_ID = process.env.AUTH_USERPOOLID!;
 
 const roleToGroup: Record<string, string> = {
@@ -248,6 +245,8 @@ const GRAPHQL_ACTION_MAP: Record<string, string> = {
   adminAddUserToGroup: 'addUserToGroup',
   adminRemoveUserFromGroup: 'removeUserFromGroup',
   adminListUsersInGroup: 'listUsersInGroup',
+  adminDisableUser: 'disableUser',
+  adminEnableUser: 'enableUser',
 };
 
 interface AdminPayload {
@@ -314,6 +313,72 @@ async function assertOrganizationExists(organizationId: string): Promise<void> {
   }
 }
 
+async function updateUserStatusByEmail(email: string, status: string): Promise<void> {
+  const { data: users } = await dataClient.models.User.listUserByEmail({ email });
+  const user = users?.[0];
+  if (user) {
+    await dataClient.models.User.update({ cognitoId: user.cognitoId, status });
+  }
+}
+
+function cognitoIdFromCreateUserResponse(
+  user: { Username?: string; Attributes?: Array<{ Name?: string; Value?: string }> } | undefined
+): string {
+  const sub = user?.Attributes?.find((attr) => attr.Name === 'sub')?.Value;
+  if (sub) {
+    return sub;
+  }
+  if (user?.Username) {
+    return user.Username;
+  }
+  throw new Error('Failed to resolve cognitoId from AdminCreateUser response');
+}
+
+async function createInvitedUserRecord(input: {
+  cognitoId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  organizationId?: string;
+  role: string;
+}): Promise<void> {
+  const now = new Date().toISOString();
+  const { data: existing } = await dataClient.models.User.get({ cognitoId: input.cognitoId });
+
+  if (existing) {
+    const { errors } = await dataClient.models.User.update({
+      cognitoId: input.cognitoId,
+      email: input.email,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      organizationId: input.organizationId ?? existing.organizationId,
+      role: input.role as Schema['User']['type']['role'],
+      status: 'invited',
+      updatedAt: now,
+    });
+    if (errors?.length) {
+      throw new Error(`Failed to update invited user: ${errors.map((e) => e.message).join(', ')}`);
+    }
+    return;
+  }
+
+  const { errors } = await dataClient.models.User.create({
+    cognitoId: input.cognitoId,
+    email: input.email,
+    firstName: input.firstName,
+    lastName: input.lastName,
+    username: input.email.split('@')[0],
+    organizationId: input.organizationId,
+    role: input.role as Schema['User']['type']['role'],
+    status: 'invited',
+    createdAt: now,
+    updatedAt: now,
+  });
+  if (errors?.length) {
+    throw new Error(`Failed to create invited user: ${errors.map((e) => e.message).join(', ')}`);
+  }
+}
+
 export const handler = async (event: { action?: string; payload?: Record<string, unknown>; fieldName?: string; arguments?: Record<string, unknown> }) => {
   const { action, payload } = normalizeEvent(event);
 
@@ -342,7 +407,7 @@ export const handler = async (event: { action?: string; payload?: Record<string,
       const groupName = roleToGroup[role];
       const templateKey = applicationType === 'Tenant' ? 'Tenant' : 'Employee';
 
-      await cognito.send(new AdminCreateUserCommand({
+      const createUserResponse = await cognito.send(new AdminCreateUserCommand({
         UserPoolId: USER_POOL_ID,
         Username: email,
         TemporaryPassword: tempPassword,
@@ -356,11 +421,22 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         MessageAction: 'SUPPRESS',
       }));
 
+      const cognitoId = cognitoIdFromCreateUserResponse(createUserResponse.User);
+
       await cognito.send(new AdminAddUserToGroupCommand({
         UserPoolId: USER_POOL_ID,
         Username: email,
         GroupName: groupName,
       }));
+
+      await createInvitedUserRecord({
+        cognitoId,
+        email,
+        firstName,
+        lastName,
+        organizationId,
+        role,
+      });
 
       let html = templates[templateKey]
         .replace(/{{firstName}}/g, firstName)
@@ -368,16 +444,20 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         .replace(/{{temporaryPassword}}/g, tempPassword)
         .replace(/{{role}}/g, role);
 
-      await ses.send(new SendEmailCommand({
-        Source: 'no-reply@yourdomain.com', // CHANGE TO YOUR VERIFIED SES EMAIL
-        Destination: { ToAddresses: [email] },
-        Message: {
-          Subject: { Data: `Protos – ${applicationType === 'Tenant' ? 'Rental' : 'Employee'} Application` },
-          Body: { Html: { Data: html } },
-        },
-      }));
+      try {
+        await ses.send(new SendEmailCommand({
+          Source: 'no-reply@yourdomain.com', // CHANGE TO YOUR VERIFIED SES EMAIL
+          Destination: { ToAddresses: [email] },
+          Message: {
+            Subject: { Data: `Protos – ${applicationType === 'Tenant' ? 'Rental' : 'Employee'} Application` },
+            Body: { Html: { Data: html } },
+          },
+        }));
+      } catch (emailError) {
+        console.warn('Invite email not sent (SES unavailable or unverified sender):', emailError);
+      }
 
-      return { success: true };
+      return true;
     }
 
     case 'listGroups': {
@@ -391,7 +471,7 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         UserPoolId: USER_POOL_ID,
         GroupName: groupName,
       }));
-      return { success: true };
+      return true;
     }
 
     case 'deleteGroup': {
@@ -400,7 +480,7 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         UserPoolId: USER_POOL_ID,
         GroupName: groupName,
       }));
-      return { success: true };
+      return true;
     }
 
     case 'addUserToGroup': {
@@ -411,7 +491,7 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         Username: email,
         GroupName: groupName,
       }));
-      return { success: true };
+      return true;
     }
 
     case 'removeUserFromGroup': {
@@ -422,7 +502,7 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         Username: email,
         GroupName: groupName,
       }));
-      return { success: true };
+      return true;
     }
 
     case 'listUsersInGroup': {
@@ -435,6 +515,26 @@ export const handler = async (event: { action?: string; payload?: Record<string,
         email: u.Attributes?.find((a: any) => a.Name === 'email')?.Value,
         cognitoId: u.Username,
       })) || [];
+    }
+
+    case 'disableUser': {
+      const email = requireEmail(payload);
+      await cognito.send(new AdminDisableUserCommand({
+        UserPoolId: USER_POOL_ID,
+        Username: email,
+      }));
+      await updateUserStatusByEmail(email, 'disabled');
+      return true;
+    }
+
+    case 'enableUser': {
+      const email = requireEmail(payload);
+      await cognito.send(new AdminEnableUserCommand({
+        UserPoolId: USER_POOL_ID,
+        Username: email,
+      }));
+      await updateUserStatusByEmail(email, 'active');
+      return true;
     }
 
     default:
