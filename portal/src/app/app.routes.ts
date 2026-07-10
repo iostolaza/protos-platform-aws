@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, noAuthGuard, MainLayoutComponent } from '@ui';
+import { authGuard, noAuthGuard, profileCompleteGuard, MainLayoutComponent } from '@ui';
 import { SignInComponent } from './features/auth/sign-in.component';
 
 export const appRoutes: Routes = [
@@ -8,9 +8,18 @@ export const appRoutes: Routes = [
   { path: 'sign-in', component: SignInComponent, canActivate: [noAuthGuard] },
 
   {
+    path: 'complete-profile',
+    loadComponent: () =>
+      import('./features/complete-profile/complete-profile.component').then(
+        (m) => m.CompleteProfileComponent
+      ),
+    canActivate: [authGuard],
+  },
+
+  {
     path: 'main-layout',
     component: MainLayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, profileCompleteGuard],
     children: [
       { path: 'home', loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent) },
 

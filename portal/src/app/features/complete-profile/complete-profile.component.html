@@ -1,0 +1,90 @@
+<div class="min-h-screen bg-gray-50 py-12 px-4">
+  <div class="mx-auto max-w-2xl rounded-lg bg-white p-8 shadow-lg">
+    <h1 class="text-3xl font-bold text-gray-900">Complete Your Profile</h1>
+    <p class="mt-2 text-sm text-gray-600">
+      Tell us a bit about yourself before accessing the portal.
+    </p>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="cp-firstName" class="block text-sm font-medium text-gray-700">First Name</label>
+          <input id="cp-firstName" formControlName="firstName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label for="cp-lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+          <input id="cp-lastName" formControlName="lastName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+        </div>
+      </div>
+
+      <div>
+        <label for="cp-phone" class="block text-sm font-medium text-gray-700">Phone</label>
+        <input id="cp-phone" type="tel" formControlName="phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+      </div>
+
+      <fieldset class="space-y-4 rounded-lg border border-gray-200 p-4">
+        <legend class="px-1 text-sm font-semibold text-gray-900">Address</legend>
+        <div>
+          <label for="cp-addressLine1" class="block text-sm font-medium text-gray-700">Street</label>
+          <input id="cp-addressLine1" formControlName="addressLine1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="cp-city" class="block text-sm font-medium text-gray-700">City</label>
+            <input id="cp-city" formControlName="city" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label for="cp-state" class="block text-sm font-medium text-gray-700">State</label>
+            <input id="cp-state" formControlName="state" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="cp-zip" class="block text-sm font-medium text-gray-700">ZIP</label>
+            <input id="cp-zip" formControlName="zip" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label for="cp-country" class="block text-sm font-medium text-gray-700">Country</label>
+            <input id="cp-country" formControlName="country" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-4 rounded-lg border border-gray-200 p-4">
+        <legend class="px-1 text-sm font-semibold text-gray-900">Emergency Contact</legend>
+        <div>
+          <label for="cp-emergencyName" class="block text-sm font-medium text-gray-700">Name</label>
+          <input id="cp-emergencyName" formControlName="emergencyName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="cp-emergencyPhone" class="block text-sm font-medium text-gray-700">Phone</label>
+            <input id="cp-emergencyPhone" formControlName="emergencyPhone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label for="cp-emergencyEmail" class="block text-sm font-medium text-gray-700">Email</label>
+            <input id="cp-emergencyEmail" type="email" formControlName="emergencyEmail" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+          </div>
+        </div>
+        <div>
+          <label for="cp-emergencyAddress" class="block text-sm font-medium text-gray-700">Address</label>
+          <input id="cp-emergencyAddress" formControlName="emergencyAddress" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+        </div>
+      </fieldset>
+
+      @if (errorMessage()) {
+        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <button
+        type="submit"
+        [disabled]="form.invalid || loading()"
+        class="w-full rounded-lg bg-indigo-600 py-3 text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {{ loading() ? 'Saving...' : 'Save and Continue' }}
+      </button>
+    </form>
+  </div>
+</div>

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { sanitizeText } from '../utils/validation';
 
 /** Dev/localhost default org slug — UX hint only, not used for auth. */
 const LOCALHOST_DEFAULT_SLUG: string | null = null;
@@ -7,7 +8,8 @@ const LOCALHOST_DEFAULT_SLUG: string | null = null;
 export class SubdomainService {
   /**
    * Parse org slug from hostname (e.g. "companya" from companya.protosadmin.com).
-   * Returns null on platform root or localhost unless a dev default is configured.
+   * On localhost, also accepts ?org=slug for development.
+   * Returns null on platform root or localhost without a slug hint.
    */
   getSubdomain(): string | null {
     if (typeof window === 'undefined') {
@@ -17,6 +19,11 @@ export class SubdomainService {
     const hostname = window.location.hostname.toLowerCase();
 
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      const params = new URLSearchParams(window.location.search);
+      const orgParam = params.get('org');
+      if (orgParam) {
+        return sanitizeText(orgParam).toLowerCase();
+      }
       return LOCALHOST_DEFAULT_SLUG;
     }
 

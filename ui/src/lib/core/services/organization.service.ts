@@ -4,13 +4,52 @@ import type { Schema } from '@amplify-schema';
 import { OrgContextService } from './org-context.service';
 import { isValidSlug, sanitizeText } from '../utils/validation';
 
+/** Org resolved from subdomain for portal self-signup. */
+export type PortalOrganization = Pick<
+  OrganizationRecord,
+  'organizationId' | 'name' | 'slug' | 'status'
+>;
+
 export type OrganizationPlan = 'free' | 'starter' | 'pro' | 'enterprise';
 export type OrganizationRecord = Schema['Organization']['type'];
+
+const ACTIVE_ORG_STATUSES = new Set(['active', 'trial']);
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
   private client = generateClient<Schema>();
+  private publicClient = generateClient<Schema>({ authMode: 'apiKey' });
   private orgContext = inject(OrgContextService);
+
+  /**
+   * Look up an active organization by slug for unauthenticated portal signup.
+   * Returns null for unknown or suspended orgs.
+   */
+  async getActiveOrganizationBySlug(slug: string): Promise<PortalOrganization | null> {
+    const normalized = sanitizeText(slug).toLowerCase();
+    if (!isValidSlug(normalized)) {
+      return null;
+    }
+
+    const { data, errors } = await this.publicClient.models.Organization.listOrganizationBySlug({
+      slug: normalized,
+    });
+    if (errors?.length) {
+      throw errors;
+    }
+
+    const org = data?.[0];
+    if (!org?.organizationId || !org.status || !ACTIVE_ORG_STATUSES.has(org.status)) {
+      return null;
+    }
+
+    return {
+      organizationId: org.organizationId,
+      name: org.name,
+      slug: org.slug,
+      status: org.status,
+    };
+  }
 
   async listOrganizations(): Promise<OrganizationRecord[]> {
     if (!this.orgContext.isSuperAdmin()) {

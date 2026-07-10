@@ -45,6 +45,7 @@ export * from './lib/core/models/user.model';
 export * from './lib/core/guards/auth.guard';
 export * from './lib/core/guards/admin.guard';
 export * from './lib/core/guards/super-admin.guard';
+export * from './lib/core/guards/profile-complete.guard';
 
 // Pipes
 export * from './lib/core/pipes/status.pipe';

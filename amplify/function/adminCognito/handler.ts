@@ -352,9 +352,10 @@ async function createInvitedUserRecord(input: {
       firstName: input.firstName,
       lastName: input.lastName,
       organizationId: input.organizationId ?? existing.organizationId,
-      role: input.role as Schema['User']['type']['role'],
-      status: 'invited',
-      updatedAt: now,
+    role: input.role as Schema['User']['type']['role'],
+    status: 'invited',
+    profileComplete: false,
+    updatedAt: now,
     });
     if (errors?.length) {
       throw new Error(`Failed to update invited user: ${errors.map((e) => e.message).join(', ')}`);
@@ -371,6 +372,7 @@ async function createInvitedUserRecord(input: {
     organizationId: input.organizationId,
     role: input.role as Schema['User']['type']['role'],
     status: 'invited',
+    profileComplete: false,
     createdAt: now,
     updatedAt: now,
   });

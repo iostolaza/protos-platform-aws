@@ -1,5 +1,6 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
+import { preSignUp } from '../auth/pre-sign-up/resource';
 import { preTokenGeneration } from '../auth/pre-token-generation/resource';
 import { adminCognito } from '../function/adminCognito/resource'; 
 
@@ -20,6 +21,7 @@ const schema = a.schema({
       allow.groups(['platform_SuperAdmin']).to(['create', 'read', 'update', 'delete']),
       allow.groups(['user_Admin']).to(['read', 'update']),
       allow.authenticated().to(['read']),
+      allow.publicApiKey().to(['read']),
     ]),
 
   User: a.model({
@@ -73,6 +75,7 @@ const schema = a.schema({
     otMultiplier: a.float().default(1.5),
     taxRate: a.float().default(0.015),
     role: a.enum(['Admin', 'Manager', 'Facilities', 'Tenant', 'Employee']),
+    profileComplete: a.boolean().default(false),
   })
     .identifier(['cognitoId'])
     .secondaryIndexes(index => [index('email')])
@@ -80,6 +83,7 @@ const schema = a.schema({
       allow.group('user_Admin').to(['create', 'read', 'update', 'delete']),
       allow.group('team_lead').to(['create', 'read', 'update', 'delete']),
       allow.authenticated().to(['create', 'read']),
+      allow.ownerDefinedIn('cognitoId').identityClaim('sub').to(['read', 'update']),
     ]),
 
   PaymentMethod: a.model({
@@ -502,6 +506,7 @@ const schema = a.schema({
 
 }).authorization(allow => [
   allow.resource(postConfirmation),
+  allow.resource(preSignUp),
   allow.resource(preTokenGeneration),
   allow.resource(adminCognito),
 ]);

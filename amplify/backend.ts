@@ -14,10 +14,10 @@ const backend = defineBackend({
   preTokenGeneration,
 });
 
-function findAdminCognitoLambda(scope: IConstruct): LambdaFunction | undefined {
+function findAuthLambda(scope: IConstruct, nameFragment: string): LambdaFunction | undefined {
   let found: LambdaFunction | undefined;
   const visit = (node: IConstruct): void => {
-    if (node instanceof LambdaFunction && node.node.path.includes('adminCognito')) {
+    if (node instanceof LambdaFunction && node.node.path.includes(nameFragment)) {
       found = node;
     }
     for (const child of node.node.children) {
@@ -28,7 +28,8 @@ function findAdminCognitoLambda(scope: IConstruct): LambdaFunction | undefined {
   return found;
 }
 
-const adminCognitoLambda = findAdminCognitoLambda(backend.data.stack);
+const adminCognitoLambda = findAuthLambda(backend.data.stack, 'adminCognito');
+const postConfirmationLambda = findAuthLambda(backend.auth.stack, 'postconfirmation');
 const userPool = backend.auth.resources.userPool;
 
 if (adminCognitoLambda) {
@@ -42,6 +43,11 @@ if (adminCognitoLambda) {
   userPool.grant(adminCognitoLambda, 'cognito-idp:CreateGroup');
   userPool.grant(adminCognitoLambda, 'cognito-idp:DeleteGroup');
   userPool.grant(adminCognitoLambda, 'cognito-idp:ListUsersInGroup');
+}
+
+if (postConfirmationLambda) {
+  postConfirmationLambda.addEnvironment('AUTH_USERPOOLID', userPool.userPoolId);
+  userPool.grant(postConfirmationLambda, 'cognito-idp:AdminAddUserToGroup');
 }
 
 // Gen 2 does not yet expose tokenGenerationVersion in defineAuth(); V2_0 is required

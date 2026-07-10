@@ -2,6 +2,7 @@
 import { defineAuth } from '@aws-amplify/backend';
 import { postConfirmation } from './post-confirmation/resource';
 import { preTokenGeneration } from './pre-token-generation/resource';
+import { preSignUp } from './pre-sign-up/resource';
 
 export const auth = defineAuth({
   loginWith: { email: true },
@@ -16,8 +17,7 @@ export const auth = defineAuth({
     'member',
   ],
   userAttributes: {
-  // Admin/backend-only: mutable:false blocks UpdateUserAttributes from clients.
-  // Value is set via AdminCreateUser in adminCognito Lambda only.
+  // Set at admin invite (AdminCreateUser) or portal self-signup (signUp userAttributes).
     'custom:organizationId': {
       dataType: 'String',
       mutable: false,
@@ -26,6 +26,7 @@ export const auth = defineAuth({
     },
   },
   triggers: {
+    preSignUp,
     postConfirmation,
     preTokenGeneration,
   },

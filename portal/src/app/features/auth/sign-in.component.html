@@ -9,10 +9,33 @@
       <div class="auth-brand">
         <div class="auth-logo">P</div>
         <h1 class="auth-title">Protos Portal</h1>
-        <p class="auth-subtitle">Sign in to access your account</p>
+        @if (portalOrg()) {
+          <p class="auth-subtitle">Sign in to {{ portalOrg()!.name }}</p>
+        } @else {
+          <p class="auth-subtitle">Sign in to access your account</p>
+        }
       </div>
-      <amplify-authenticator [loginMechanisms]="['email']" class="block w-full">
-      </amplify-authenticator>
+
+      @if (orgError()) {
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+          {{ orgError() }}
+        </div>
+      }
+
+      @if (portalOrg()) {
+        <amplify-authenticator
+          [loginMechanisms]="['email']"
+          [services]="$any(services)"
+          [signUpAttributes]="['email']"
+          class="block w-full"
+        />
+      } @else {
+        <amplify-authenticator
+          [loginMechanisms]="['email']"
+          [hideSignUp]="true"
+          class="block w-full"
+        />
+      }
     </div>
   </div>
 }
