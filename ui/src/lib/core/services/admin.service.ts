@@ -1,10 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@amplify-schema';
+import { OrgContextService } from './org-context.service';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private client = generateClient<Schema>();
+  private orgContext = inject(OrgContextService);
 
   async inviteUser(data: {
     email: string;
@@ -13,15 +15,20 @@ export class AdminService {
     role: 'Admin' | 'Manager' | 'Facilities' | 'Tenant';
     applicationType?: 'Tenant' | 'Employee';
   }) {
+    const organizationId = this.orgContext.getEffectiveOrgId() ?? undefined;
     const { errors } = await this.client.mutations.adminInviteUser({
       ...data,
       applicationType: data.applicationType ?? 'Employee',
+      organizationId,
     });
     if (errors) throw errors;
   }
 
   async listUsers() {
-    const { data } = await this.client.models.User.list({}); // ← Add empty input
+    const filter = this.orgContext.mergeWithOrgFilter({});
+    const { data } = await this.client.models.User.list(
+      filter ? { filter } : {}
+    );
     return data ?? [];
   }
 

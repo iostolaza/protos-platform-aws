@@ -9,6 +9,7 @@ import { Observable, Subject, from, of } from 'rxjs';
 import { takeUntil, switchMap, catchError } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import { UserService } from './user.service';
+import { OrgContextService } from './org-context.service';
 import { ChatItem, Message } from '../models/message.model';
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +21,7 @@ export class MessageService implements OnDestroy {
   private channelMembersCache = new Map<string, string[]>();
 
   private userService = inject(UserService);
+  private orgContext = inject(OrgContextService);
 
   async getCurrentUserId(): Promise<string> {
     const { userId } = await getCurrentUser();
@@ -29,13 +31,14 @@ export class MessageService implements OnDestroy {
   async loadRecentChats(): Promise<void> {
     try {
       const userId = await this.getCurrentUserId();
+      const userChannelFilter = this.orgContext.mergeWithOrgFilter({ userCognitoId: { eq: userId } });
       const { data: userChannels } = await this.client.models.UserChannel.list({
-        filter: { userCognitoId: { eq: userId } },
+        filter: userChannelFilter,
       });
 
-      // Direct fetch friends to break cycle
+      const friendFilter = this.orgContext.mergeWithOrgFilter({ ownerCognitoId: { eq: userId } });
       const { data: friends } = await this.client.models.Friend.list({
-        filter: { ownerCognitoId: { eq: userId } },
+        filter: friendFilter,
       });
       const friendIds = new Set(friends.map((f: Schema['Friend']['type']) => f.friendCognitoId));
 
@@ -97,26 +100,33 @@ export class MessageService implements OnDestroy {
     const me = await this.getCurrentUserId();
     const ids = [me, otherUserId].sort();
     const directKey = `${ids[0]}_${ids[1]}`;
+    const channelFilter = this.orgContext.mergeWithOrgFilter({ directKey: { eq: directKey } });
     const { data: channels } = await this.client.models.Channel.list({
-      filter: { directKey: { eq: directKey } },
+      filter: channelFilter,
     });
     let channel = channels[0];
     if (!channel) {
       const now = new Date().toISOString();
-      const { data: newChannel, errors } = await this.client.models.Channel.create({
-        creatorCognitoId: me,
-        type: 'direct',
-        directKey,
-        name: `Chat with ${otherUserId}`,
-        createdAt: now,
-        updatedAt: now,
-      });
+      const { data: newChannel, errors } = await this.client.models.Channel.create(
+        this.orgContext.stampOrgId({
+          creatorCognitoId: me,
+          type: 'direct',
+          directKey,
+          name: `Chat with ${otherUserId}`,
+          createdAt: now,
+          updatedAt: now,
+        })
+      );
       if (errors) throw new Error(errors.map((e: { message: string }) => e.message).join(', '));
       if (!newChannel) throw new Error('Channel creation failed');
       channel = newChannel;
       await Promise.all([
-        this.client.models.UserChannel.create({ userCognitoId: me, channelId: channel.id, createdAt: now, updatedAt: now }),
-        this.client.models.UserChannel.create({ userCognitoId: otherUserId, channelId: channel.id, createdAt: now, updatedAt: now }),
+        this.client.models.UserChannel.create(
+          this.orgContext.stampOrgId({ userCognitoId: me, channelId: channel.id, createdAt: now, updatedAt: now })
+        ),
+        this.client.models.UserChannel.create(
+          this.orgContext.stampOrgId({ userCognitoId: otherUserId, channelId: channel.id, createdAt: now, updatedAt: now })
+        ),
       ]);
       await this.loadRecentChats();
     }
@@ -180,16 +190,18 @@ export class MessageService implements OnDestroy {
     try {
       const userId = await this.getCurrentUserId();
       const now = new Date().toISOString();
-      await this.client.models.Message.create({
-        channelId,
-        senderCognitoId: userId,
-        content: text,
-        timestamp: now,
-        attachment,
-        readBy: [userId],
-        createdAt: now,
-        updatedAt: now,
-      });
+      await this.client.models.Message.create(
+        this.orgContext.stampOrgId({
+          channelId,
+          senderCognitoId: userId,
+          content: text,
+          timestamp: now,
+          attachment,
+          readBy: [userId],
+          createdAt: now,
+          updatedAt: now,
+        })
+      );
     } catch (error) {
       console.error('Send message error:', error);
     }
@@ -226,8 +238,9 @@ export class MessageService implements OnDestroy {
 
   private async getChannelMembers(channelId: string): Promise<string[]> {
     if (this.channelMembersCache.has(channelId)) return this.channelMembersCache.get(channelId)!;
+    const ucFilter = this.orgContext.mergeWithOrgFilter({ channelId: { eq: channelId } });
     const { data: userChannels } = await this.client.models.UserChannel.list({
-      filter: { channelId: { eq: channelId } },
+      filter: ucFilter,
     });
     const members = userChannels.map((uc: Schema['UserChannel']['type']) => uc.userCognitoId);
     this.channelMembersCache.set(channelId, members);

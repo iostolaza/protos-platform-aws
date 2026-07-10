@@ -11,6 +11,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { UserService } from './user.service';
 import { MessageService } from './message.service';
+import { OrgContextService } from './org-context.service';
 import { InputContact } from '../models/contact';
 
 @Injectable({
@@ -22,6 +23,7 @@ export class ContactService implements OnDestroy {
   private contacts = signal<InputContact[]>([]);
   private userService = inject(UserService);
   private messageService = inject(MessageService);
+  private orgContext = inject(OrgContextService);
 
   // Method to get authenticated user
   async getAuthenticatedUser(): Promise<Schema['User']['type'] | null> {
@@ -117,11 +119,13 @@ export class ContactService implements OnDestroy {
     try {
       const { userId } = await getCurrentUser();
       const now = new Date().toISOString();
-      const { errors } = await this.client.models.Friend.create({
-        ownerCognitoId: userId,
-        friendCognitoId,
-        addedAt: now,
-      });
+      const { errors } = await this.client.models.Friend.create(
+        this.orgContext.stampOrgId({
+          ownerCognitoId: userId,
+          friendCognitoId,
+          addedAt: now,
+        })
+      );
       if (errors) {
         throw new Error(errors.map((e: { message: string }) => e.message).join(', '));
       }

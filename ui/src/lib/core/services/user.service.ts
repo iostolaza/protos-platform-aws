@@ -7,6 +7,7 @@ import { Observable, Subject, from } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Hub } from 'aws-amplify/utils';
 import { RoleService } from './role.service';
+import { OrgContextService } from './org-context.service';
 
 type Models = Schema;
 type UserType = Models['User']['type'];
@@ -24,6 +25,7 @@ export class UserService implements OnDestroy {
   private destroy$ = new Subject<void>();
 
   private roleService = inject(RoleService);
+  private orgContext = inject(OrgContextService);
 
   constructor() {
     this.setupAuthListener();
@@ -35,10 +37,12 @@ export class UserService implements OnDestroy {
         case 'signedIn':
         case 'tokenRefresh':
           console.log('Auth event:', payload.event);
+          await this.orgContext.resolveOrg();
           await this.loadCurrentUser();
           await this.roleService.refreshGroups();
           break;
         case 'signedOut':
+          this.orgContext.clearOrg();
           this.user.set(null);
           this.allUsers.set([]);
           break;
@@ -48,6 +52,7 @@ export class UserService implements OnDestroy {
     (async () => {
       try {
         await fetchAuthSession();
+        await this.orgContext.resolveOrg();
         await this.loadCurrentUser();
         await this.roleService.refreshGroups();
       } catch {
@@ -77,12 +82,14 @@ export class UserService implements OnDestroy {
 
       if (!user && email) {
         const now = new Date().toISOString();
-        const { errors } = await this.client.models.User.create({
-          cognitoId: userId,
-          email,
-          createdAt: now,
-          updatedAt: now,
-        });
+        const { errors } = await this.client.models.User.create(
+          this.orgContext.stampOrgId({
+            cognitoId: userId,
+            email,
+            createdAt: now,
+            updatedAt: now,
+          })
+        );
         if (errors) throw new Error(errors.map((e: any) => e.message).join(', '));
 
         const { data: newUser } = await this.client.models.User.get({ cognitoId: userId });
@@ -141,7 +148,11 @@ export class UserService implements OnDestroy {
       const accumulated: UserType[] = [];
       let token = nextToken;
       do {
-        const { data, nextToken: newToken, errors } = await this.client.models.User.list({ nextToken: token ?? undefined });
+        const filter = this.orgContext.mergeWithOrgFilter({});
+        const { data, nextToken: newToken, errors } = await this.client.models.User.list({
+          nextToken: token ?? undefined,
+          ...(filter ? { filter } : {}),
+        });
         if (errors) throw new Error(errors.map((e: any) => e.message).join(', '));
         accumulated.push(...data);
         token = newToken ?? null;
@@ -205,7 +216,15 @@ export class UserService implements OnDestroy {
     try {
       const { userId } = await getCurrentUser();
       const now = new Date().toISOString();
-      const { errors } = await this.client.models.PaymentMethod.create({ userCognitoId: userId, type, name, createdAt: now, updatedAt: now });
+      const { errors } = await this.client.models.PaymentMethod.create(
+        this.orgContext.stampOrgId({
+          userCognitoId: userId,
+          type,
+          name,
+          createdAt: now,
+          updatedAt: now,
+        })
+      );
       if (errors) throw new Error(errors.map((e: any) => e.message).join(', '));
     } catch (error: unknown) {
       console.error('Add payment error:', error);

@@ -5,6 +5,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@amplify-schema';
 import { getCurrentUser } from 'aws-amplify/auth';
 import { UserService } from './user.service';
+import { OrgContextService } from './org-context.service';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -16,6 +17,7 @@ export class TeamService {
   public members = signal<Schema['User']['type'][]>([]);
 
   private userService = inject(UserService);
+  private orgContext = inject(OrgContextService);
 
   async createTeam(name: string, inviteUserIds: string[]): Promise<Schema['Team']['type']> {
     try {
@@ -24,25 +26,29 @@ export class TeamService {
       const teamLeadName = `${leadUser?.firstName || ''} ${leadUser?.lastName || ''}`.trim() || 'Unknown';
       const now = new Date().toISOString();
 
-      const { data: team, errors } = await this.client.models.Team.create({
-        name,
-        description: '',
-        teamLeadCognitoId: userId,
-        teamLeadName,
-        memberCount: inviteUserIds.length,
-        createdAt: now,
-        updatedAt: now,
-      });
+      const { data: team, errors } = await this.client.models.Team.create(
+        this.orgContext.stampOrgId({
+          name,
+          description: '',
+          teamLeadCognitoId: userId,
+          teamLeadName,
+          memberCount: inviteUserIds.length,
+          createdAt: now,
+          updatedAt: now,
+        })
+      );
       if (errors) throw new Error(errors.map(e => e.message).join(', '));
       if (!team) throw new Error('Created team is null');
 
       for (const userId of inviteUserIds) {
-        const { errors: memberErrors } = await this.client.models.TeamMember.create({
-          teamId: team.id,
-          userCognitoId: userId,
-          createdAt: now,
-          updatedAt: now,
-        });
+        const { errors: memberErrors } = await this.client.models.TeamMember.create(
+          this.orgContext.stampOrgId({
+            teamId: team.id,
+            userCognitoId: userId,
+            createdAt: now,
+            updatedAt: now,
+          })
+        );
         if (memberErrors) throw new Error(memberErrors.map(e => e.message).join(', '));
       }
       this.teams.update(t => [...t, team]);
@@ -55,7 +61,8 @@ export class TeamService {
 
   async getTeams(): Promise<Schema['Team']['type'][]> {
     try {
-      const { data, errors } = await this.client.models.Team.list();
+      const filter = this.orgContext.mergeWithOrgFilter({});
+      const { data, errors } = await this.client.models.Team.list(filter ? { filter } : {});
       if (errors) throw new Error(errors.map(e => e.message).join(', '));
       this.teams.set(data);
       return data;
@@ -132,12 +139,14 @@ export class TeamService {
     try {
       console.log('Adding member:', { teamId, userCognitoId });  // Added log
       const now = new Date().toISOString();
-      const { data: newMember, errors } = await this.client.models.TeamMember.create({
-        teamId,
-        userCognitoId,
-        createdAt: now,
-        updatedAt: now,
-      });
+      const { data: newMember, errors } = await this.client.models.TeamMember.create(
+        this.orgContext.stampOrgId({
+          teamId,
+          userCognitoId,
+          createdAt: now,
+          updatedAt: now,
+        })
+      );
       if (errors) throw new Error(errors.map(e => e.message).join(', '));
       console.log('Member added:', newMember);  // Added log
       const team = await this.getTeam(teamId);

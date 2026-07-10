@@ -6,6 +6,7 @@ import { from, Observable, throwError, of, forkJoin } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { RoleService } from './role.service';
 import { AuthService } from './auth.service';
+import { OrgContextService } from './org-context.service';
 import { Transaction, Invoice, InvoiceItem, Account, ChargeCode } from '../models/financial.model';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -17,6 +18,7 @@ export class FinancialService {
   private roleService = inject(RoleService);
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  private orgContext = inject(OrgContextService);
 
   // ═══════════ ACCOUNT CRUD (for timesheet charge codes) ═══════════
 
@@ -58,7 +60,11 @@ export class FinancialService {
   }
 
   async listAccounts(): Promise<Account[]> {
-    const { data, errors } = await this.accountModel.list({ limit: 100 });
+    const filter = this.orgContext.mergeWithOrgFilter({});
+    const { data, errors } = await this.accountModel.list({
+      limit: 100,
+      ...(filter ? { filter } : {}),
+    });
     if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
     return data.map((d: any) => this.mapAccountFromSchema(d));
   }
@@ -73,7 +79,7 @@ export class FinancialService {
   async createAccount(account: Omit<Account, 'id' | 'accountNumber'>): Promise<Account> {
     const id = crypto.randomUUID();
     const accountNumber = this.generateAccountNumber(id);
-    const input: any = {
+    const input: any = this.orgContext.stampOrgId({
       id,
       accountNumber,
       name: account.name,
@@ -84,7 +90,7 @@ export class FinancialService {
       date: account.date ?? new Date().toISOString().split('T')[0],
       type: account.type ?? null,
       chargeCodesJson: JSON.stringify(account.chargeCodes ?? []),
-    };
+    });
     const { data, errors } = await this.accountModel.create(input);
     if (errors?.length) throw new Error(errors.map((e: any) => e.message).join(', '));
     if (!data) throw new Error('Create failed');
@@ -217,7 +223,7 @@ export class FinancialService {
 
     return from(this.getLastBalance(transData.accountId)).pipe(
       switchMap(lastBalance => {
-        const computed: Transaction = {
+        const computed: Transaction = this.orgContext.stampOrgId({
           transactionId: crypto.randomUUID(),
           accountId: transData.accountId,
           type: transData.type ?? 'charge',
@@ -237,7 +243,7 @@ export class FinancialService {
           updatedAt: new Date().toISOString(),
           tenantId: transData.tenantId ?? undefined,
           building: transData.building ?? undefined,
-        };
+        });
         return from(this.client.models.Transaction.create(computed)).pipe(
           map(res => {
             if (res.errors) throw new Error(res.errors.map(e => e.message).join(', '));
@@ -255,7 +261,10 @@ export class FinancialService {
     const conditions: any[] = [];
     if (filter.startDate) conditions.push({ date: { ge: filter.startDate } });
     if (filter.endDate) conditions.push({ date: { le: filter.endDate } });
-    const fullFilter = conditions.length > 0 ? { and: [baseFilter, ...conditions] } : baseFilter;
+    const mergedBase = this.orgContext.mergeWithOrgFilter(baseFilter);
+    const fullFilter = conditions.length > 0
+      ? { and: [mergedBase ?? {}, ...conditions] }
+      : mergedBase;
 
     return from(this.client.models.Transaction.list({
       filter: fullFilter,
@@ -346,7 +355,7 @@ export class FinancialService {
         const invoiceNumber = `INV-${invoiceId.slice(0, 8).toUpperCase()}`;
         const now = new Date().toISOString();
 
-        const computedInvoice = {
+        const computedInvoice = this.orgContext.stampOrgId({
           invoiceId,
           invoiceNumber,
           billFromId: userId,
@@ -363,7 +372,7 @@ export class FinancialService {
           updatedAt: now,
           tenantId: invoiceData.tenantId ?? undefined,
           building: invoiceData.building ?? undefined,
-        };
+        });
 
         return from(this.client.models.Invoice.create(computedInvoice)).pipe(
           map(res => {
@@ -375,14 +384,16 @@ export class FinancialService {
           switchMap(invoice => {
             const itemCreates = invoiceData.items.map(item => {
               const itemId = crypto.randomUUID();
-              return this.client.models.InvoiceItem.create({
-                invoiceItemId: itemId,
-                invoiceId: invoice.invoiceId,
-                name: item.name ?? '',
-                unitPrice: item.unitPrice ?? 0,
-                units: item.units ?? 1,
-                total: item.total ?? 0,
-              });
+              return this.client.models.InvoiceItem.create(
+                this.orgContext.stampOrgId({
+                  invoiceItemId: itemId,
+                  invoiceId: invoice.invoiceId,
+                  name: item.name ?? '',
+                  unitPrice: item.unitPrice ?? 0,
+                  units: item.units ?? 1,
+                  total: item.total ?? 0,
+                })
+              );
             });
             return from(Promise.all(itemCreates)).pipe(
               map(results => {
@@ -451,14 +462,16 @@ export class FinancialService {
               switchMap(() => {
                 const createNew = updates.items.map(item => {
                   const itemId = crypto.randomUUID();
-                  return this.client.models.InvoiceItem.create({
-                    invoiceItemId: itemId,
-                    invoiceId,
-                    name: item.name ?? '',
-                    unitPrice: item.unitPrice ?? 0,
-                    units: item.units ?? 1,
-                    total: item.total ?? 0,
-                  });
+                  return this.client.models.InvoiceItem.create(
+                    this.orgContext.stampOrgId({
+                      invoiceItemId: itemId,
+                      invoiceId,
+                      name: item.name ?? '',
+                      unitPrice: item.unitPrice ?? 0,
+                      units: item.units ?? 1,
+                      total: item.total ?? 0,
+                    })
+                  );
                 });
                 return from(Promise.all(createNew)).pipe(
                   map(results => {
@@ -492,8 +505,12 @@ export class FinancialService {
 
     const isAdmin = this.roleService.isAdmin$();
     const queryFilter = isAdmin ? {} : { billToId: { eq: currentUser.cognitoId } };
+    const listFilter = this.orgContext.mergeWithOrgFilter(queryFilter);
 
-    return from(this.client.models.Invoice.list({ filter: queryFilter, limit: filter.limit || 100 })).pipe(
+    return from(this.client.models.Invoice.list({
+      filter: listFilter,
+      limit: filter.limit || 100,
+    })).pipe(
       map(res => res.data as unknown as Invoice[]),
       switchMap(invoices => {
         const itemFetches = invoices.map(inv => 

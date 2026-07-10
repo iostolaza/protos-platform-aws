@@ -6,7 +6,9 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@amplify-schema';
 import { Observable } from 'rxjs';
 import { getCurrentUser } from 'aws-amplify/auth';
-import { FlatTicket, TicketComment, TicketStatus } from '../models/tickets.model';  
+import { inject } from '@angular/core';
+import { FlatTicket, TicketComment, TicketStatus } from '../models/tickets.model';
+import { OrgContextService } from './org-context.service';
 
 type TicketType = Schema['Ticket']['type'];
 // type TeamType = Schema['Team']['type'];
@@ -19,6 +21,7 @@ type CommentType = Schema['Comment']['type'];
 })
 export class TicketService {
   private client = generateClient<Schema>();
+  private orgContext = inject(OrgContextService);
   private teamMembersCache = new Map<string, UserType[]>();
 
   async getTicketById(id: string): Promise<FlatTicket | null> {
@@ -81,7 +84,11 @@ export class TicketService {
         let token = nextToken;
         do {
           console.log('Fetching tickets with nextToken:', token);
-          const { data, nextToken: newToken, errors } = await this.client.models.Ticket.list({ nextToken: token ?? undefined });
+          const filter = this.orgContext.mergeWithOrgFilter({});
+          const { data, nextToken: newToken, errors } = await this.client.models.Ticket.list({
+            nextToken: token ?? undefined,
+            ...(filter ? { filter } : {}),
+          });
           if (errors) throw new Error(`Failed to list tickets: ${errors.map(e => e.message).join(', ')}`);
           const extended = await Promise.all(
             data.map(async (t: TicketType) => {
@@ -139,14 +146,14 @@ export class TicketService {
         if (!ticket.estimated) throw new Error('Missing ticket estimated date');
         if (!ticket.requesterId) throw new Error('Missing ticket requester ID');
 
-        const payload: Partial<TicketType> = {
+        const payload: Partial<TicketType> = this.orgContext.stampOrgId({
           ...ticket,
-          status: TicketStatus.OPEN, // Use enum
-          assigneeId: undefined, // Optional
-          teamId: undefined, // Optional
-          labels: [], // Default empty
+          status: TicketStatus.OPEN,
+          assigneeId: undefined,
+          teamId: undefined,
+          labels: [],
           createdAt: new Date().toISOString(),
-        };
+        });
 
         const { data, errors } = await this.client.models.Ticket.create(payload as TicketType);
         if (errors) throw new Error(`Failed to create ticket: ${errors.map(e => e.message).join(', ')}`);
@@ -189,12 +196,14 @@ export class TicketService {
     try {
       const { userId } = await getCurrentUser();
       const now = new Date().toISOString();
-      const { data, errors } = await this.client.models.Comment.create({
-        content,
-        createdAt: now,
-        userCognitoId: userId,
-        ticketId,
-      });
+      const { data, errors } = await this.client.models.Comment.create(
+        this.orgContext.stampOrgId({
+          content,
+          createdAt: now,
+          userCognitoId: userId,
+          ticketId,
+        })
+      );
       if (errors) throw new Error(`Failed to add comment: ${errors.map(e => e.message).join(', ')}`);
       console.log('Comment added:', data);
       return data;

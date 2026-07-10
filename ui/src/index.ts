@@ -26,6 +26,9 @@ export * from './lib/core/services/theme.service';
 export * from './lib/core/services/ticket.service';
 export * from './lib/core/services/timesheet.service';
 export * from './lib/core/services/storage.service';
+export * from './lib/core/services/subdomain.service';
+export * from './lib/core/services/org-context.service';
+export * from './lib/core/providers/org-context.provider';
 
 // Models
 export * from './lib/core/models/menu.model';

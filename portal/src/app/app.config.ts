@@ -6,6 +6,7 @@ import { provideAngularSvgIcon } from 'angular-svg-icon';
 import { Amplify } from 'aws-amplify';
 import { appRoutes } from './app.routes';
 import { provideIconPreload } from './app.icons';
+import { provideOrgContext } from '@ui';
 import outputs from '../amplify_outputs.json';
 
 export const appConfig: ApplicationConfig = {
@@ -22,5 +23,6 @@ export const appConfig: ApplicationConfig = {
         console.warn('Amplify outputs not found — backend not deployed yet', e);
       }
     }),
+    provideOrgContext(),
   ],
 };

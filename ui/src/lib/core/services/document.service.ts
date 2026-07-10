@@ -1,12 +1,13 @@
 // src/app/core/services/document.service.ts (Full edited script)
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { generateClient } from 'aws-amplify/data';
 import { Schema } from '@amplify-schema';
 import { uploadData, getUrl, remove } from 'aws-amplify/storage';  // Removed invalid type StorageGetUrlInput (Gen2 uses inline object)
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { OrgContextService } from './org-context.service';
 
 export interface Category {
   value: string;
@@ -25,6 +26,7 @@ export interface FilterOptions {
 })
 export class DocumentService {
   private readonly client = generateClient<Schema>();
+  private readonly orgContext = inject(OrgContextService);
   private readonly categories: ReadonlyArray<Category> = [
     { value: 'Audit', label: 'Audit' },
     { value: 'Budget', label: 'Budget' },
@@ -62,22 +64,24 @@ export class DocumentService {
       }).result;
 
       const docId = crypto.randomUUID();
-      const { data: doc, errors } = await this.client.models.Document.create({
-        docId,
-        userCognitoId: userId,
-        ownerIdentityId: identityId,
-        category: category as any,
-        fileName: file.name,
-        fileKey: `protected/${docPath}`,
-        fileType: file.type,
-        description,
-        uploadDate: new Date().toISOString().split('T')[0],
-        status: 'active',
-        version: 1,
-        permissions: ['Admin', 'User'],
-        size: file.size,
-        tags: [],
-      });
+      const { data: doc, errors } = await this.client.models.Document.create(
+        this.orgContext.stampOrgId({
+          docId,
+          userCognitoId: userId,
+          ownerIdentityId: identityId,
+          category: category as any,
+          fileName: file.name,
+          fileKey: `protected/${docPath}`,
+          fileType: file.type,
+          description,
+          uploadDate: new Date().toISOString().split('T')[0],
+          status: 'active',
+          version: 1,
+          permissions: ['Admin', 'User'],
+          size: file.size,
+          tags: [],
+        })
+      );
 
       if (errors) throw new Error(errors[0].message);
       console.log('Upload success:', doc);  // Debug log
@@ -142,7 +146,8 @@ export class DocumentService {
       });
     }
 
-    return filters.length > 0 ? { and: filters } : undefined;
+    const optionFilter = filters.length > 0 ? { and: filters } : undefined;
+    return this.orgContext.mergeWithOrgFilter(optionFilter);
   }
 
   async getDocument(docId: string): Promise<Schema['Document']['type'] | null> {

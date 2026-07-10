@@ -4,6 +4,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@amplify-schema';
 import { AuthService } from './auth.service';
 import { FinancialService } from './financial.service';
+import { OrgContextService } from './org-context.service';
 import { Timesheet, TimesheetEntry, DailyAggregate } from '../models/timesheet.model';
 import { ChargeCode } from '../models/financial.model';
 
@@ -14,6 +15,7 @@ export class TimesheetService {
   private client = generateClient<Schema>();
   private authService = inject(AuthService);
   private financialService = inject(FinancialService);
+  private orgContext = inject(OrgContextService);
 
   private mapTimesheetFromSchema(data: any): Timesheet {
     const assocJsonRaw = data?.associatedChargeCodesJson ?? '[]';
@@ -45,12 +47,12 @@ export class TimesheetService {
     const sub = await this.authService.getCurrentUserId();
     if (!sub) throw new Error('User not authenticated');
 
-    const filter = { 
-      userId: { eq: sub }, 
+    const filter = this.orgContext.mergeWithOrgFilter({
+      userId: { eq: sub },
       status: { eq: 'draft' },
-      startDate: { eq: startDate }, 
+      startDate: { eq: startDate },
       endDate: { eq: endDate },
-    };
+    });
 
     const { data } = await this.client.models.Timesheet.list({ filter });
 
@@ -70,11 +72,13 @@ export class TimesheetService {
   }
 
   async createTimesheet(ts: Omit<Timesheet, 'id' | 'entries'>): Promise<Timesheet> {
-    const { data, errors } = await this.client.models.Timesheet.create({
-      ...ts,
-      associatedChargeCodesJson: JSON.stringify([]),
-      dailyAggregatesJson: JSON.stringify([]),
-    });
+    const { data, errors } = await this.client.models.Timesheet.create(
+      this.orgContext.stampOrgId({
+        ...ts,
+        associatedChargeCodesJson: JSON.stringify([]),
+        dailyAggregatesJson: JSON.stringify([]),
+      })
+    );
     if (errors?.length) throw new Error(errors.map(e => e.message).join(', '));
     if (!data) throw new Error('Create failed');
     // Ensure status is draft
@@ -133,7 +137,8 @@ export class TimesheetService {
     if (startDate) filter.startDate = { eq: startDate };
     if (endDate) filter.endDate = { eq: endDate };
 
-    const { data, errors } = await this.client.models.Timesheet.list({ filter });
+    const listFilter = this.orgContext.mergeWithOrgFilter(filter);
+    const { data, errors } = await this.client.models.Timesheet.list({ filter: listFilter });
     if (errors?.length) throw new Error(errors.map(e => e.message).join(', '));
 
     const validData = data.filter(d => d.userId != null);
@@ -161,7 +166,9 @@ export class TimesheetService {
 
 
   async addEntry(entry: Omit<TimesheetEntry, 'id' | 'timesheetId'>, timesheetId: string): Promise<TimesheetEntry> {
-    const { data, errors } = await this.client.models.TimesheetEntry.create({ ...entry, timesheetId });
+    const { data, errors } = await this.client.models.TimesheetEntry.create(
+      this.orgContext.stampOrgId({ ...entry, timesheetId })
+    );
     if (errors?.length) throw new Error(errors.map(e => e.message).join(', '));
     await this.updateTotals(timesheetId);
     return data as TimesheetEntry;
