@@ -472,6 +472,13 @@ const schema = a.schema({
     .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
     .handler(a.handler.function(adminCognito)),
 
+  adminListGroupsForUser: a
+    .query()
+    .arguments({ email: a.string().required() })
+    .returns(a.string().array())
+    .authorization(allow => [allow.group('user_Admin'), allow.group('platform_SuperAdmin')])
+    .handler(a.handler.function(adminCognito)),
+
   adminAddUserToGroup: a
     .mutation()
     .arguments({

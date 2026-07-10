@@ -282,6 +282,7 @@ const templates: Record<'Tenant' | 'Employee', string> = {
 const GRAPHQL_ACTION_MAP: Record<string, string> = {
   adminInviteUser: 'inviteUser',
   adminListGroups: 'listGroups',
+  adminListGroupsForUser: 'listGroupsForUser',
   adminAddUserToGroup: 'addUserToGroup',
   adminRemoveUserFromGroup: 'removeUserFromGroup',
   adminListUsersInGroup: 'listUsersInGroup',
@@ -644,6 +645,17 @@ export const handler = async (event: { action?: string; payload?: Record<string,
     case 'listGroups': {
       const res = await cognito.send(new ListGroupsCommand({ UserPoolId: USER_POOL_ID }));
       return res.Groups?.map((g: any) => g.GroupName) || [];
+    }
+
+    case 'listGroupsForUser': {
+      const email = requireEmail(payload);
+      const res = await cognito.send(
+        new AdminListGroupsForUserCommand({
+          UserPoolId: USER_POOL_ID,
+          Username: email,
+        })
+      );
+      return res.Groups?.map((g) => g.GroupName).filter((name): name is string => !!name) ?? [];
     }
 
     case 'createGroup': {

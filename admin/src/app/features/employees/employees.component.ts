@@ -5,8 +5,10 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import {
   AdminService,
   OrgContextService,
+  isValidInviteRole,
   sanitizeText,
   type InviteRole,
+  type UserDisplayRole,
 } from '@ui';
 import { AddEmployeeDialogComponent } from './add-employee-dialog.component';
 
@@ -15,7 +17,7 @@ interface EmployeeRow {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  role: InviteRole | null;
+  role: UserDisplayRole;
   status: string | null;
   rate: number | null | undefined;
 }
@@ -80,7 +82,7 @@ export class EmployeesComponent implements OnInit, OnDestroy {
           email: dbUser.email,
           firstName: dbUser.firstName ?? null,
           lastName: dbUser.lastName ?? null,
-          role: this.adminService.getPrimaryRole(groups),
+          role: this.adminService.resolveUserRole(groups, dbUser.role),
           status: dbUser.status ?? 'active',
           rate: dbUser.rate,
         });
@@ -187,5 +189,9 @@ export class EmployeesComponent implements OnInit, OnDestroy {
   displayName(employee: EmployeeRow): string {
     const name = `${employee.firstName ?? ''} ${employee.lastName ?? ''}`.trim();
     return name || '(No name)';
+  }
+
+  isEditableRole(role: UserDisplayRole): role is InviteRole {
+    return isValidInviteRole(role);
   }
 }

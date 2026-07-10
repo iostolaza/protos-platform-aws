@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@amplify-schema';
 import { OrgContextService } from './org-context.service';
-import { INVITE_ROLES, type InviteRole } from '../utils/validation';
+import { INVITE_ROLES, isValidInviteRole, type InviteRole } from '../utils/validation';
 
 export type InviteUserResult = {
   invited: boolean;
@@ -29,7 +29,13 @@ function parseInviteUserResult(data: unknown): InviteUserResult {
   throw new Error('Invite succeeded but returned an unexpected response');
 }
 
-export const ROLE_GROUPS = ['user_Admin', 'user_Manager', 'user_Facilities', 'user_Tenant'] as const;
+export const ROLE_GROUPS = [
+  'user_Admin',
+  'user_Manager',
+  'user_Facilities',
+  'user_Tenant',
+  'user_Employee',
+] as const;
 export const TENANT_GROUP = 'user_Tenant';
 export const EMPLOYEE_GROUP = 'user_Employee';
 
@@ -40,12 +46,15 @@ export const ROLE_TO_GROUP: Record<InviteRole, string> = {
   Tenant: 'user_Tenant',
 };
 
-export const GROUP_TO_ROLE: Record<string, InviteRole> = {
+export const GROUP_TO_ROLE: Record<string, InviteRole | 'Employee'> = {
   user_Admin: 'Admin',
   user_Manager: 'Manager',
   user_Facilities: 'Facilities',
   user_Tenant: 'Tenant',
+  user_Employee: 'Employee',
 };
+
+export type UserDisplayRole = InviteRole | 'Employee' | 'Unknown';
 
 export type AdminUserRecord = Schema['User']['type'];
 
@@ -185,12 +194,17 @@ export class AdminService {
   }
 
   async getUserGroups(email: string): Promise<string[]> {
+    const { data, errors } = await this.client.queries.adminListGroupsForUser({ email });
+    if (!errors?.length && Array.isArray(data)) {
+      return data.filter((group): group is string => typeof group === 'string');
+    }
+
     const groups = await this.listGroups();
     const userGroups: string[] = [];
 
     for (const group of groups) {
-      const { data } = await this.client.queries.adminListUsersInGroup({ groupName: group });
-      const users = data ?? [];
+      const { data: usersInGroup } = await this.client.queries.adminListUsersInGroup({ groupName: group });
+      const users = usersInGroup ?? [];
       if (Array.isArray(users) && users.some((u: { email?: string }) => u?.email === email)) {
         userGroups.push(group);
       }
@@ -198,13 +212,30 @@ export class AdminService {
     return userGroups;
   }
 
-  getPrimaryRole(groups: string[]): InviteRole | null {
+  getPrimaryRole(groups: string[]): InviteRole | 'Employee' | null {
     for (const group of ROLE_GROUPS) {
       if (groups.includes(group)) {
-        return GROUP_TO_ROLE[group];
+        return GROUP_TO_ROLE[group] ?? null;
       }
     }
     return null;
+  }
+
+  resolveUserRole(
+    groups: string[],
+    dbRole: AdminUserRecord['role'] | null | undefined
+  ): UserDisplayRole {
+    const fromGroups = this.getPrimaryRole(groups);
+    if (fromGroups) {
+      return fromGroups;
+    }
+    if (dbRole === 'Employee') {
+      return 'Employee';
+    }
+    if (dbRole && isValidInviteRole(dbRole)) {
+      return dbRole;
+    }
+    return 'Unknown';
   }
 
   private async updateUserRateByEmail(email: string, rate: number): Promise<void> {
