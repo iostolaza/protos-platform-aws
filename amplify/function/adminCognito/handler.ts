@@ -74,210 +74,94 @@ const roleToGroup: Record<string, string> = {
   Admin: 'user_Admin',
 };
 
-// Full HTML Templates
-const templates: Record<'Tenant' | 'Employee', string> = {
-  Tenant: `<!DOCTYPE html>
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+type InviteTemplateKey = 'Tenant' | 'Employee';
+
+function getInviteSignInUrl(templateKey: InviteTemplateKey): string {
+  const envKey = templateKey === 'Tenant' ? 'PORTAL_APP_URL' : 'ADMIN_APP_URL';
+  const base = process.env[envKey]?.trim();
+  if (!base) {
+    throw new Error(
+      `${envKey} is not configured. Set it to the app sign-in base URL at deploy time.`
+    );
+  }
+  return `${base.replace(/\/$/, '')}/sign-in`;
+}
+
+function inviteEmailSubject(templateKey: InviteTemplateKey): string {
+  return templateKey === 'Tenant'
+    ? 'Protos – Your tenant portal invitation'
+    : 'Protos – Your staff account invitation';
+}
+
+function buildInviteEmailBodies(input: {
+  firstName: string;
+  email: string;
+  tempPassword: string;
+  role: string;
+  templateKey: InviteTemplateKey;
+  signInUrl: string;
+}): { html: string; text: string } {
+  const safeFirst = escapeHtml(input.firstName);
+  const safeEmail = escapeHtml(input.email);
+  const safePassword = escapeHtml(input.tempPassword);
+  const safeRole = escapeHtml(input.role);
+  const safeUrl = escapeHtml(input.signInUrl);
+
+  const htmlIntro =
+    input.templateKey === 'Tenant'
+      ? 'You&rsquo;ve been invited to join Protos as a tenant.'
+      : `You&rsquo;ve been invited to join Protos as <strong>${safeRole}</strong>.`;
+
+  const textIntro =
+    input.templateKey === 'Tenant'
+      ? "You've been invited to join Protos as a tenant."
+      : `You've been invited to join Protos as ${input.role}.`;
+
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rental Application - Protos</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <title>Protos Invitation</title>
 </head>
-<body class="bg-gray-100 font-sans">
-    <div class="max-w-2xl mx-auto my-8 p-8 bg-white rounded-lg shadow-xl">
-        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">Protos Rental Application</h1>
-        <p class="text-center text-lg mb-4">Hello {{firstName}},</p>
-        <p class="text-center mb-4">You've been invited to apply as a Tenant.</p>
-        <p class="text-center text-xl font-bold text-indigo-600 mb-8">Temporary Password: {{temporaryPassword}}</p>
-        <p class="text-center mb-8">Please complete the full rental application below.</p>
-
-        <!-- Phase 1: Quick Apply Form -->
-        <div class="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md mb-8">
-            <h2 class="text-2xl font-bold text-center mb-6">Step 1: Basic Information</h2>
-            <form id="quick-apply-form" class="space-y-4" onsubmit="saveProgress(event, 'quick-apply')">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" name="full-name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input type="email" name="email" value="{{email}}" readonly class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm bg-gray-100" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="tel" name="phone" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Property Address / Unit</label>
-                    <input type="text" name="property-address" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Desired Move-in Date</label>
-                    <input type="date" name="move-in-date" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Lease Term</label>
-                    <select name="lease-term" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="6 months">6 Months</option>
-                        <option value="12 months">12 Months</option>
-                        <option value="flexible">Flexible</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Number of Occupants</label>
-                    <input type="number" name="occupants" min="1" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Monthly Income Range</label>
-                    <select name="income-range" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="0-2000">$0 - $2,000</option>
-                        <option value="2001-4000">$2,001 - $4,000</option>
-                        <option value="4001-6000">$4,001 - $6,000</option>
-                        <option value="6001+">$6,001+</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Any Pets?</label>
-                    <select name="pets" required onchange="togglePetDetails(this)" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="no">No</option>
-                        <option value="yes">Yes</option>
-                    </select>
-                    <textarea name="pet-details" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm hidden" placeholder="Describe pets (type, number, etc.)"></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Smoking?</label>
-                    <select name="smoking" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="no">No</option>
-                        <option value="yes">Yes</option>
-                    </select>
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700">Continue to Step 2</button>
-            </form>
-        </div>
-
-        <!-- Phase 2: Main Application -->
-        <div class="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md mb-8 hidden" id="main-application">
-            <h2 class="text-2xl font-bold text-center mb-6">Step 2: Employment & Rental History</h2>
-            <form id="main-application-form" class="space-y-4" onsubmit="saveProgress(event, 'main-application')">
-                <!-- All your original Phase 2 fields here -->
-                <!-- ... (paste the rest from your original) ... -->
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700">Continue to Review</button>
-            </form>
-        </div>
-
-        <!-- Phase 3: Review & Consent -->
-        <div class="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md hidden" id="review-consent">
-            <h2 class="text-2xl font-bold text-center mb-6">Step 3: Review & Sign</h2>
-            <form id="review-consent-form" class="space-y-4" onsubmit="saveProgress(event, 'review-consent')">
-                <!-- All your original Phase 3 fields here -->
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700">Submit Application</button>
-            </form>
-        </div>
-
-        <script>
-            function saveProgress(event, formId) {
-                event.preventDefault();
-                const form = document.getElementById(\`\${formId}-form\`);
-                const formData = new FormData(form);
-                const data = {};
-                formData.forEach((value, key) => data[key] = value);
-                localStorage.setItem(formId, JSON.stringify(data));
-
-                if (formId === 'quick-apply') {
-                    document.querySelector('#quick-apply-form').parentElement.classList.add('hidden');
-                    document.getElementById('main-application').classList.remove('hidden');
-                } else if (formId === 'main-application') {
-                    document.getElementById('main-application').classList.add('hidden');
-                    document.getElementById('review-consent').classList.remove('hidden');
-                } else {
-                    alert('Application submitted successfully!');
-                    localStorage.clear();
-                }
-            }
-
-            function togglePetDetails(select) {
-                const details = document.querySelector('[name="pet-details"]');
-                details.classList.toggle('hidden', select.value === 'no');
-                details.required = select.value === 'yes';
-            }
-
-            window.onload = function() {
-                ['quick-apply', 'main-application', 'review-consent'].forEach(id => {
-                    const data = JSON.parse(localStorage.getItem(id) || 'null');
-                    if (data) {
-                        const form = document.getElementById(\`\${id}-form\`);
-                        Object.keys(data).forEach(key => {
-                            const el = form.querySelector(\`[name="\${key}"]\`);
-                            if (el) el.value = data[key];
-                        });
-                    }
-                });
-            };
-        </script>
-    </div>
+<body style="font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5; color: #222222; margin: 0; padding: 0;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+    <h1 style="font-size: 22px; color: #1e3a8a; margin: 0 0 16px 0;">Welcome to Protos, ${safeFirst}!</h1>
+    <p style="margin: 0 0 16px 0;">${htmlIntro}</p>
+    <p style="margin: 0 0 8px 0;"><strong>Email:</strong> ${safeEmail}</p>
+    <p style="margin: 0 0 16px 0;"><strong>Temporary password:</strong> ${safePassword}</p>
+    <p style="margin: 0 0 16px 0; font-size: 18px;">
+      <a href="${safeUrl}" style="color: #1e40af; font-weight: bold; text-decoration: underline;">Sign in here: ${safeUrl}</a>
+    </p>
+    <p style="margin: 0; font-size: 14px; color: #555555;">
+      You will be asked to set a new password on your first login.
+      If you did not expect this invitation, you can ignore this email.
+    </p>
+  </div>
 </body>
-</html>`,
+</html>`;
 
-  Employee: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Onboarding - Protos</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 font-sans">
-    <div class="max-w-2xl mx-auto my-8 p-8 bg-white rounded-lg shadow-xl">
-        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">Welcome to Protos, {{firstName}}!</h1>
-        <p class="text-center text-lg mb-6">You've been invited to join as a <strong>{{role}}</strong>.</p>
-        <p class="text-center text-xl font-bold text-indigo-600 mb-8">Temporary Password: {{temporaryPassword}}</p>
-        <p class="text-center mb-10">Please complete your employee onboarding form below.</p>
+  const text = `Welcome to Protos, ${input.firstName}!
 
-        <form class="space-y-8">
-            <section>
-                <h2 class="text-2xl font-semibold mb-4">Personal Information</h2>
-                <input type="text" placeholder="Full Legal Name" required class="w-full border rounded px-4 py-2 mb-3" />
-                <input type="date" placeholder="Date of Birth" class="w-full border rounded px-4 py-2 mb-3" />
-                <input type="text" placeholder="SSN / Tax ID" class="w-full border rounded px-4 py-2 mb-3" />
-                <input type="tel" placeholder="Personal Phone" required class="w-full border rounded px-4 py-2 mb-3" />
-            </section>
+${textIntro}
 
-            <section>
-                <h2 class="text-2xl font-semibold mb-4">Emergency Contact</h2>
-                <input type="text" placeholder="Name" required class="w-full border rounded px-4 py-2 mb-3" />
-                <input type="tel" placeholder="Phone" required class="w-full border rounded px-4 py-2 mb-3" />
-                <input type="text" placeholder="Relationship" class="w-full border rounded px-4 py-2 mb-3" />
-            </section>
+Email: ${input.email}
+Temporary password: ${input.tempPassword}
 
-            <section>
-                <h2 class="text-2xl font-semibold mb-4">Employment Details</h2>
-                <input type="date" placeholder="Preferred Start Date" class="w-full border rounded px-4 py-2 mb-3" />
-                <select class="w-full border rounded px-4 py-2 mb-3">
-                    <option>Full-Time</option>
-                    <option>Part-Time</option>
-                    <option>Contract</option>
-                </select>
-                <textarea placeholder="Relevant Experience or Notes" class="w-full border rounded px-4 py-2 mb-3 h-32"></textarea>
-            </section>
+Sign in here: ${input.signInUrl}
 
-            <section>
-                <h2 class="text-2xl font-semibold mb-4">Direct Deposit (Optional)</h2>
-                <input type="text" placeholder="Bank Name" class="w-full border rounded px-4 py-2 mb-3" />
-                <input type="text" placeholder="Routing Number" class="w-full border rounded px-4 py-2 mb-3" />
-                <input type="text" placeholder="Account Number" class="w-full border rounded px-4 py-2 mb-3" />
-            </section>
+You will be asked to set a new password on your first login.
+If you did not expect this invitation, you can ignore this email.`;
 
-            <div class="text-center">
-                <button type="submit" class="bg-indigo-600 text-white px-8 py-4 rounded-lg text-lg hover:bg-indigo-700">
-                    Submit Onboarding
-                </button>
-            </div>
-        </form>
-    </div>
-</body>
-</html>`,
-};
+  return { html, text };
+}
 
 const GRAPHQL_ACTION_MAP: Record<string, string> = {
   adminInviteUser: 'inviteUser',
@@ -443,13 +327,17 @@ async function sendInviteEmail(input: {
   applicationType: string;
   role: string;
   tempPassword: string;
-  templateKey: 'Tenant' | 'Employee';
+  templateKey: InviteTemplateKey;
 }): Promise<{ emailSent: boolean; warning: string | null }> {
-  const html = templates[input.templateKey]
-    .replace(/{{firstName}}/g, input.firstName)
-    .replace(/{{email}}/g, input.email)
-    .replace(/{{temporaryPassword}}/g, input.tempPassword)
-    .replace(/{{role}}/g, input.role);
+  const signInUrl = getInviteSignInUrl(input.templateKey);
+  const { html, text } = buildInviteEmailBodies({
+    firstName: input.firstName,
+    email: input.email,
+    tempPassword: input.tempPassword,
+    role: input.role,
+    templateKey: input.templateKey,
+    signInUrl,
+  });
 
   try {
     const senderEmail = requireSesSenderEmail();
@@ -458,10 +346,11 @@ async function sendInviteEmail(input: {
         Source: senderEmail,
         Destination: { ToAddresses: [input.email] },
         Message: {
-          Subject: {
-            Data: `Protos – ${input.applicationType === 'Tenant' ? 'Rental' : 'Employee'} Application`,
+          Subject: { Data: inviteEmailSubject(input.templateKey) },
+          Body: {
+            Html: { Data: html },
+            Text: { Data: text },
           },
-          Body: { Html: { Data: html } },
         },
       })
     );

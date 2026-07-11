@@ -33,35 +33,39 @@ function findAuthLambda(scope: IConstruct, nameFragment: string): LambdaFunction
 const adminCognitoLambda = findAuthLambda(backend.data.stack, 'adminCognito');
 const postConfirmationLambda = findAuthLambda(backend.auth.stack, 'postconfirmation');
 const userPool = backend.auth.resources.userPool;
-const sesSenderEmail = process.env.SES_SENDER_EMAIL?.trim();
+// TEST SENDER — replace with a verified DOMAIN identity before production (see PRODUCTION_TODO.md)
+const SES_TEST_SENDER_EMAIL = 'i.ostolaza87@gmail.com';
+const sesSenderEmail = process.env.SES_SENDER_EMAIL?.trim() || SES_TEST_SENDER_EMAIL;
+const sesSenderIdentityArn = `arn:aws:ses:${backend.data.stack.region}:${backend.data.stack.account}:identity/${sesSenderEmail}`;
+// TEST URLS — replace with custom domains before production (see PRODUCTION_TODO.md)
+const ADMIN_APP_URL =
+  process.env.ADMIN_APP_URL?.trim() || 'https://main.d11yajkly52yyj.amplifyapp.com';
+const PORTAL_APP_URL =
+  process.env.PORTAL_APP_URL?.trim() || 'https://main.daog7do89x2bd.amplifyapp.com';
 
 if (adminCognitoLambda) {
   adminCognitoLambda.addEnvironment('AUTH_USERPOOLID', userPool.userPoolId);
-  if (sesSenderEmail) {
-    adminCognitoLambda.addEnvironment('SES_SENDER_EMAIL', sesSenderEmail);
-    const senderIdentity = EmailIdentity.fromEmailIdentityName(
-      backend.data.stack,
-      'AdminInviteSesSender',
-      sesSenderEmail
-    );
-    senderIdentity.grantSendEmail(adminCognitoLambda);
-    // SES sandbox authorizes SendEmail against the recipient identity ARN too.
-    // Constrain sends to our verified From address while allowing any in-account identity as To.
-    adminCognitoLambda.addToRolePolicy(
-      new PolicyStatement({
-        effect: Effect.ALLOW,
-        actions: ['ses:SendEmail', 'ses:SendRawEmail'],
-        resources: [
-          `arn:aws:ses:${backend.data.stack.region}:${backend.data.stack.account}:identity/*`,
-        ],
-        conditions: {
-          StringEquals: {
-            'ses:FromAddress': sesSenderEmail,
-          },
+  adminCognitoLambda.addEnvironment('SES_SENDER_EMAIL', sesSenderEmail);
+  adminCognitoLambda.addEnvironment('ADMIN_APP_URL', ADMIN_APP_URL);
+  adminCognitoLambda.addEnvironment('PORTAL_APP_URL', PORTAL_APP_URL);
+  const senderIdentity = EmailIdentity.fromEmailIdentityName(
+    backend.data.stack,
+    'AdminInviteSesSender',
+    sesSenderEmail
+  );
+  senderIdentity.grantSendEmail(adminCognitoLambda);
+  adminCognitoLambda.addToRolePolicy(
+    new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+      resources: [sesSenderIdentityArn],
+      conditions: {
+        StringEquals: {
+          'ses:FromAddress': sesSenderEmail,
         },
-      })
-    );
-  }
+      },
+    })
+  );
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminCreateUser');
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminGetUser');
   userPool.grant(adminCognitoLambda, 'cognito-idp:AdminUpdateUserAttributes');

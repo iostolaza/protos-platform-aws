@@ -1,17 +1,16 @@
 import { defineFunction } from '@aws-amplify/backend';
 
 /**
- * SES_SENDER_EMAIL is injected at deploy time in amplify/backend.ts from
- * process.env.SES_SENDER_EMAIL (verified SES identity in us-west-1).
- * Default empty here so this file stays browser-safe — it is pulled into
- * Angular builds via @amplify-schema → data/resource.ts imports.
- *
- * Deploy example:
- *   SES_SENDER_EMAIL=no-reply@yourdomain.com npx ampx sandbox --once --profile amplify-admin
+ * SES_SENDER_EMAIL is also set in amplify/backend.ts (process.env override or
+ * the test default below). Verified SES identity must exist in us-west-1.
  */
 export const adminCognito = defineFunction({
   resourceGroupName: 'data',
   environment: {
-    SES_SENDER_EMAIL: '',
+    // TEST SENDER — replace with a verified DOMAIN identity before production (see PRODUCTION_TODO.md)
+    SES_SENDER_EMAIL: 'i.ostolaza87@gmail.com',
+    // TEST URLS — replace with custom domains before production (see PRODUCTION_TODO.md)
+    ADMIN_APP_URL: 'https://main.d11yajkly52yyj.amplifyapp.com',
+    PORTAL_APP_URL: 'https://main.daog7do89x2bd.amplifyapp.com',
   },
 });
