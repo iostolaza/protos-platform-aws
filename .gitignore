@@ -43,3 +43,4 @@ yarn-error.log*
 amplify_outputs.json
 admin/src/amplify_outputs.json
 portal/src/amplify_outputs.json
+scripts/walkthrough-users.json
