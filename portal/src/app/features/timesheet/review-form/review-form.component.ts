@@ -31,7 +31,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { TimesheetService } from '@ui';
 import { AuthService } from '@ui';
 import { FinancialService } from '@ui';
-import { Timesheet, DailyAggregate, TimesheetEntry } from '@ui';
+import { Timesheet, DailyAggregate, TimesheetEntry, TimesheetWithEntries, NewTimesheetEntry } from '@ui';
 import { ChargeCode } from '@ui';
 import { UserProfile } from '@ui';
 import { DayEntryDialogComponent } from '../calendar-view/day-entry-dialog.component';
@@ -57,7 +57,7 @@ export class ReviewComponent implements OnInit, AfterViewInit {
   @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
 
   // --- Signals ---
-  timesheet = signal<Timesheet | null>(null);
+  timesheet = signal<TimesheetWithEntries | null>(null);
   events = signal<TimesheetEntry[]>([]);
   chargeCodes = signal<ChargeCode[]>([]);
   clientAggregates = signal<{ chargeCode: string, totalHours: number, totalPay: number }[]>([]);
@@ -339,8 +339,7 @@ export class ReviewComponent implements OnInit, AfterViewInit {
       const hours = this.computeHoursDiff(info.start, info.end);
 
       const timesheetId = this.timesheet()!.id;
-      const entryData: Omit<TimesheetEntry, 'id'> = {
-        timesheetId,
+      const entryData: NewTimesheetEntry = {
         date,
         startTime,
         endTime,

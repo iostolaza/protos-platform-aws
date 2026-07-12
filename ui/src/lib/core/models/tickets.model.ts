@@ -36,7 +36,10 @@ export interface Team {
   id: string;
   name: string;
   description?: string;
-  teamLeadId: string;
+  organizationId: string;
+  teamLeadCognitoId: string;
+  teamLeadName?: string;
+  memberCount?: number;
   teamLead?: User;
   members?: TeamMember[];
   tickets?: Ticket[];
@@ -44,7 +47,8 @@ export interface Team {
 
 export interface TeamMember {
   teamId: string;
-  userId: string;
+  userCognitoId: string;
+  organizationId: string;
   team?: Team;
   user?: User;
 }
@@ -52,7 +56,8 @@ export interface TeamMember {
 export interface Comment {
   content: string;
   createdAt: Date;
-  userId: string;
+  userCognitoId: string;
+  organizationId: string;
   user?: User;
   ticketId: string;
   ticket?: Ticket;
@@ -63,7 +68,8 @@ export interface Notification {
   createdAt: Date;
   type: 'team' | 'ticket' | 'viewTeam';
   nameType?: string;
-  userId: string;
+  userCognitoId: string;
+  organizationId: string;
   user?: User;
   isRead: boolean;
 }
@@ -96,7 +102,7 @@ export interface FlatTeam {
   id: string;
   name: string;
   description?: string | null;
-  teamLeadId: string;
+  teamLeadCognitoId: string;
   createdAt?: string;
   updatedAt?: string;
   teamLeadName?: string;

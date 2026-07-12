@@ -25,7 +25,7 @@ import { Router } from '@angular/router';
 import { TimesheetService } from '@ui';
 import { AuthService } from '@ui';
 import { FinancialService } from '@ui';
-import { TimesheetEntry } from '@ui';
+import { TimesheetEntry, NewTimesheetEntry } from '@ui';
 import { ChargeCode } from '@ui';
 import { DayEntryDialogComponent } from './day-entry-dialog.component';
 import { ChargeCodeSearchDialogComponent } from '../../timesheet/charge-code-search/charge-code-search.component';
@@ -270,8 +270,7 @@ async handleSelect(info: any) {
       const timesheetId = this.currentTimesheetId();
       if (!timesheetId) throw new Error('No timesheet ID available');
 
-      const entryData: Omit<TimesheetEntry, 'id'> = {
-        timesheetId,
+      const entryData: NewTimesheetEntry = {
         date: dateStr,
         startTime: startStr,
         endTime: endStr,

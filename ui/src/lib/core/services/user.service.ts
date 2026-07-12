@@ -143,10 +143,17 @@ export class UserService implements OnDestroy {
     this.user.set(updatedUser);
   }
 
+  /** Allowlist of scalar User fields safe to pass to Amplify update. */
+  private static readonly EDITABLE_USER_FIELDS = new Set([
+    'firstName', 'lastName', 'username', 'email', 'profileImageKey',
+    'address', 'vehicle', 'emergencyContact', 'contactPrefs',
+    'status', 'role', 'rate', 'otMultiplier', 'taxRate', 'profileComplete',
+  ]);
+
   async save(updated: Partial<UserProfile>) {
     const validUpdated: Partial<UserType> = Object.fromEntries(
       Object.entries(updated).filter(([key]) =>
-        key !== 'cognitoId' && key !== 'createdAt' && key !== 'updatedAt' && key !== 'profileImageUrl'
+        UserService.EDITABLE_USER_FIELDS.has(key)
       )
     );
     await this.updateUser(validUpdated);

@@ -32,7 +32,7 @@ export interface InputContact {
   cognitoId: string;  
   firstName: string;
   lastName: string;
-  username: string;
+  username?: string | null;
   email: string;
   profileImageKey?: string | null;
   status?: string;

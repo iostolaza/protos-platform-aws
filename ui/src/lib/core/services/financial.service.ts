@@ -44,7 +44,7 @@ export class FinancialService {
       id: data.id,
       accountNumber: data.accountNumber,
       name: data.name,
-      ownerCognitoId: data.ownerCognitoId ?? undefined, // schema field not deployed yet
+      organizationId: data.organizationId,
       details: data.details,
       balance: data.balance,
       startingBalance: data.startingBalance ?? 0,
@@ -77,7 +77,7 @@ export class FinancialService {
     return this.mapAccountFromSchema(data);
   }
 
-  async createAccount(account: Omit<Account, 'id' | 'accountNumber'>): Promise<Account> {
+  async createAccount(account: Omit<Account, 'id' | 'accountNumber' | 'organizationId'>): Promise<Account> {
     const id = crypto.randomUUID();
     const accountNumber = this.generateAccountNumber(id);
     const input: any = this.orgContext.stampOrgId({
@@ -235,24 +235,10 @@ export class FinancialService {
 
   /**
    * Account ownership check for tenant transaction visibility.
-   * INERT until Account.ownerCognitoId is added to amplify/data/resource.ts and deployed —
-   * the field is not in the schema today, so ownerCognitoId is always undefined and this
-   * always returns false. Tenants currently see only bill-to rows (accountId === cognitoId).
+   * Account.ownerCognitoId is not in the schema; tenants see only bill-to rows (accountId === cognitoId).
    */
-  private async isAccountOwnedByTenant(accountId: string, cognitoId: string): Promise<boolean> {
-    const cacheKey = `${accountId}:${cognitoId}`;
-    const cached = this.accountAccessCache.get(cacheKey);
-    if (cached !== undefined) return cached;
-
-    try {
-      const account = await this.getAccount(accountId);
-      const allowed = account.ownerCognitoId === cognitoId;
-      this.accountAccessCache.set(cacheKey, allowed);
-      return allowed;
-    } catch {
-      this.accountAccessCache.set(cacheKey, false);
-      return false;
-    }
+  private async isAccountOwnedByTenant(_accountId: string, _cognitoId: string): Promise<boolean> {
+    return false;
   }
 
   createTransaction(transData: Partial<Transaction> & { accountId: string }): Observable<Transaction> {

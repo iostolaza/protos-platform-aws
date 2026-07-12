@@ -15,8 +15,7 @@ export interface Account {
   id: string;
   accountNumber: string;
   name: string;
-  organizationId?: string;
-  ownerCognitoId?: string;
+  organizationId: string;
   details: string | null;
   balance: number;
   startingBalance: number | null;

@@ -10,7 +10,7 @@ import { UserService } from '@ui';
       <div>
         <h3 class="text-lg font-semibold text-foreground">Profile</h3>
         @if (user()) {
-          <p class="text-body mt-1">{{ user()!.firstName }} {{ user()!.lastName }}</p>
+          <p class="text-body mt-1">{{ user()!.firstName || '' }} {{ user()!.lastName || '' }}</p>
           <p class="text-muted-foreground text-sm">{{ user()!.email }}</p>
         }
         <p class="text-muted-foreground text-xs mt-2">Last Login: {{ lastLogin() }}</p>

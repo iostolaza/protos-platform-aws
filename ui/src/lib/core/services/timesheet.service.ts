@@ -6,7 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 import { FinancialService } from './financial.service';
 import { OrgContextService } from './org-context.service';
-import { Timesheet, TimesheetEntry, DailyAggregate } from '../models/timesheet.model';
+import { Timesheet, TimesheetEntry, TimesheetWithEntries, NewTimesheetEntry, DailyAggregate } from '../models/timesheet.model';
 import { ChargeCode } from '../models/financial.model';
 
 export interface LedgerPostingResult {
@@ -42,6 +42,7 @@ export class TimesheetService {
     return {
       id: data.id,
       status: data.status,
+      organizationId: data.organizationId,
       totalHours: data.totalHours,
       totalCost: data.totalCost ?? 0,
       userId: data.userId,
@@ -55,7 +56,6 @@ export class TimesheetService {
       endDate: data.endDate ?? undefined,
       postedToLedger: data.postedToLedger ?? false,
       ledgerPostingError: data.ledgerPostingError ?? undefined,
-      entries: [],
     };
   }
 
@@ -87,7 +87,7 @@ export class TimesheetService {
     });
   }
 
-  async createTimesheet(ts: Omit<Timesheet, 'id' | 'entries'>): Promise<Timesheet> {
+  async createTimesheet(ts: Omit<Timesheet, 'id' | 'organizationId'>): Promise<Timesheet> {
     const { data, errors } = await this.client.models.Timesheet.create(
       this.orgContext.stampOrgId({
         ...ts,
@@ -169,7 +169,7 @@ export class TimesheetService {
    return user?.role === 'Manager' || user?.role === 'Admin';
   }
 
-  async getTimesheetWithEntries(id: string): Promise<Timesheet & { entries: TimesheetEntry[] }> {
+  async getTimesheetWithEntries(id: string): Promise<TimesheetWithEntries> {
     const { data: ts } = await this.client.models.Timesheet.get({ id });
     const { data: entries } = await this.client.models.TimesheetEntry.list({
       filter: { timesheetId: { eq: id } },
@@ -181,7 +181,7 @@ export class TimesheetService {
   }
 
 
-  async addEntry(entry: Omit<TimesheetEntry, 'id' | 'timesheetId'>, timesheetId: string): Promise<TimesheetEntry> {
+  async addEntry(entry: NewTimesheetEntry, timesheetId: string): Promise<TimesheetEntry> {
     const { data, errors } = await this.client.models.TimesheetEntry.create(
       this.orgContext.stampOrgId({ ...entry, timesheetId })
     );

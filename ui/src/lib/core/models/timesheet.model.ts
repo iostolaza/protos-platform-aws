@@ -13,7 +13,7 @@ export interface DailyAggregate {
 export interface Timesheet {
   id: string;
   status: 'draft' | 'submitted' | 'approved' | 'rejected';
-  entries: TimesheetEntry[];
+  organizationId: string;
   totalHours: number;
   totalCost?: number;
   userId: string;
@@ -31,9 +31,13 @@ export interface Timesheet {
   ledgerPostingError?: string;
 }
 
+/** Entry payload for create (org and timesheetId stamped by service). */
+export type NewTimesheetEntry = Omit<TimesheetEntry, 'id' | 'organizationId' | 'timesheetId'>;
+
 export interface TimesheetEntry {
   id: string;
   timesheetId: string;
+  organizationId: string;
   date: string;
   startTime: string;
   endTime: string;
@@ -42,3 +46,6 @@ export interface TimesheetEntry {
   chargeCode: string;
   userId: string;
 }
+
+/** Timesheet with entries loaded separately (not a schema relationship). */
+export type TimesheetWithEntries = Timesheet & { entries: TimesheetEntry[] };
