@@ -83,15 +83,27 @@ export class UserService implements OnDestroy {
 
       if (!user && email) {
         const now = new Date().toISOString();
-        const { errors } = await this.client.models.User.create(
-          this.orgContext.stampOrgId({
-            cognitoId: userId,
-            email,
-            createdAt: now,
-            updatedAt: now,
-          })
-        );
-        if (errors) throw new Error(errors.map((e: any) => e.message).join(', '));
+        const basePayload = {
+          cognitoId: userId,
+          email,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        let createPayload: typeof basePayload & { organizationId: string };
+        try {
+          createPayload = this.orgContext.stampOrgId(basePayload);
+        } catch {
+          await this.roleService.refreshGroups();
+          const isSuperAdmin = this.roleService.hasGroup('platform_SuperAdmin');
+          if (!isSuperAdmin) {
+            throw new Error('organizationId is required for non-SuperAdmin user creation');
+          }
+          createPayload = { ...basePayload, organizationId: 'PLATFORM' };
+        }
+
+        const { errors: createErrors } = await this.client.models.User.create(createPayload);
+        if (createErrors) throw new Error(createErrors.map((e: any) => e.message).join(', '));
 
         const { data: newUser } = await this.client.models.User.get({ cognitoId: userId });
         user = newUser;

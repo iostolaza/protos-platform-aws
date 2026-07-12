@@ -16,7 +16,7 @@ export class PersonalInfoCardComponent {
   form: FormGroup;
   user: UserProfile | null = null;
   profileImageUrl: string | null = null;
- 
+
   private fb = inject(FormBuilder);
   private userService = inject(UserService);
 
@@ -24,28 +24,34 @@ export class PersonalInfoCardComponent {
     this.form = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
-      username: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
+      username: [''],
     });
     effect(() => {
       const u = this.userService.user();
       this.user = u;
-      this.form.patchValue(u || {});
+      this.form.patchValue({
+        firstName: u?.firstName ?? '',
+        lastName: u?.lastName ?? '',
+        username: u?.username ?? '',
+      });
       this.profileImageUrl = u?.profileImageUrl || '/assets/profile/avatar-default.svg';
     });
   }
+
   toggleEdit() {
-    this.editMode.update(m => !m);
+    this.editMode.update((m) => !m);
   }
-  
+
   async save() {
-    if (this.form.valid && this.user) {
-      const updated = { ...this.user, ...this.form.getRawValue() };
-      await this.userService.save(updated);
+    if (!this.form.valid || !this.user) return;
+    try {
+      await this.userService.save(this.form.getRawValue());
       this.toggleEdit();
+    } catch (err) {
+      console.error('Profile save failed:', err);
     }
   }
-  
+
   async uploadImage(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file && this.user) {

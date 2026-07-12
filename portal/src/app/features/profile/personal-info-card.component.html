@@ -16,23 +16,29 @@
         <div>
           <label for="firstName" class="block text-sm text-label">First Name</label>
           <input id="firstName" name="firstName" formControlName="firstName" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter first name" />
+          @if (form.get('firstName')?.invalid && form.get('firstName')?.touched) {
+            <p class="text-red-500 text-xs mt-1">First name is required</p>
+          }
         </div>
         <div>
           <label for="lastName" class="block text-sm text-label">Last Name</label>
           <input id="lastName" name="lastName" formControlName="lastName" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter last name" />
+          @if (form.get('lastName')?.invalid && form.get('lastName')?.touched) {
+            <p class="text-red-500 text-xs mt-1">Last name is required</p>
+          }
         </div>
         <div>
           <label for="username" class="block text-sm text-label">Username</label>
           <input id="username" name="username" formControlName="username" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter username" />
         </div>
         <div>
-          <label for="email" class="block text-sm text-label">Email</label>
-          <input id="email" name="email" formControlName="email" type="email" class="w-full p-2 border border-border rounded bg-form-bg text-foreground" placeholder="Enter email" />
+          <span class="block text-sm text-label">Email</span>
+          <p class="w-full p-2 text-foreground">{{ user?.email || 'Not set' }}</p>
         </div>
       </div>
       <div class="mt-4 flex justify-end gap-2">
         <button type="button" (click)="toggleEdit()" class="btn btn-neutral">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="submit" [disabled]="form.invalid" class="btn btn-primary disabled:opacity-50">Save</button>
       </div>
     </form>
   } @else {
