@@ -1,3 +1,5 @@
+<!-- ui/src/lib/layouts/sidebar/sidebar-submenu/sidebar-submenu.component.html -->
+
 <div class="max-h-0 overflow-hidden pt-1 transition-all duration-500 ltr:pl-4 rtl:pr-4" [ngClass]="{ hidden: !menuService.showSideBar, 'max-h-screen': submenu.expanded }">
   <ul class="border-border text-foreground flex flex-col border-dashed ltr:border-l ltr:pl-2 rtl:border-r rtl:pr-2">
     @for (sub of submenu.children; track sub.label) {

@@ -1,15 +1,11 @@
+// admin/src/app/features/financials/edit-invoice/edit-invoice.component.ts — icons: getIconPath ✅ (Phase 1 sweep)
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { FinancialService } from '@ui';
-import { RoleService } from '@ui';
-import { AuthService } from '@ui';
-import { UserService } from '@ui';
-import { ContactService } from '@ui';
+import { AngularSvgIconModule } from 'angular-svg-icon';
+import { FinancialService, RoleService, AuthService, UserService, ContactService, Invoice, InvoiceItem, InputContact, getIconPath } from '@ui';
 import { Router } from '@angular/router';
-import { Invoice, InvoiceItem } from '@ui';
-import { InputContact } from '@ui';
 
 interface DictItem {
   description: string;
@@ -19,11 +15,12 @@ interface DictItem {
 @Component({
   selector: 'app-edit-invoice',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AngularSvgIconModule],
   templateUrl: './edit-invoice.component.html',
   providers: [DecimalPipe],
 })
 export class EditInvoiceComponent implements OnInit {
+  getIconPath = getIconPath;
   @Input() invoiceId!: string;
   form: FormGroup;
   items: FormArray<FormGroup>;

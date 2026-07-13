@@ -34,7 +34,7 @@ import { ChatItem } from '@ui';
 
       <div class="flex justify-end mt-4">
         <button (click)="navigateToMessages()">
-          <svg-icon [src]="getIconPath('arrow-right')" class="h-5 w-5 text-gray-500"></svg-icon>
+          <svg-icon [src]="getIconPath('arrow-right')" svgClass="h-5 w-5 text-muted-foreground"></svg-icon>
         </button>
       </div>
     </div>

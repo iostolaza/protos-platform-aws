@@ -1,3 +1,5 @@
+<!-- ui/src/lib/layouts/sidebar/sidebar.component.html -->
+
 <nav
   [ngClass]="menuService.showSideBar ? 'w-[210px] xl:w-[280px]' : 'w-[70px]'"
   class="bg-card hidden h-full min-h-0 flex-col lg:flex"
@@ -17,7 +19,7 @@
         class="nav-hover text-foreground flex items-center justify-center rounded-md p-2 transition-all duration-200 focus:outline-none"
         [ngClass]="{ 'rotate-180': !menuService.showSideBar }"
       >
-        <svg-icon src="assets/icons/heroicons/outline/arrow-left.svg" svgClass="h-5 w-5 text-foreground group-hover:text-muted-foreground"></svg-icon>
+        <svg-icon [src]="getIconPath('arrow-left')" svgClass="h-5 w-5 text-foreground group-hover:text-muted-foreground"></svg-icon>
       </button>
     </div>
 

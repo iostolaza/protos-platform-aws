@@ -1,3 +1,4 @@
+// portal/src/app/features/timesheet/review-form/review-form.component.ts — icons: getIconPath ✅ (Phase 1 sweep)
 // src/app/timesheet/review-form/review-form.component.ts
 
 import {
@@ -22,18 +23,14 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
+import { AngularSvgIconModule } from 'angular-svg-icon';
 
 import { FullCalendarModule, FullCalendarComponent } from '@fullcalendar/angular';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-import { TimesheetService } from '@ui';
-import { AuthService } from '@ui';
-import { FinancialService } from '@ui';
-import { Timesheet, DailyAggregate, TimesheetEntry, TimesheetWithEntries, NewTimesheetEntry } from '@ui';
-import { ChargeCode } from '@ui';
-import { UserProfile } from '@ui';
+import { TimesheetService, AuthService, FinancialService, Timesheet, DailyAggregate, TimesheetEntry, TimesheetWithEntries, NewTimesheetEntry, ChargeCode, UserProfile, getIconPath } from '@ui';
 import { DayEntryDialogComponent } from '../calendar-view/day-entry-dialog.component';
 
 @Component({
@@ -48,12 +45,14 @@ import { DayEntryDialogComponent } from '../calendar-view/day-entry-dialog.compo
     MatRadioModule,
     MatButtonModule,
     MatSnackBarModule,
-    MatDialogModule
+    MatDialogModule,
+    AngularSvgIconModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-form.component.html',
 })
 export class ReviewComponent implements OnInit, AfterViewInit {
+  getIconPath = getIconPath;
   @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
 
   // --- Signals ---

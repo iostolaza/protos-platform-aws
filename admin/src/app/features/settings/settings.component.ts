@@ -1,10 +1,11 @@
+// admin/src/app/features/settings/settings.component.ts — icons: getIconPath ✅ (Phase 1 sweep)
 
 /* Edited settings: Add theme arrays/toggles from snippets. */
 
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ThemeService } from '@ui';
+import { ThemeService, getIconPath } from '@ui';
 import { AngularSvgIconModule } from 'angular-svg-icon';
 
 @Component({
@@ -14,6 +15,7 @@ import { AngularSvgIconModule } from 'angular-svg-icon';
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {
+  getIconPath = getIconPath;
   passwordForm: FormGroup;
   timezone = 'UTC'; // Mock
   language = 'English'; // Mock

@@ -26,10 +26,7 @@
   <div class="mt-3 flex items-center justify-center space-x-4">
     <!-- Light Label -->
     <div class="flex items-center gap-1 text-sm text-foreground/70">
-      <svg-icon
-        src="assets/icons/heroicons/outline/sun.svg"
-        svgClass="h-5 w-5"
-      ></svg-icon>
+      <svg-icon [src]="getIconPath('sun')" svgClass="h-5 w-5"></svg-icon>
       <span>Light</span>
     </div>
 
@@ -49,10 +46,7 @@
 
     <!-- Dark Label -->
     <div class="flex items-center gap-1 text-sm text-foreground/70">
-      <svg-icon
-        src="assets/icons/heroicons/outline/moon.svg"
-        svgClass="h-5 w-5"
-      ></svg-icon>
+      <svg-icon [src]="getIconPath('moon')" svgClass="h-5 w-5"></svg-icon>
       <span>Dark</span>
     </div>
   </div>

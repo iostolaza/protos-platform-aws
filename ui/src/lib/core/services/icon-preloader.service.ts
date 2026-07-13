@@ -328,9 +328,13 @@ export const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
-export function getIconPath(name: IconName | string | null | undefined): string {
+export function getIconPath(name: IconName | null | undefined): string {
   if (!name) return '';
-  return (ICONS as Record<string, string>)[name] ?? '';
+  const path = ICONS[name];
+  if (!path) {
+    console.warn(`[icons] Unknown icon "${name}" — not in ICONS registry.`);
+  }
+  return path ?? '';
 }
 
 @Injectable({ providedIn: 'root' })

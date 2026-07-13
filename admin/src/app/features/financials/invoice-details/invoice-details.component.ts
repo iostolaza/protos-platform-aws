@@ -1,18 +1,12 @@
-
-// src/app/features/financials/balance-card/invoice-details/invoice-details.component.ts
+// admin/src/app/features/financials/invoice-details/invoice-details.component.ts — icons: getIconPath ✅ (Phase 1 sweep)
 
 import { Component, Input, OnInit, Output, EventEmitter, inject, signal, computed } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { FinancialService } from '@ui';
-import { RoleService } from '@ui';
-import { AuthService } from '@ui';
-import { UserService } from '@ui';
-import { ContactService } from '@ui';
+import { AngularSvgIconModule } from 'angular-svg-icon';
+import { FinancialService, RoleService, AuthService, UserService, ContactService, Invoice, InvoiceItem, InputContact, getIconPath } from '@ui';
 import { Router } from '@angular/router';
-import { Invoice, InvoiceItem } from '@ui';
-import { InputContact } from '@ui';
 
 interface DictItem {
   description: string;
@@ -22,11 +16,12 @@ interface DictItem {
 @Component({
   selector: 'app-invoice-details',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DecimalPipe],
+  imports: [CommonModule, ReactiveFormsModule, DecimalPipe, AngularSvgIconModule],
   templateUrl: './invoice-details.component.html',
   providers: [DecimalPipe],
 })
 export class InvoiceDetailsComponent implements OnInit {
+  getIconPath = getIconPath;
   @Input() invoice!: Invoice;
   @Output() closed = new EventEmitter<void>();
   @Output() edit = new EventEmitter<string>(); // Keep for parent nav if needed

@@ -1,15 +1,12 @@
+// portal/src/app/features/financials/create-invoice/create-invoice.component.ts — icons: getIconPath ✅ (Phase 1 sweep)
 // src/app/features/financials/create-invoice/create-invoice.component.ts
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { FinancialService } from '@ui';
-import { AuthService } from '@ui';
-import { UserService } from '@ui';
-import { ContactService } from '@ui';
+import { AngularSvgIconModule } from 'angular-svg-icon';
+import { FinancialService, AuthService, UserService, ContactService, Invoice, InvoiceItem, InputContact, getIconPath } from '@ui';
 import { Router } from '@angular/router';
-import { Invoice, InvoiceItem } from '@ui';  // UPDATED: Remove Transaction if unused
-import { InputContact } from '@ui';
 
 interface DictItem {
   description: string;
@@ -19,11 +16,12 @@ interface DictItem {
 @Component({
   selector: 'app-create-invoice',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AngularSvgIconModule],
   templateUrl: './create-invoice.component.html',
   providers: [DecimalPipe],
 })
 export class CreateInvoiceComponent implements OnInit {
+  getIconPath = getIconPath;
   @Input() accountId = '';
   @Input() isManager = false;
   @Input() assignedBuildings: string[] = [];
