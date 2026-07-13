@@ -40,9 +40,9 @@ export class UserService implements OnDestroy {
         case 'tokenRefresh':
           console.log('Auth event:', payload.event);
           await this.orgContext.resolveOrg();
+          await this.roleService.refreshGroups();
           await this.entitlements.resolve();
           await this.loadCurrentUser();
-          await this.roleService.refreshGroups();
           break;
         case 'signedOut':
           this.orgContext.clearOrg();
@@ -58,9 +58,9 @@ export class UserService implements OnDestroy {
       try {
         await fetchAuthSession();
         await this.orgContext.resolveOrg();
+        await this.roleService.refreshGroups();
         await this.entitlements.resolve();
         await this.loadCurrentUser();
-        await this.roleService.refreshGroups();
       } catch {
         console.log('No initial user');
       }

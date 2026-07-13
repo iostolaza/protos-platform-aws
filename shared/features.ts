@@ -1,4 +1,4 @@
-/** Canonical feature keys stamped in the JWT `features` claim. */
+/** Canonical feature keys used for org entitlements and route gating. */
 export const FEATURES = {
   MESSAGING: 'messaging',
   CONTACTS: 'contacts',
@@ -8,6 +8,7 @@ export const FEATURES = {
   TIMESHEETS: 'timesheets',
   TIMESHEET_REVIEW: 'timesheet.review',
   ACCOUNTS: 'financial.accounts',
+  BILLING_VIEW: 'financial.billing_view',
   INVOICES: 'invoices',
   EMPLOYEES: 'employees',
   TENANTS: 'tenants',
@@ -22,22 +23,3 @@ export function isFeatureKey(value: string): value is FeatureKey {
 }
 
 export const ALL_FEATURES: readonly FeatureKey[] = Object.values(FEATURES);
-
-export const FEATURES_CLAIM = 'features';
-export const VERTICAL_CLAIM = 'vertical';
-export const PLAN_CLAIM = 'plan';
-
-export function serializeFeaturesClaim(features: Iterable<FeatureKey>): string {
-  return [...features].join(',');
-}
-
-export function parseFeaturesClaim(claim: unknown): Set<FeatureKey> {
-  if (typeof claim !== 'string' || !claim.trim()) {
-    return new Set();
-  }
-  const keys = claim
-    .split(',')
-    .map((s) => s.trim())
-    .filter(isFeatureKey);
-  return new Set(keys);
-}

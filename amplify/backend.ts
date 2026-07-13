@@ -97,11 +97,3 @@ cfnUserPool.addPropertyOverride('LambdaConfig.PreTokenGenerationConfig', {
   LambdaArn: preTokenGenArn,
   LambdaVersion: 'V2_0',
 });
-
-// Pre-token-gen needs to read the Organization table to resolve entitlements.
-const organizationTable = backend.data.resources.tables['Organization'];
-organizationTable.grantReadData(backend.preTokenGeneration.resources.lambda);
-cfnFunction.addPropertyOverride(
-  'Environment.Variables.ORGANIZATION_TABLE_NAME',
-  organizationTable.tableName
-);

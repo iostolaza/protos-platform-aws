@@ -1,35 +1,27 @@
-import { isFeatureKey, type FeatureKey } from './features';
-import { VERTICALS, isVerticalKey, type VerticalKey } from './verticals';
+import { type FeatureKey } from './features';
+import { VERTICALS, type VerticalKey } from './verticals';
+import { PLAN_ALLOWLIST, type OrganizationPlan } from './plans';
 
-export type ResolveFeaturesInput = {
-  vertical?: string | null;
-  plan?: string | null;
-  featureOverrides?: string[] | null;
-};
+export interface OrgEntitlementInput {
+  vertical?: VerticalKey | string | null;
+  plan?: OrganizationPlan | string | null;
+  featureOverrides?: readonly (string | null)[] | null;
+}
 
-/**
- * Resolve the effective feature set for an organization.
- * `vertical: 'full'` grants every feature (Phase 5 default for all orgs).
- */
-export function resolveFeatures(input: ResolveFeaturesInput): Set<FeatureKey> {
-  const vertical: VerticalKey =
-    input.vertical && isVerticalKey(input.vertical) ? input.vertical : 'full';
+/** Pure. Never throws. Unknown vertical or plan degrades to an empty set. */
+export function resolveFeatures(input: OrgEntitlementInput): Set<FeatureKey> {
+  const preset = VERTICALS[input.vertical as VerticalKey];
+  const base = new Set<FeatureKey>(preset?.features ?? []);
 
-  const features = new Set<FeatureKey>(VERTICALS[vertical].features);
-
-  for (const override of input.featureOverrides ?? []) {
-    if (!override) continue;
-    if (override.startsWith('-') && isFeatureKey(override.slice(1))) {
-      features.delete(override.slice(1) as FeatureKey);
-    } else if (override.startsWith('+') && isFeatureKey(override.slice(1))) {
-      features.add(override.slice(1) as FeatureKey);
-    } else if (isFeatureKey(override)) {
-      features.add(override);
-    }
+  for (const o of input.featureOverrides ?? []) {
+    if (!o || o.length < 2) continue;
+    const key = o.slice(1) as FeatureKey;
+    if (o.startsWith('+')) base.add(key);
+    else if (o.startsWith('-')) base.delete(key);
   }
 
-  // Plan-based trimming is Phase 6+; keep all resolved features for now.
-  void input.plan;
-
-  return features;
+  const allow = PLAN_ALLOWLIST[input.plan as OrganizationPlan];
+  if (allow === undefined) return new Set();
+  if (allow === '*') return base;
+  return new Set([...base].filter((f) => allow.includes(f)));
 }

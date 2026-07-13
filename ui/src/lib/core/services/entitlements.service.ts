@@ -1,18 +1,23 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '@amplify-schema';
 import {
-  parseFeaturesClaim,
-  FEATURES_CLAIM,
-  VERTICAL_CLAIM,
+  resolveFeatures,
   ALL_FEATURES,
   VERTICALS,
   isVerticalKey,
   type FeatureKey,
   type VerticalKey,
 } from '@shared';
+import { OrgContextService } from './org-context.service';
+import { RoleService } from './role.service';
 
 @Injectable({ providedIn: 'root' })
 export class EntitlementsService {
+  private client = generateClient<Schema>();
+  private orgContext = inject(OrgContextService);
+  private roleService = inject(RoleService);
+
   private readonly _features = signal<Set<FeatureKey>>(new Set());
   private readonly _vertical = signal<VerticalKey>('full');
   private readonly _resolved = signal(false);
@@ -20,10 +25,7 @@ export class EntitlementsService {
   readonly features = this._features.asReadonly();
   readonly vertical = this._vertical.asReadonly();
 
-  /**
-   * PHASE 5 = FAIL OPEN. If the claim is missing, grant everything.
-   * PHASE 6 flips this to fail closed. Do not change it yet.
-   */
+  /** PHASE 5 = FAIL OPEN. Phase 6 flips this to false. Do not change it yet. */
   private readonly failOpen = true;
 
   readonly effective = computed<ReadonlySet<FeatureKey>>(() => {
@@ -35,15 +37,45 @@ export class EntitlementsService {
 
   async resolve(): Promise<void> {
     try {
-      const session = await fetchAuthSession();
-      const payload = session.tokens?.idToken?.payload ?? {};
-      this._features.set(parseFeaturesClaim(payload[FEATURES_CLAIM]));
-      const v = payload[VERTICAL_CLAIM];
-      this._vertical.set(typeof v === 'string' && isVerticalKey(v) ? v : 'full');
+      if (this.roleService.hasGroup('platform_SuperAdmin')) {
+        this._features.set(new Set(ALL_FEATURES));
+        this._vertical.set('full');
+        this._resolved.set(true);
+        return;
+      }
+
+      const orgId = this.orgContext.getEffectiveOrgId();
+      if (!orgId) {
+        this._features.set(new Set());
+        this._resolved.set(false);
+        return;
+      }
+
+      const { data: org, errors } = await this.client.models.Organization.get({
+        organizationId: orgId,
+      });
+      if (errors || !org) {
+        this._features.set(new Set());
+        this._resolved.set(false);
+        return;
+      }
+
+      this._features.set(
+        resolveFeatures({
+          vertical: org.vertical,
+          plan: org.plan,
+          featureOverrides: org.featureOverrides,
+        })
+      );
+      this._vertical.set(
+        typeof org.vertical === 'string' && isVerticalKey(org.vertical)
+          ? org.vertical
+          : 'full'
+      );
       this._resolved.set(true);
-    } catch {
+    } catch (err) {
+      console.error('[entitlements] resolve failed:', err);
       this._features.set(new Set());
-      this._vertical.set('full');
       this._resolved.set(false);
     }
   }
@@ -57,7 +89,7 @@ export class EntitlementsService {
   }
 
   term(key: string, fallback: string): string {
-    const terminology = VERTICALS[this._vertical()].terminology as Record<string, string>;
+    const terminology = VERTICALS[this._vertical()]?.terminology as Record<string, string>;
     return terminology[key] ?? fallback;
   }
 
