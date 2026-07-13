@@ -7,7 +7,7 @@ import {
   FEATURES_CLAIM,
   VERTICAL_CLAIM,
   PLAN_CLAIM,
-} from '@shared';
+} from '../../../shared/index.js';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const ORG_TABLE = process.env.ORGANIZATION_TABLE_NAME ?? '';
