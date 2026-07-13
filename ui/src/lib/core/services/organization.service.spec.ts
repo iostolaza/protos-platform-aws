@@ -85,6 +85,7 @@ describe('OrganizationService', () => {
         name: 'New Corp',
         slug: 'newcorp',
         plan: 'starter',
+        vertical: 'full',
         status: 'trial',
       }));
     });

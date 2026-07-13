@@ -29,6 +29,7 @@ export * from './lib/core/services/storage.service';
 export * from './lib/core/services/subdomain.service';
 export * from './lib/core/services/org-context.service';
 export * from './lib/core/services/organization.service';
+export * from './lib/core/services/entitlements.service';
 export * from './lib/core/providers/org-context.provider';
 export * from './lib/core/utils/validation';
 export * from './lib/core/utils/trusted-url';
@@ -47,11 +48,15 @@ export * from './lib/core/guards/auth.guard';
 export * from './lib/core/guards/admin.guard';
 export * from './lib/core/guards/super-admin.guard';
 export * from './lib/core/guards/profile-complete.guard';
+export * from './lib/core/guards/feature.guard';
 
 // Pipes
 export * from './lib/core/pipes/status.pipe';
 export * from './lib/core/pipes/status-class.pipe';
 export * from './lib/core/pipes/find-attribute.pipe';
+
+// Directives
+export * from './lib/core/directives/if-feature.directive';
 
 // Constants
 export * from './lib/core/constants/menu';

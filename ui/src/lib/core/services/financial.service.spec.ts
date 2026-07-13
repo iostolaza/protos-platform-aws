@@ -9,6 +9,17 @@ import { AuthService } from './auth.service';
 import { Transaction } from '../models/financial.model';
 
 jest.mock('aws-amplify/data');
+jest.mock('aws-amplify/auth', () => ({
+  fetchAuthSession: jest.fn().mockRejectedValue(new Error('no session')),
+  getCurrentUser: jest.fn().mockRejectedValue(new Error('no user')),
+}));
+jest.mock('aws-amplify/utils', () => ({
+  Hub: { listen: jest.fn() },
+}));
+jest.mock('aws-amplify/storage', () => ({
+  uploadData: jest.fn(),
+  getUrl: jest.fn(),
+}));
 jest.mock('jspdf');
 jest.mock('jspdf-autotable');
 

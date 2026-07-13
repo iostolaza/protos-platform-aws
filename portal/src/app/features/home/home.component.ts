@@ -5,7 +5,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { getCurrentUser, fetchUserAttributes, signOut } from 'aws-amplify/auth';
-import { UserService } from '@ui';
+import { UserService, IfFeatureDirective } from '@ui';
 import { HomeOverviewComponent } from './homecards/home-overview.component';
 import { MessagesOverviewComponent } from './homecards/messages-overview.component';
 import { ContactsOverviewComponent } from './homecards/contacts-overview.component';
@@ -27,7 +27,8 @@ import { ProfileOverviewComponent } from './homecards/profile-overview.component
     ActivityOverviewComponent,
     DocumentsOverviewComponent,
     FinancialOverviewComponent,
-    ProfileOverviewComponent
+    ProfileOverviewComponent,
+    IfFeatureDirective,
   ],
   templateUrl: './home.component.html',
 })

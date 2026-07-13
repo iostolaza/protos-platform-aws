@@ -12,7 +12,8 @@
     "paths": {
       "$amplify/*": [
         "../.amplify/generated/*"
-      ]
+      ],
+      "@shared": ["../shared/index.ts"]
     }
   }
 }

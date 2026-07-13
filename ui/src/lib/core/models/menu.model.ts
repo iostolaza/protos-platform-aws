@@ -1,4 +1,5 @@
 import type { IconName } from '../services/icon-preloader.service';
+import type { FeatureKey } from '@shared';
 
 export interface SubMenuItem {
   label: string;
@@ -8,6 +9,8 @@ export interface SubMenuItem {
   active?: boolean;
   adminOnly?: boolean;
   expanded?: boolean;
+  feature?: FeatureKey;
+  groups?: string[];
 }
 
 export interface MenuItem {
@@ -16,4 +19,6 @@ export interface MenuItem {
   items: SubMenuItem[];
   active?: boolean;
   adminOnly?: boolean;
+  feature?: FeatureKey;
+  groups?: string[];
 }

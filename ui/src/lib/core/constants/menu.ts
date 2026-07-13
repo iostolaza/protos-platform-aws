@@ -1,3 +1,4 @@
+import { FEATURES } from '@shared';
 import { MenuItem } from '../models/menu.model';
 
 export const adminMenu: MenuItem[] = [
@@ -9,6 +10,7 @@ export const adminMenu: MenuItem[] = [
       { label: 'Profile', icon: 'user-circle', route: '/main-layout/profile' },
       {
         label: 'Messages', icon: 'inbox-stack', route: null,
+        feature: FEATURES.MESSAGING,
         children: [
           { label: 'Incoming', route: '/main-layout/messages/incoming' },
           { label: 'Outgoing', route: '/main-layout/messages/outgoing' },
@@ -16,6 +18,7 @@ export const adminMenu: MenuItem[] = [
       },
       {
         label: 'Contacts', icon: 'users', route: null,
+        feature: FEATURES.CONTACTS,
         children: [
           { label: 'Online', route: '/main-layout/contacts/online' },
           { label: 'New', route: '/main-layout/contacts/new' },
@@ -30,20 +33,22 @@ export const adminMenu: MenuItem[] = [
     items: [
       {
         label: 'Tickets', icon: 'ticket', route: null,
+        feature: FEATURES.TICKETS,
         children: [
           { label: 'Tickets', route: '/main-layout/ticket-management/tickets' },
-          { label: 'Teams', route: '/main-layout/ticket-management/teams' },
+          { label: 'Teams', route: '/main-layout/ticket-management/teams', feature: FEATURES.TICKET_TEAMS },
           { label: 'Create Ticket', route: '/main-layout/ticket-management/create-ticket' },
-          { label: 'Create Team', route: '/main-layout/ticket-management/create-team' },
+          { label: 'Create Team', route: '/main-layout/ticket-management/create-team', feature: FEATURES.TICKET_TEAMS },
         ],
       },
-      { label: 'Documents', icon: 'document-text', route: '/main-layout/documents' },
+      { label: 'Documents', icon: 'document-text', route: '/main-layout/documents', feature: FEATURES.DOCUMENTS },
       {
         label: 'Timesheet', icon: 'clock', route: null,
+        feature: FEATURES.TIMESHEETS,
         children: [
           { label: 'Overview', route: '/main-layout/timesheet' },
           { label: 'Calendar', route: '/main-layout/timesheet/calendar' },
-          { label: 'Review', route: '/main-layout/timesheet/review' },
+          { label: 'Review', route: '/main-layout/timesheet/review', feature: FEATURES.TIMESHEET_REVIEW },
         ],
       },
     ],
@@ -52,18 +57,21 @@ export const adminMenu: MenuItem[] = [
     group: 'Accounts & Finance',
     separator: true,
     items: [
-      { label: 'Manage Accounts', icon: 'banknotes', route: '/main-layout/accounts' },
-      { label: 'Account List', icon: 'table-cells', route: '/main-layout/accounts/list' },
-      { label: 'Financials', icon: 'chart-bar-square', route: '/main-layout/financials' },
+      {
+        label: 'Manage Accounts', icon: 'banknotes', route: '/main-layout/accounts',
+        feature: FEATURES.ACCOUNTS, groups: ['user_Admin', 'user_Manager'],
+      },
+      { label: 'Account List', icon: 'table-cells', route: '/main-layout/accounts/list', feature: FEATURES.ACCOUNTS },
+      { label: 'Financials', icon: 'chart-bar-square', route: '/main-layout/financials', feature: FEATURES.INVOICES },
     ],
   },
   {
     group: 'Administration',
     separator: true,
     items: [
-      { label: 'Employees', icon: 'users', route: '/main-layout/employees' },
-      { label: 'Tenants', icon: 'user-group', route: '/main-layout/tenants' },
-      { label: 'Organizations', icon: 'building-office-2', route: '/main-layout/organizations' },
+      { label: 'Employees', icon: 'users', route: '/main-layout/employees', feature: FEATURES.EMPLOYEES, groups: ['user_Admin'] },
+      { label: 'Tenants', icon: 'user-group', route: '/main-layout/tenants', feature: FEATURES.TENANTS, groups: ['user_Admin'] },
+      { label: 'Organizations', icon: 'building-office-2', route: '/main-layout/organizations', groups: ['platform_SuperAdmin'] },
     ],
   },
   {
@@ -85,22 +93,24 @@ export const portalMenu: MenuItem[] = [
       { label: 'Profile', icon: 'user-circle', route: '/main-layout/profile' },
       {
         label: 'Messages', icon: 'inbox-stack', route: null,
+        feature: FEATURES.MESSAGING,
         children: [
           { label: 'Incoming', route: '/main-layout/messages/incoming' },
           { label: 'Outgoing', route: '/main-layout/messages/outgoing' },
         ],
       },
-      { label: 'Contacts', icon: 'users', route: '/main-layout/contacts' },
+      { label: 'Contacts', icon: 'users', route: '/main-layout/contacts', feature: FEATURES.CONTACTS },
     ],
   },
   {
     group: 'Productivity',
     separator: true,
     items: [
-      { label: 'Tickets', icon: 'ticket', route: '/main-layout/ticket-management/tickets' },
-      { label: 'Documents', icon: 'document-text', route: '/main-layout/documents' },
+      { label: 'Tickets', icon: 'ticket', route: '/main-layout/ticket-management/tickets', feature: FEATURES.TICKETS },
+      { label: 'Documents', icon: 'document-text', route: '/main-layout/documents', feature: FEATURES.DOCUMENTS },
       {
         label: 'Timesheet', icon: 'clock', route: null,
+        feature: FEATURES.TIMESHEETS,
         children: [
           { label: 'Overview', route: '/main-layout/timesheet' },
           { label: 'Calendar', route: '/main-layout/timesheet/calendar' },
@@ -113,9 +123,12 @@ export const portalMenu: MenuItem[] = [
     group: 'Accounts & Finance',
     separator: true,
     items: [
-      { label: 'Manage Accounts', icon: 'banknotes', route: '/main-layout/accounts' },
-      { label: 'Account List', icon: 'table-cells', route: '/main-layout/accounts/list' },
-      { label: 'Financials', icon: 'chart-bar-square', route: '/main-layout/financials' },
+      {
+        label: 'Manage Accounts', icon: 'banknotes', route: '/main-layout/accounts',
+        feature: FEATURES.ACCOUNTS, groups: ['user_Admin', 'user_Manager'],
+      },
+      { label: 'Account List', icon: 'table-cells', route: '/main-layout/accounts/list', feature: FEATURES.ACCOUNTS },
+      { label: 'Financials', icon: 'chart-bar-square', route: '/main-layout/financials', feature: FEATURES.INVOICES },
     ],
   },
   {

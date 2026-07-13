@@ -8,6 +8,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Hub } from 'aws-amplify/utils';
 import { RoleService } from './role.service';
 import { OrgContextService } from './org-context.service';
+import { EntitlementsService } from './entitlements.service';
 
 type Models = Schema;
 type UserType = Models['User']['type'];
@@ -26,6 +27,7 @@ export class UserService implements OnDestroy {
 
   private roleService = inject(RoleService);
   private orgContext = inject(OrgContextService);
+  private entitlements = inject(EntitlementsService);
 
   constructor() {
     this.setupAuthListener();
@@ -38,11 +40,13 @@ export class UserService implements OnDestroy {
         case 'tokenRefresh':
           console.log('Auth event:', payload.event);
           await this.orgContext.resolveOrg();
+          await this.entitlements.resolve();
           await this.loadCurrentUser();
           await this.roleService.refreshGroups();
           break;
         case 'signedOut':
           this.orgContext.clearOrg();
+          this.entitlements.clear();
           this.roleService.clearGroups();
           this.user.set(null);
           this.allUsers.set([]);
@@ -54,6 +58,7 @@ export class UserService implements OnDestroy {
       try {
         await fetchAuthSession();
         await this.orgContext.resolveOrg();
+        await this.entitlements.resolve();
         await this.loadCurrentUser();
         await this.roleService.refreshGroups();
       } catch {

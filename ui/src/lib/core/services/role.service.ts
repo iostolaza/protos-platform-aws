@@ -25,6 +25,9 @@ export class RoleService {
     return this.groups();
   }
 
+  /** Readonly signal for reactive menu derivation. */
+  readonly groupList = this.groups.asReadonly();
+
   hasGroup(group: string): boolean {
     return this.groups().includes(group);
   }

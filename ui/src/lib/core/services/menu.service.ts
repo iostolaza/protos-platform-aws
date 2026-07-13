@@ -4,6 +4,8 @@ import { Subscription } from 'rxjs';
 import { Menu } from '../constants/menu';
 import { MenuItem, SubMenuItem } from '../models/menu.model';
 import { AuthService } from './auth.service';
+import { EntitlementsService } from './entitlements.service';
+import { RoleService } from './role.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,29 +13,21 @@ import { AuthService } from './auth.service';
 export class MenuService implements OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService);
+  private entitlements = inject(EntitlementsService);
+  private roleService = inject(RoleService);
 
   private _showSidebar = signal(true);
   private _showMobileMenu = signal(false);
   private _pagesMenu = signal<MenuItem[]>([]);
+  private _currentUrl = signal<string>(this.router.url);
+  private _expandedKeys = signal<Set<string>>(new Set());
   private _subscription = new Subscription();
 
   constructor() {
     this._pagesMenu.set(Menu.pages);
     const sub = this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
-        this._pagesMenu().forEach((menu) => {
-          let activeGroup = false;
-          menu.items.forEach((subMenu) => {
-            const active = this.isActive(subMenu.route);
-            subMenu.active = active;
-            subMenu.expanded = active;
-            if (active) activeGroup = true;
-            if (subMenu.children) {
-              this.expand(subMenu.children);
-            }
-          });
-          menu.active = activeGroup;
-        });
+        this._currentUrl.set(event.urlAfterRedirects);
       }
     });
     this._subscription.add(sub);
@@ -48,7 +42,25 @@ export class MenuService implements OnDestroy {
   get showMobileMenu() { return this._showMobileMenu(); }
   set showMobileMenu(value: boolean) { this._showMobileMenu.set(value); }
 
-  get pagesMenu() { return computed(() => this._pagesMenu()); }
+  readonly pagesMenu = computed<MenuItem[]>(() => {
+    this._currentUrl();
+    this.entitlements.effective();
+    this.roleService.groupList();
+    const expandedKeys = this._expandedKeys();
+
+    return this._pagesMenu()
+      .filter((group) => this.visible(group))
+      .map((group) => {
+        const items = group.items
+          .filter((item) => this.visible(item))
+          .map((item) => this.mapSubMenuItem(item, expandedKeys))
+          .filter((item) => item.route !== null || (item.children?.length ?? 0) > 0);
+
+        const active = items.some((item) => item.active || item.children?.some((c) => c.active));
+        return { ...group, items, active };
+      })
+      .filter((group) => group.items.length > 0);
+  });
 
   public setMenu(menu: MenuItem[]) {
     this._pagesMenu.set(menu);
@@ -60,40 +72,47 @@ export class MenuService implements OnDestroy {
 
   public toggleMenu(menu: SubMenuItem) {
     this.showSideBar = true;
-    const updatedMenu = this._pagesMenu().map((menuGroup) => ({
-      ...menuGroup,
-      items: menuGroup.items.map((item) => ({
-        ...item,
-        expanded: item === menu ? !item.expanded : false,
-      })),
-    }));
-    this._pagesMenu.set(updatedMenu);
+    const keys = new Set(this._expandedKeys());
+    if (keys.has(menu.label)) {
+      keys.delete(menu.label);
+    } else {
+      keys.clear();
+      keys.add(menu.label);
+    }
+    this._expandedKeys.set(keys);
   }
 
   public toggleSubMenu(submenu: SubMenuItem) {
-    submenu.expanded = !submenu.expanded;
+    const keys = new Set(this._expandedKeys());
+    if (keys.has(submenu.label)) {
+      keys.delete(submenu.label);
+    } else {
+      keys.add(submenu.label);
+    }
+    this._expandedKeys.set(keys);
   }
 
-  private expand(items: Array<SubMenuItem>) {
-    items.forEach((item) => {
-      item.expanded = this.isActive(item.route);
-      if (item.children) this.expand(item.children);
-    });
+  private visible(item: SubMenuItem | MenuItem): boolean {
+    const featureOk = !item.feature || this.entitlements.has(item.feature);
+    const groupOk = !item.groups || item.groups.some((g) => this.roleService.hasGroup(g));
+    return featureOk && groupOk;
+  }
+
+  private mapSubMenuItem(item: SubMenuItem, expandedKeys: Set<string>): SubMenuItem {
+    const active = this.isActive(item.route);
+    const expanded = active || expandedKeys.has(item.label);
+    const children = item.children
+      ?.filter((child) => this.visible(child))
+      .map((child) => ({
+        ...child,
+        active: this.isActive(child.route),
+      }));
+
+    return { ...item, active, expanded, children };
   }
 
   private collapseAll() {
-    this._pagesMenu.update((menus) => menus.map((group) => ({
-      ...group,
-      items: group.items.map((item) => this._collapseRecursive(item))
-    })));
-  }
-
-  private _collapseRecursive(item: SubMenuItem): SubMenuItem {
-    return {
-      ...item,
-      expanded: false,
-      children: item.children?.map((child) => this._collapseRecursive(child))
-    };
+    this._expandedKeys.set(new Set());
   }
 
   public isActive(instruction: string | null | undefined): boolean {

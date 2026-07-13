@@ -98,6 +98,7 @@ export class OrganizationService {
       name: sanitizeText(input.name),
       slug,
       plan: input.plan,
+      vertical: 'full',
       status: 'trial',
       primaryContactEmail: input.primaryContactEmail
         ? sanitizeText(input.primaryContactEmail)

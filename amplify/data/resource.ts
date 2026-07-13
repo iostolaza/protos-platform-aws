@@ -10,6 +10,8 @@ const schema = a.schema({
     name: a.string().required(),
     slug: a.string().required(),
     plan: a.enum(['free', 'starter', 'pro', 'enterprise']),
+    vertical: a.enum(['full', 'hoa', 'property']),
+    featureOverrides: a.string().array(),
     status: a.enum(['active', 'suspended', 'trial']),
     primaryContactEmail: a.email(),
     createdAt: a.string().required(),

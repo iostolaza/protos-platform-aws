@@ -17,7 +17,8 @@
     "skipDefaultLibCheck": true,
     "paths": {
       "@ui": ["./ui/src/index.ts"],
-      "@amplify-schema": ["./amplify/data/resource.ts"]
+      "@amplify-schema": ["./amplify/data/resource.ts"],
+      "@shared": ["./shared/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
